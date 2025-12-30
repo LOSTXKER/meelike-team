@@ -18,6 +18,8 @@ import {
   Calendar,
   Trophy,
   UserPlus,
+  Medal,
+  Sparkles as Sparkle,
 } from "lucide-react";
 
 // Mock find-team posts

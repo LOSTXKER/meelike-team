@@ -19,6 +19,9 @@ import {
   CheckCircle2,
   Zap,
   Flame,
+  Facebook,
+  Instagram,
+  Music2,
 } from "lucide-react";
 
 // Mock outsource jobs

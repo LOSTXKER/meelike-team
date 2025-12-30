@@ -43,21 +43,21 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       <div className={cn("w-full", className)} ref={ref} {...props}>
         {showLabel && (
           <div className="flex justify-between mb-1.5">
-            <span className="text-sm text-brand-text-light">Progress</span>
-            <span className="text-sm font-medium text-brand-text-dark">
+            <span className="text-sm font-medium text-brand-text-light">Progress</span>
+            <span className="text-sm font-bold text-brand-text-dark">
               {Math.round(percentage)}%
             </span>
           </div>
         )}
         <div
           className={cn(
-            "w-full bg-brand-border rounded-full overflow-hidden",
+            "w-full bg-brand-secondary border border-brand-border/50 rounded-full overflow-hidden",
             sizes[size]
           )}
         >
           <div
             className={cn(
-              "h-full rounded-full transition-all duration-500 ease-out",
+              "h-full rounded-full transition-all duration-500 ease-out shadow-sm",
               variants[variant]
             )}
             style={{ width: `${percentage}%` }}

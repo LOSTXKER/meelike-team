@@ -256,7 +256,7 @@ export default function WorkerDashboard() {
       )}
 
       {/* Streak Bonus */}
-      <Card variant="bordered" className="bg-gradient-to-r from-brand-warning/10 to-brand-secondary/10">
+      <Card variant="bordered" className="bg-gradient-to-r from-brand-warning/10 to-transparent">
         <div className="flex items-center gap-4">
           <Flame className="w-10 h-10 text-brand-error" />
           <div className="flex-1">

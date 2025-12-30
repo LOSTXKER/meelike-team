@@ -186,42 +186,38 @@ export default function HubPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 animate-fade-in">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-primary to-brand-primary-dark p-8 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] p-10 text-white shadow-xl shadow-brand-primary/20">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
         
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-6 h-6" />
-            <span className="text-white/80 text-sm">MeeLike Hub</span>
+        <div className="relative z-10 text-center max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+            <Sparkles className="w-4 h-4 text-[#D4A373]" />
+            <span className="text-white/90 text-xs font-medium uppercase tracking-wider">MeeLike Hub Center</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">
-            ตลาดกลางเชื่อมต่อแม่ทีมกับลูกทีม
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight leading-tight">
+            ตลาดกลางเชื่อมต่อ<br/>
+            <span className="text-[#F4EFEA]">แม่ทีม</span> กับ <span className="text-[#D4A373]">ลูกทีม</span>
           </h1>
-          <p className="text-white/80 max-w-xl">
-            ค้นหาทีมที่ใช่ หรือหาลูกทีมคุณภาพ พร้อมระบบโยนงานเมื่องานเกินรับไหว
+          <p className="text-[#E8DED5] text-lg mb-8 font-light">
+            พื้นที่สำหรับหาทีมคุณภาพ หาลูกทีมขยัน หรือส่งต่องานเมื่องานล้นมือ
+            <br className="hidden sm:block" /> ครบจบในที่เดียว ปลอดภัย มั่นใจได้
           </p>
 
           {/* Quick Actions */}
-          <div className="flex flex-wrap gap-3 mt-6">
+          <div className="flex flex-wrap justify-center gap-3">
             <Link href="/hub/recruit">
-              <Button variant="secondary" className="bg-white text-brand-primary hover:bg-white/90">
-                <Users className="w-4 h-4 mr-2" />
+              <Button size="lg" className="bg-white text-brand-primary hover:bg-[#F4EFEA] border-none shadow-lg shadow-black/10">
+                <Users className="w-5 h-5 mr-2" />
                 โพสต์หาลูกทีม
               </Button>
             </Link>
             <Link href="/hub/find-team">
-              <Button variant="outline" className="border-white text-white hover:bg-white/10">
-                <Search className="w-4 h-4 mr-2" />
+              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm">
+                <Search className="w-5 h-5 mr-2" />
                 โพสต์หาทีม
-              </Button>
-            </Link>
-            <Link href="/hub/outsource">
-              <Button variant="outline" className="border-white text-white hover:bg-white/10">
-                <Briefcase className="w-4 h-4 mr-2" />
-                โยนงาน
               </Button>
             </Link>
           </div>
@@ -229,18 +225,18 @@ export default function HubPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {stats.map((stat) => (
-          <Card key={stat.label} variant="bordered" padding="md">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg bg-brand-bg ${stat.color}`}>
-                <stat.icon className="w-5 h-5" />
+          <Card key={stat.label} variant="elevated" padding="md" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl bg-brand-bg ${stat.color.replace('text-', 'bg-').replace('primary', 'primary/10').replace('info', 'info/10').replace('warning', 'warning/10').replace('success', 'success/10')} ${stat.color}`}>
+                <stat.icon className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-brand-text-dark">
+                <p className="text-3xl font-bold text-brand-text-dark leading-none">
                   {stat.value.toLocaleString()}
                 </p>
-                <p className="text-sm text-brand-text-light">{stat.label}</p>
+                <p className="text-sm font-medium text-brand-text-light mt-1">{stat.label}</p>
               </div>
             </div>
           </Card>
@@ -248,194 +244,200 @@ export default function HubPage() {
       </div>
 
       {/* Search & Filters */}
-      <Card variant="bordered" padding="md">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="ค้นหาโพสต์..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="w-4 h-4" />}
-            />
+      <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-brand-text-light group-focus-within:text-brand-primary transition-colors" />
           </div>
-          <div className="flex gap-2 overflow-x-auto">
-            {[
-              { key: "all", label: "ทั้งหมด" },
-              { key: "recruit", label: "หาลูกทีม", icon: <Users className="w-4 h-4" /> },
-              { key: "find-team", label: "หาทีม", icon: <Search className="w-4 h-4" /> },
-              { key: "outsource", label: "โยนงาน", icon: <Briefcase className="w-4 h-4" /> },
-            ].map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilterType(f.key as PostType)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  filterType === f.key
-                    ? "bg-brand-primary text-white"
-                    : "bg-brand-bg text-brand-text-light hover:text-brand-text-dark"
-                }`}
-              >
-                {f.icon && <span className="mr-1">{f.icon}</span>}
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <input
+            type="text"
+            className="block w-full pl-11 pr-4 py-3 bg-white border-none rounded-2xl text-brand-text-dark placeholder:text-brand-text-light/50 focus:ring-2 focus:ring-brand-primary/20 shadow-sm transition-all"
+            placeholder="ค้นหาโพสต์, ชื่องาน, หรือชื่อทีม..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-      </Card>
+        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
+          {[
+            { key: "all", label: "ทั้งหมด" },
+            { key: "recruit", label: "หาลูกทีม", icon: <Users className="w-4 h-4" /> },
+            { key: "find-team", label: "หาทีม", icon: <Search className="w-4 h-4" /> },
+            { key: "outsource", label: "โยนงาน", icon: <Briefcase className="w-4 h-4" /> },
+          ].map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilterType(f.key as PostType)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+                filterType === f.key
+                  ? "bg-brand-primary text-white border-brand-primary shadow-md shadow-brand-primary/20"
+                  : "bg-white text-brand-text-light border-brand-border hover:border-brand-primary/50 hover:text-brand-text-dark"
+              }`}
+            >
+              {f.icon}
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Posts Grid */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-6">
         {filteredPosts.map((post) => (
           <Card
             key={post.id}
-            variant="bordered"
+            variant="elevated"
             padding="lg"
-            className="hover:shadow-lg transition-shadow cursor-pointer group"
+            className="group hover:border-brand-primary/30 transition-all duration-300 cursor-pointer border border-transparent shadow-sm hover:shadow-lg"
           >
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Header */}
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shadow-sm ${
                       post.author.type === "seller"
-                        ? "bg-brand-primary/10 text-brand-primary"
-                        : "bg-brand-info/10 text-brand-info"
+                        ? "bg-brand-primary text-white"
+                        : "bg-brand-secondary text-brand-text-dark border border-brand-border"
                     }`}
                   >
                     {post.author.avatar}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-brand-text-dark">
+                      <p className="font-bold text-brand-text-dark text-lg group-hover:text-brand-primary transition-colors">
                         {post.author.name}
                       </p>
                       {post.author.verified && (
-                        <Badge variant="success" size="sm">✓ ยืนยัน</Badge>
+                        <Badge variant="success" size="sm" className="px-1.5 py-0.5 text-[10px]">✓</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-brand-text-light">
-                      <Star className="w-3 h-3 text-brand-warning" />
-                      <span>{post.author.rating || "ใหม่"}</span>
+                    <div className="flex items-center gap-3 text-xs font-medium text-brand-text-light mt-0.5">
+                      <span className="flex items-center gap-1 bg-brand-warning/10 text-brand-warning px-1.5 py-0.5 rounded">
+                        <Star className="w-3 h-3 fill-current" />
+                        {post.author.rating || "New"}
+                      </span>
                       <span>•</span>
-                      <Clock className="w-3 h-3" />
-                      <span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
                         {new Date(post.createdAt).toLocaleDateString("th-TH", {
                           day: "numeric",
                           month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
                         })}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge variant={postTypeConfig[post.type].color} size="sm">
+                <div className="flex flex-col items-end gap-2">
+                  <Badge variant={postTypeConfig[post.type].color} className="shadow-sm">
                     {postTypeConfig[post.type].label}
                   </Badge>
-                  {post.isHot && (
-                    <Badge variant="error" size="sm">
-                      <Flame className="w-3 h-3 mr-1" />
-                      Hot
-                    </Badge>
-                  )}
-                  {post.isUrgent && (
-                    <Badge variant="error" size="sm">
-                      <Zap className="w-3 h-3 mr-1" />
-                      ด่วน
-                    </Badge>
-                  )}
+                  <div className="flex gap-1">
+                    {post.isHot && (
+                      <Badge variant="error" size="sm" className="px-1.5">
+                        <Flame className="w-3 h-3" />
+                      </Badge>
+                    )}
+                    {post.isUrgent && (
+                      <Badge variant="error" size="sm" className="px-1.5">
+                        <Zap className="w-3 h-3" />
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Title & Description */}
               <div>
-                <h3 className="font-semibold text-brand-text-dark text-lg group-hover:text-brand-primary transition-colors">
+                <h3 className="font-bold text-brand-text-dark text-xl mb-2 line-clamp-1">
                   {post.title}
                 </h3>
-                <p className="text-brand-text-light text-sm mt-1 line-clamp-2">
+                <p className="text-brand-text-light text-sm leading-relaxed line-clamp-2">
                   {post.description}
                 </p>
               </div>
 
               {/* Platforms */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {post.platforms.map((platform) => (
                   <span
                     key={platform}
-                    className="px-2 py-1 bg-brand-bg rounded text-sm flex items-center gap-1"
+                    className="px-3 py-1.5 bg-brand-bg border border-brand-border/50 rounded-lg text-xs font-medium text-brand-text-dark flex items-center gap-1.5"
                   >
-                    <PlatformIcon platform={platform} className="w-4 h-4" />
-                    <span>{platform}</span>
+                    <PlatformIcon platform={platform} className="w-3.5 h-3.5" />
+                    <span className="capitalize">{platform}</span>
                   </span>
                 ))}
               </div>
 
-              {/* Post Type Specific Info */}
-              {post.type === "recruit" && (
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="p-2 bg-brand-bg rounded">
-                    <span className="text-brand-text-light">อัตราค่าจ้าง:</span>
-                    <span className="ml-1 font-medium text-brand-success">
-                      {post.payRate}
-                    </span>
+              {/* Post Type Specific Info (Highlighted Box) */}
+              <div className="bg-brand-bg/50 rounded-xl p-4 border border-brand-border/30">
+                {post.type === "recruit" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs text-brand-text-light block mb-1">อัตราค่าจ้าง</span>
+                      <span className="font-bold text-brand-success text-base">
+                        {post.payRate}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-brand-text-light block mb-1">รับเพิ่ม</span>
+                      <span className="font-bold text-brand-primary text-base">
+                        {post.openSlots} คน
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-2 bg-brand-bg rounded">
-                    <span className="text-brand-text-light">รับเพิ่ม:</span>
-                    <span className="ml-1 font-medium text-brand-primary">
-                      {post.openSlots} คน
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {post.type === "find-team" && (
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="p-2 bg-brand-bg rounded">
-                    <span className="text-brand-text-light">ประสบการณ์:</span>
-                    <span className="ml-1 font-medium">{post.experience}</span>
+                {post.type === "find-team" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs text-brand-text-light block mb-1">ประสบการณ์</span>
+                      <span className="font-bold text-brand-text-dark text-base">
+                        {post.experience}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-brand-text-light block mb-1">ค่าจ้างที่ต้องการ</span>
+                      <span className="font-bold text-brand-success text-base">
+                        {post.expectedPay}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-2 bg-brand-bg rounded">
-                    <span className="text-brand-text-light">ค่าจ้างที่ต้องการ:</span>
-                    <span className="ml-1 font-medium text-brand-success">
-                      {post.expectedPay}
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {post.type === "outsource" && (
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="p-2 bg-brand-bg rounded">
-                    <span className="text-brand-text-light">งบประมาณ:</span>
-                    <span className="ml-1 font-medium text-brand-success">
-                      {post.budget}
-                    </span>
+                {post.type === "outsource" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs text-brand-text-light block mb-1">งบประมาณ</span>
+                      <span className="font-bold text-brand-success text-base">
+                        {post.budget}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-brand-text-light block mb-1">กำหนดส่ง</span>
+                      <span className="font-bold text-brand-error text-base">
+                        {post.deadline}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-2 bg-brand-bg rounded">
-                    <span className="text-brand-text-light">กำหนดส่ง:</span>
-                    <span className="ml-1 font-medium text-brand-error">
-                      {post.deadline}
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between pt-3 border-t border-brand-border">
-                <div className="flex items-center gap-4 text-sm text-brand-text-light">
-                  <span className="flex items-center gap-1">
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-4 text-xs font-medium text-brand-text-light">
+                  <span className="flex items-center gap-1.5">
                     <Eye className="w-4 h-4" />
                     {post.views}
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1.5">
                     <Heart className="w-4 h-4" />
                     {post.interested} สนใจ
                   </span>
                 </div>
-                <Button size="sm" variant="outline">
-                  <MessageCircle className="w-4 h-4 mr-1" />
-                  ติดต่อ
+                <Button size="sm" className="rounded-lg font-semibold shadow-sm shadow-brand-primary/20">
+                  <MessageCircle className="w-4 h-4 mr-1.5" />
+                  ติดต่อทันที
                 </Button>
               </div>
             </div>

@@ -16,6 +16,10 @@ import {
   DollarSign,
   CheckCircle2,
   Flame,
+  Facebook,
+  Instagram,
+  Music2,
+  ClipboardList,
 } from "lucide-react";
 
 // Mock recruit posts

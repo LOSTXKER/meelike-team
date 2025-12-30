@@ -61,12 +61,12 @@ export function TopHeader({
         {/* Search */}
         {showSearch && (
           <div className="hidden sm:flex items-center flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
+            <div className="relative w-full group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light group-focus-within:text-brand-primary transition-colors" />
               <input
                 type="text"
                 placeholder="ค้นหา..."
-                className="w-full pl-10 pr-4 py-2 bg-brand-bg border border-brand-border rounded-lg text-sm text-brand-text-dark placeholder:text-brand-text-light/60 focus:outline-none focus:border-brand-primary"
+                className="w-full pl-10 pr-4 py-2.5 bg-brand-bg/50 border-none rounded-xl text-sm text-brand-text-dark placeholder:text-brand-text-light/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/10 transition-all shadow-sm group-hover:bg-brand-bg group-focus-within:bg-brand-surface"
               />
             </div>
           </div>

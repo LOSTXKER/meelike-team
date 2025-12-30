@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
-import { PageHeader } from "@/components/shared";
+import { PageHeader, EmptyState } from "@/components/shared";
 import {
   ArrowLeft,
   History,
@@ -14,6 +14,11 @@ import {
   Plus,
   Download,
   Calendar,
+  Wallet,
+  LayoutGrid,
+  CheckCircle,
+  TrendingUp,
+  TrendingDown
 } from "lucide-react";
 
 const allTransactions = [
@@ -122,133 +127,148 @@ export default function FinanceHistoryPage() {
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
-      <PageHeader
-        title="ประวัติธุรกรรม"
-        description="รายการธุรกรรมทั้งหมดของคุณ"
-        icon={History}
-        actions={
-          <div className="flex items-center gap-2">
-            <Link href="/seller/finance">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                กลับ
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              ดาวน์โหลด
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/seller/finance">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <PageHeader
+            title="ประวัติธุรกรรม"
+            description="รายการธุรกรรมและประวัติการเงินทั้งหมดของคุณ"
+            icon={History}
+          />
+        </div>
+        <Button variant="outline" className="bg-white hover:bg-brand-bg text-brand-text-dark border-brand-border/50 shadow-sm rounded-xl">
+          <Download className="w-4 h-4 mr-2" />
+          ส่งออกรายงาน (CSV)
+        </Button>
+      </div>
 
-      {/* Summary */}
+      {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card variant="bordered" padding="md">
-          <p className="text-sm text-brand-text-light">รายรับทั้งหมด</p>
-          <p className="text-2xl font-bold text-brand-success">
-            +฿{totalIncome.toLocaleString()}
-          </p>
+        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
+           <div className="flex flex-col items-center justify-center p-2 text-center">
+             <div className="w-10 h-10 rounded-xl bg-brand-success/10 flex items-center justify-center text-brand-success mb-2">
+               <TrendingUp className="w-5 h-5" />
+             </div>
+             <p className="text-2xl font-bold text-brand-success">+฿{totalIncome.toLocaleString()}</p>
+             <p className="text-sm text-brand-text-light">รายรับรวม</p>
+           </div>
         </Card>
-        <Card variant="bordered" padding="md">
-          <p className="text-sm text-brand-text-light">รายจ่ายทั้งหมด</p>
-          <p className="text-2xl font-bold text-brand-error">
-            -฿{totalExpense.toLocaleString()}
-          </p>
+        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
+           <div className="flex flex-col items-center justify-center p-2 text-center">
+             <div className="w-10 h-10 rounded-xl bg-brand-error/10 flex items-center justify-center text-brand-error mb-2">
+               <TrendingDown className="w-5 h-5" />
+             </div>
+             <p className="text-2xl font-bold text-brand-error">-฿{totalExpense.toLocaleString()}</p>
+             <p className="text-sm text-brand-text-light">รายจ่ายรวม</p>
+           </div>
         </Card>
-        <Card variant="bordered" padding="md">
-          <p className="text-sm text-brand-text-light">ยอดสุทธิ</p>
-          <p className="text-2xl font-bold text-brand-primary">
-            ฿{(totalIncome - totalExpense).toLocaleString()}
-          </p>
+        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
+           <div className="flex flex-col items-center justify-center p-2 text-center">
+             <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary mb-2">
+               <Wallet className="w-5 h-5" />
+             </div>
+             <p className="text-2xl font-bold text-brand-primary">฿{(totalIncome - totalExpense).toLocaleString()}</p>
+             <p className="text-sm text-brand-text-light">ยอดสุทธิ</p>
+           </div>
         </Card>
-        <Card variant="bordered" padding="md">
-          <p className="text-sm text-brand-text-light">จำนวนรายการ</p>
-          <p className="text-2xl font-bold text-brand-text-dark">
-            {allTransactions.length}
-          </p>
+        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
+           <div className="flex flex-col items-center justify-center p-2 text-center">
+             <div className="w-10 h-10 rounded-xl bg-brand-info/10 flex items-center justify-center text-brand-info mb-2">
+               <History className="w-5 h-5" />
+             </div>
+             <p className="text-2xl font-bold text-brand-text-dark">{allTransactions.length}</p>
+             <p className="text-sm text-brand-text-light">รายการทั้งหมด</p>
+           </div>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card variant="bordered" padding="md">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="ค้นหาธุรกรรม..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="w-4 h-4" />}
-            />
-          </div>
-          <div className="flex gap-2">
+      {/* Filter & Search */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
+        <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar">
+          <div className="flex gap-1 p-1.5 bg-brand-bg/50 rounded-xl border border-brand-border/30 min-w-max">
             {[
-              { key: "all", label: "ทั้งหมด" },
-              { key: "income", label: "รายรับ" },
-              { key: "expense", label: "รายจ่าย" },
-              { key: "topup", label: "เติมเงิน" },
+              { key: "all", label: "ทั้งหมด", icon: LayoutGrid },
+              { key: "income", label: "รายรับ", icon: ArrowDownRight },
+              { key: "expense", label: "รายจ่าย", icon: ArrowUpRight },
+              { key: "topup", label: "เติมเงิน", icon: Plus },
             ].map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key as FilterType)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   filter === f.key
-                    ? "bg-brand-primary text-white"
-                    : "bg-brand-bg text-brand-text-light hover:text-brand-text-dark"
+                    ? "bg-white text-brand-text-dark shadow-sm ring-1 ring-black/5"
+                    : "text-brand-text-light hover:text-brand-text-dark opacity-70 hover:opacity-100"
                 }`}
               >
-                {f.label}
+                <f.icon className={`w-4 h-4 ${filter === f.key ? "text-brand-primary" : ""}`} />
+                <span>{f.label}</span>
               </button>
             ))}
           </div>
         </div>
-      </Card>
+        <div className="w-full lg:w-auto lg:min-w-[280px]">
+          <Input
+            placeholder="ค้นหาธุรกรรม, รหัส..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full border-brand-border/50 bg-brand-bg/50 focus:bg-white !py-2.5 !rounded-xl"
+            leftIcon={<Search className="w-4 h-4 text-brand-text-light" />}
+          />
+        </div>
+      </div>
 
       {/* Transactions List */}
-      <Card variant="bordered">
-        <div className="divide-y divide-brand-border">
+      <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
+        <div className="divide-y divide-brand-border/30">
           {filteredTransactions.length === 0 ? (
-            <div className="p-8 text-center">
-              <Filter className="w-12 h-12 text-brand-text-light mx-auto mb-3" />
-              <p className="text-brand-text-light">ไม่พบรายการที่ค้นหา</p>
-            </div>
+            <EmptyState 
+                icon={History} 
+                title="ไม่พบรายการธุรกรรม" 
+                description="ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง"
+                className="py-12"
+            />
           ) : (
             filteredTransactions.map((txn) => (
               <div
                 key={txn.id}
-                className="p-4 flex items-center justify-between hover:bg-brand-bg/50 transition-colors"
+                className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-brand-bg/30 transition-colors group cursor-pointer"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
                   <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-sm ${
                       txn.type === "income"
-                        ? "bg-brand-success/10"
+                        ? "bg-brand-success/5 border-brand-success/20 text-brand-success"
                         : txn.type === "topup"
-                        ? "bg-brand-info/10"
-                        : "bg-brand-error/10"
+                        ? "bg-brand-info/5 border-brand-info/20 text-brand-info"
+                        : "bg-brand-error/5 border-brand-error/20 text-brand-error"
                     }`}
                   >
                     {txn.type === "income" ? (
-                      <ArrowDownRight className="w-6 h-6 text-brand-success" />
+                      <ArrowDownRight className="w-6 h-6" />
                     ) : txn.type === "topup" ? (
-                      <Plus className="w-6 h-6 text-brand-info" />
+                      <Plus className="w-6 h-6" />
                     ) : (
-                      <ArrowUpRight className="w-6 h-6 text-brand-error" />
+                      <ArrowUpRight className="w-6 h-6" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-brand-text-dark">
+                    <p className="font-bold text-brand-text-dark text-base group-hover:text-brand-primary transition-colors">
                       {txn.title}
                     </p>
-                    <p className="text-sm text-brand-text-light">
+                    <p className="text-sm text-brand-text-light mt-0.5">
                       {txn.description}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Calendar className="w-3 h-3 text-brand-text-light" />
-                      <span className="text-xs text-brand-text-light">
-                        {new Date(txn.date).toLocaleDateString("th-TH", {
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-brand-text-light">
+                      <span className="flex items-center gap-1 bg-brand-bg px-2 py-0.5 rounded">
+                         <Calendar className="w-3 h-3" />
+                         {new Date(txn.date).toLocaleDateString("th-TH", {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
@@ -259,9 +279,9 @@ export default function FinanceHistoryPage() {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pl-16 sm:pl-0">
                   <p
-                    className={`text-lg font-bold ${
+                    className={`text-xl font-bold ${
                       txn.amount > 0 ? "text-brand-success" : "text-brand-error"
                     }`}
                   >
@@ -278,6 +298,7 @@ export default function FinanceHistoryPage() {
                         : "default"
                     }
                     size="sm"
+                    className="border-none bg-opacity-10 sm:mt-1"
                   >
                     {txn.category === "order"
                       ? "ออเดอร์"
@@ -292,7 +313,7 @@ export default function FinanceHistoryPage() {
             ))
           )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

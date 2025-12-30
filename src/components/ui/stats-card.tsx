@@ -28,8 +28,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
     <Card variant="bordered" className={cn("", className)}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-brand-text-light">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-brand-text-dark">{value}</p>
+          <p className="text-sm font-medium text-brand-text-light">{title}</p>
+          <p className="mt-2 text-3xl font-bold text-brand-text-dark tracking-tight">{value}</p>
           {change !== undefined && (
             <div className="mt-2 flex items-center gap-1">
               {isPositive ? (

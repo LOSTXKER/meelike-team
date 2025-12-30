@@ -74,7 +74,7 @@ export default function StorePage() {
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Store Header */}
-        <Card className="bg-gradient-to-br from-brand-secondary/20 to-brand-accent/10 border border-brand-border">
+        <Card className="bg-gradient-to-br from-brand-surface to-brand-accent/5 border border-brand-border">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Avatar fallback={store.storeName} size="xl" />
             <div className="text-center sm:text-left flex-1">

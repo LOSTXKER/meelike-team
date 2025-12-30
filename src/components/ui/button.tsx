@@ -29,19 +29,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
 
     const variants = {
       primary:
-        "bg-brand-primary text-white hover:bg-brand-primary/90 focus:ring-brand-primary",
+        "bg-brand-primary text-white hover:bg-brand-primary/90 focus:ring-brand-primary shadow-sm",
       secondary:
-        "bg-brand-secondary text-brand-text-dark hover:bg-brand-secondary/90 focus:ring-brand-secondary",
+        "bg-white border border-brand-border text-brand-text-dark hover:bg-brand-secondary focus:ring-brand-border shadow-sm",
       outline:
-        "border border-brand-primary text-brand-primary hover:bg-brand-primary/10 focus:ring-brand-primary",
+        "border border-brand-border text-brand-text-dark hover:bg-brand-secondary focus:ring-brand-border",
       ghost:
-        "text-brand-primary hover:bg-brand-primary/10 focus:ring-brand-primary",
+        "text-brand-text-dark hover:bg-brand-secondary focus:ring-brand-border",
       danger:
-        "bg-brand-error text-white hover:bg-brand-error/90 focus:ring-brand-error",
+        "bg-brand-error text-white hover:bg-brand-error/90 focus:ring-brand-error shadow-sm",
     };
 
     const sizes = {

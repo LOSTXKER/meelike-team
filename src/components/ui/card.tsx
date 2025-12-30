@@ -13,14 +13,15 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const variants = {
       default: "bg-brand-surface",
       bordered: "bg-brand-surface border border-brand-border",
-      elevated: "bg-brand-surface shadow-md",
+      elevated: "bg-brand-surface shadow-lg shadow-brand-primary/5 border border-brand-border/50",
+      flat: "bg-brand-bg/50 hover:bg-brand-bg transition-colors",
     };
 
     const paddings = {
       none: "",
       sm: "p-3",
-      md: "p-4",
-      lg: "p-6",
+      md: "p-5",
+      lg: "p-8",
     };
 
     return (

@@ -5,44 +5,56 @@
    MeeLike Theme - Light Mode
    ========================================== */
 :root {
-  /* Brand Colors */
-  --brand-bg: #FFFAF5;
+  /* Brand Colors - Coffee & Cream (Modern Earthy) */
+  --brand-bg: #FAF9F6; /* Pearl White - Cleaner than previous warm white */
   --brand-surface: #FFFFFF;
-  --brand-text-dark: #473B30;
-  --brand-text-light: #937058;
-  --brand-primary: #937058;
-  --brand-primary-light: #C9B7AB;
-  --brand-secondary: #FCD77F;
-  --brand-secondary-light: #FDE8BD;
-  --brand-accent: #F892A2;
-  --brand-border: #EAE5E0;
+  --brand-text-dark: #1A1512; /* Deep Espresso - Almost black for sharp contrast */
+  --brand-text-light: #6D5E54; /* Muted Cocoa - Easy on eyes but readable */
   
-  /* System Colors */
-  --brand-success: #6A994E;
-  --brand-warning: #FCD77F;
-  --brand-error: #BC4749;
-  --brand-info: #A6CDE3;
+  --brand-primary: #8C6A54; /* Medium Roast - Sophisticated Brown */
+  --brand-primary-light: #E8DED5; /* Foam */
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --brand-secondary: #F4EFEA; /* Light Cream */
+  --brand-secondary-light: #FDFBF9; /* White Milk */
+  
+  --brand-accent: #D4A373; /* Golden Caramel - Pop color */
+  --brand-border: #E6E0DB; /* Subtle beige border */
+  
+  /* System Colors - Slightly desaturated for harmony */
+  --brand-success: #588157; /* Sage Green */
+  --brand-warning: #D4A373; /* Golden (Matches accent) */
+  --brand-error: #B04F4F; /* Muted Red */
+  --brand-info: #5FA8D3; /* Soft Blue */
+  
+  /* Shadows - Warm & Soft */
+  --shadow-sm: 0 1px 2px 0 rgb(26 21 18 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(26 21 18 / 0.04), 0 2px 4px -2px rgb(26 21 18 / 0.02);
+  --shadow-md: 0 10px 15px -3px rgb(26 21 18 / 0.06), 0 4px 6px -4px rgb(26 21 18 / 0.03);
+  --shadow-lg: 0 20px 25px -5px rgb(26 21 18 / 0.06), 0 8px 10px -6px rgb(26 21 18 / 0.03);
 }
 
 /* ==========================================
-   MeeLike Theme - Dark Mode
+   MeeLike Theme - Dark Mode (Espresso)
    ========================================== */
 .dark {
-  --brand-bg: #211d1a;
-  --brand-surface: #2c2825;
-  --brand-text-dark: #FFFAF5;
-  --brand-text-light: #C9B7AB;
-  --brand-primary: #FCD77F;
-  --brand-secondary: #937058;
-  --brand-accent: #F892A2;
-  --brand-border: #3a3532;
-  --brand-primary-light: #937058;
-  --brand-secondary-light: #473B30;
+  --brand-bg: #0C0A09; /* Rich Black */
+  --brand-surface: #1C1917; /* Dark Roast */
+  --brand-text-dark: #FAF9F6; /* Pearl */
+  --brand-text-light: #A8A29E; /* Stone */
+  
+  --brand-primary: #D4A373; /* Caramel as primary in dark */
+  --brand-primary-light: #8C6A54;
+  
+  --brand-secondary: #292524;
+  --brand-secondary-light: #44403C;
+  
+  --brand-accent: #D4A373;
+  --brand-border: #292524;
+  
+  --brand-success: #588157;
+  --brand-warning: #D4A373;
+  --brand-error: #B04F4F;
+  --brand-info: #5FA8D3;
 }
 
 /* ==========================================

@@ -48,9 +48,9 @@ export function Sidebar({
         className={cn(
           "fixed left-0 top-0 h-full bg-brand-surface border-r border-brand-border z-50",
           "transition-all duration-300 ease-in-out",
-          sidebarOpen ? "w-64" : "w-0 lg:w-16",
+          sidebarOpen ? "w-64" : "w-64 lg:w-16",
           hiddenOnMobile ? "hidden lg:block" : "",
-          !hiddenOnMobile && (sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"),
+          !hiddenOnMobile && (sidebarOpen ? "translate-x-0 shadow-xl" : "-translate-x-full lg:translate-x-0 lg:shadow-none"),
           className
         )}
       >
@@ -80,7 +80,7 @@ export function Sidebar({
           </div>
 
           {/* Menu */}
-          <nav className="flex-1 overflow-y-auto p-4">
+          <nav className={cn("flex-1 overflow-y-auto", sidebarOpen ? "p-4" : "p-2")}>
             <ul className="space-y-1">
               {nav.map((item, index) => (
                 <li key={index}>
@@ -131,18 +131,19 @@ function NavItemComponent({
     <Link
       href={item.href}
       className={cn(
-        "flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-colors",
+        "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ease-in-out",
+        sidebarOpen ? "justify-between" : "justify-center px-2",
         isActive
-          ? "bg-brand-primary/10 text-brand-primary"
-          : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg"
+          ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
+          : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-secondary"
       )}
     >
-      <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 flex-shrink-0" />
+      <div className={cn("flex items-center gap-3", !sidebarOpen && "gap-0")}>
+        <Icon className={cn("w-5 h-5 flex-shrink-0 transition-colors", isActive ? "text-white" : "group-hover:text-brand-primary")} />
         {sidebarOpen && <span className="font-medium">{item.label}</span>}
       </div>
       {sidebarOpen && item.badge && (
-        <Badge variant="error" size="sm">
+        <Badge variant={isActive ? "secondary" : "error"} size="sm" className={isActive ? "bg-white/20 text-white" : ""}>
           {item.badge}
         </Badge>
       )}

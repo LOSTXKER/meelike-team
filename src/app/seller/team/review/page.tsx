@@ -15,13 +15,14 @@ import {
   Image as ImageIcon,
   MessageSquare,
   ThumbsUp,
-  ThumbsDown,
   AlertCircle,
   Target,
   User,
   Star,
   Package,
   Paperclip,
+  CheckCircle,
+  Info
 } from "lucide-react";
 
 // Mock pending review jobs
@@ -137,193 +138,198 @@ export default function TeamReviewPage() {
   const totalPayout = jobs.reduce((sum, j) => sum + j.workerPayout, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
-      <PageHeader
-        title="รอตรวจสอบ"
-        description="ตรวจสอบและอนุมัติงานจาก Worker"
-        icon={CheckCircle2}
-        actions={
-          <div className="flex items-center gap-4">
-            <Link href="/seller/team">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                กลับ
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/seller/team/jobs">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <PageHeader
+            title="รอตรวจสอบ"
+            description="ตรวจสอบและอนุมัติงานจาก Worker"
+            icon={CheckCircle2}
+          />
+        </div>
+        
+        {jobs.length > 0 && (
+          <div className="flex items-center gap-4 bg-white p-2 pl-4 rounded-xl shadow-sm border border-brand-border/50">
+             <div className="text-right">
+                <p className="text-xs text-brand-text-light font-medium">ยอดจ่ายรวม</p>
+                <p className="text-lg font-bold text-brand-success">฿{totalPayout.toLocaleString()}</p>
+             </div>
+             <Button
+                size="sm"
+                onClick={() => {
+                  if (confirm(`อนุมัติทั้งหมด ${jobs.length} งาน?`)) {
+                    setJobs([]);
+                    alert("อนุมัติงานทั้งหมดเรียบร้อย!");
+                  }
+                }}
+                className="rounded-lg shadow-md shadow-brand-primary/20"
+              >
+                <ThumbsUp className="w-4 h-4 mr-2" />
+                อนุมัติทั้งหมด ({jobs.length})
               </Button>
-            </Link>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-brand-warning">{jobs.length} งาน</p>
-              <p className="text-sm text-brand-text-light">
-                รวม <span className="text-brand-success font-medium">฿{totalPayout}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Stats - Only if jobs exist */}
+      {jobs.length > 0 && (
+        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 bg-brand-info/5">
+          <div className="flex items-start gap-4 p-2">
+            <div className="p-3 bg-white rounded-xl shadow-sm text-brand-info border border-brand-info/20">
+               <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-brand-text-dark">มี {jobs.length} งานที่รอการตรวจสอบ</h3>
+              <p className="text-brand-text-light text-sm mt-1">
+                กรุณาตรวจสอบความถูกต้องของงานก่อนอนุมัติ หากอนุมัติแล้วระบบจะโอนเงินให้ Worker ทันที
               </p>
             </div>
-          </div>
-        }
-      />
-
-      {/* Quick Actions */}
-      {jobs.length > 0 && (
-        <Card variant="bordered" padding="md" className="bg-brand-info/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-brand-info" />
-              <span className="text-brand-text-dark">
-                มี {jobs.length} งานรอตรวจสอบ
-              </span>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                if (confirm(`อนุมัติทั้งหมด ${jobs.length} งาน?`)) {
-                  setJobs([]);
-                  alert("อนุมัติงานทั้งหมดเรียบร้อย!");
-                }
-              }}
-            >
-              <ThumbsUp className="w-4 h-4 mr-2" />
-              อนุมัติทั้งหมด
-            </Button>
           </div>
         </Card>
       )}
 
       {/* Jobs List */}
       {jobs.length === 0 ? (
-        <Card variant="bordered" padding="lg" className="text-center">
-          <div className="py-8 space-y-3">
-            <CheckCircle2 className="w-16 h-16 text-brand-success mx-auto" />
-            <h3 className="font-semibold text-brand-text-dark text-xl">
-              ไม่มีงานรอตรวจสอบ
-            </h3>
-            <p className="text-brand-text-light">
-              งานทั้งหมดได้รับการตรวจสอบแล้ว
-            </p>
-            <Link href="/seller/team/jobs">
-              <Button variant="outline" className="mt-4">
-                ดูงานทั้งหมด
-              </Button>
-            </Link>
-          </div>
-        </Card>
+        <EmptyState 
+            icon={CheckCircle2} 
+            title="ไม่มีงานรอตรวจสอบ" 
+            description="งานทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว"
+            action={
+                <Link href="/seller/team/jobs">
+                  <Button variant="outline" className="mt-4">
+                    ดูงานทั้งหมด
+                  </Button>
+                </Link>
+            }
+            className="py-16"
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {jobs.map((job) => (
-            <Card key={job.id} variant="bordered" padding="lg">
-              <div className="space-y-4">
-                {/* Job Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-brand-bg rounded-lg flex items-center justify-center">
-                      <PlatformIcon platform={job.platform} className="w-6 h-6" />
+            <div key={job.id} className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden hover:shadow-md transition-shadow">
+               {/* Header Section */}
+               <div className="p-6 border-b border-brand-border/30 bg-brand-bg/30">
+                 <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                       <div className="p-3 bg-white rounded-xl shadow-sm border border-brand-border/20">
+                          <PlatformIcon platform={job.platform as Platform} size="lg" />
+                       </div>
+                       <div>
+                          <h3 className="font-bold text-lg text-brand-text-dark">{job.serviceName}</h3>
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-light">
+                             <span className="bg-white px-2 py-1 rounded-lg border border-brand-border/50 shadow-sm flex items-center gap-1.5">
+                                <Package className="w-3.5 h-3.5" />
+                                <span className="font-mono">{job.orderNumber}</span>
+                             </span>
+                             <span className="flex items-center gap-1.5">
+                                <Target className="w-3.5 h-3.5" />
+                                <span>เป้าหมาย {job.completedQuantity}/{job.quantity}</span>
+                             </span>
+                             <span className="flex items-center gap-1.5 text-brand-text-light/70">
+                                <Clock className="w-3.5 h-3.5" />
+                                {new Date(job.submittedAt).toLocaleDateString("th-TH", {
+                                  day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                                })}
+                             </span>
+                          </div>
+                       </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-brand-text-dark text-lg">
-                        {job.serviceName}
-                      </p>
-                      <div className="flex items-center gap-3 text-sm text-brand-text-light mt-1">
-                        <span className="flex items-center gap-1">
-                          <Package className="w-4 h-4" />
-                          {job.orderNumber}
-                        </span>
-                        <span>
-                          <Target className="w-3 h-3 inline mr-1" />
-                          {job.completedQuantity}/{job.quantity}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-brand-success">
-                      ฿{job.workerPayout}
-                    </p>
-                    <p className="text-xs text-brand-text-light">
-                      ค่าจ้าง Worker
-                    </p>
-                  </div>
-                </div>
-
-                {/* Worker Info */}
-                <div className="flex items-center gap-3 p-3 bg-brand-bg rounded-lg">
-                  <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-brand-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-brand-text-dark">
-                      @{job.worker.displayName}
-                    </p>
-                    <div className="flex items-center gap-2 text-sm text-brand-text-light">
-                      <span className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-brand-warning" />
-                        {job.worker.rating}
-                      </span>
-                      <span>•</span>
-                      <span>{job.worker.totalJobsCompleted} งาน</span>
-                    </div>
-                  </div>
-                  <Badge variant="success" size="sm">
-                    {job.worker.level}
-                  </Badge>
-                </div>
-
-                {/* Worker Note */}
-                {job.workerNote && (
-                  <div className="p-3 bg-brand-info/10 rounded-lg">
-                    <p className="text-sm text-brand-text-light flex items-start gap-2">
-                      <MessageSquare className="w-4 h-4 shrink-0 mt-0.5" />
-                      "{job.workerNote}"
-                    </p>
-                  </div>
-                )}
-
-                {/* Proof Images */}
-                {job.proofImages.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-brand-text-dark mb-2 flex items-center gap-1">
-                      <Paperclip className="w-4 h-4" /> หลักฐาน ({job.proofImages.length})
-                    </p>
-                    <div className="flex gap-2 overflow-x-auto">
-                      {job.proofImages.map((_, index) => (
-                        <div
-                          key={index}
-                          className="w-20 h-20 bg-brand-bg rounded-lg flex items-center justify-center shrink-0"
-                        >
-                          <ImageIcon className="w-8 h-8 text-brand-text-light" />
+                    <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 lg:gap-0 w-full lg:w-auto justify-between lg:justify-start">
+                        <div className="text-right">
+                           <span className="text-sm text-brand-text-light block">ค่าจ้างที่ต้องจ่าย</span>
+                           <span className="text-2xl font-bold text-brand-success">฿{job.workerPayout}</span>
                         </div>
-                      ))}
                     </div>
-                  </div>
-                )}
+                 </div>
+               </div>
 
-                {/* Target Link */}
-                <a
-                  href={job.targetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-brand-primary hover:underline"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  ดูลิงก์งาน
-                </a>
+               {/* Content Section */}
+               <div className="p-6">
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Left: Worker & Proof */}
+                    <div className="space-y-6">
+                       {/* Worker Profile */}
+                       <div className="flex items-center gap-4 p-4 rounded-xl bg-brand-bg/50 border border-brand-border/30">
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-brand-border/50 shadow-sm">
+                             <span className="text-lg font-bold text-brand-primary">{job.worker.displayName.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1">
+                             <div className="flex items-center gap-2">
+                                <span className="font-bold text-brand-text-dark">@{job.worker.displayName}</span>
+                                <Badge variant="success" size="sm" className="px-1.5 py-0 text-[10px] h-5">{job.worker.level}</Badge>
+                             </div>
+                             <div className="flex items-center gap-3 text-sm text-brand-text-light mt-0.5">
+                                <span className="flex items-center gap-1">
+                                   <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
+                                   {job.worker.rating}
+                                </span>
+                                <span className="w-1 h-1 bg-brand-border rounded-full"></span>
+                                <span>งานเสร็จ {job.worker.totalJobsCompleted}</span>
+                             </div>
+                          </div>
+                       </div>
 
-                {/* Submitted Time */}
-                <div className="flex items-center justify-between text-sm text-brand-text-light">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    ส่งเมื่อ{" "}
-                    {new Date(job.submittedAt).toLocaleDateString("th-TH", {
-                      day: "numeric",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
+                       {/* Worker Note */}
+                       {job.workerNote && (
+                         <div className="relative pl-4 border-l-2 border-brand-info/30 py-1">
+                            <p className="text-sm italic text-brand-text-light">"{job.workerNote}"</p>
+                         </div>
+                       )}
+                       
+                       {/* Target Link */}
+                        <a
+                          href={job.targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-brand-primary hover:text-brand-primary-dark transition-colors group w-fit"
+                        >
+                          <div className="p-2 bg-brand-primary/10 rounded-lg group-hover:bg-brand-primary/20 transition-colors">
+                             <ExternalLink className="w-4 h-4" />
+                          </div>
+                          <span className="font-medium underline decoration-brand-primary/30 underline-offset-4">เปิดลิงก์งานตรวจสอบ</span>
+                        </a>
+                    </div>
 
-                {/* Actions */}
-                <div className="flex gap-3 pt-2 border-t border-brand-border">
+                    {/* Right: Proof Images */}
+                    <div className="space-y-3">
+                       <h4 className="font-bold text-brand-text-dark flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4 text-brand-text-light" />
+                          หลักฐานการทำงาน
+                          <span className="text-xs font-normal text-brand-text-light bg-brand-bg px-2 py-0.5 rounded-full">
+                             {job.proofImages.length} รูป
+                          </span>
+                       </h4>
+                       
+                       {job.proofImages.length > 0 ? (
+                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {job.proofImages.map((img, index) => (
+                              <div key={index} className="aspect-square bg-brand-bg rounded-xl border border-brand-border/50 flex items-center justify-center relative overflow-hidden group cursor-pointer hover:shadow-md transition-all">
+                                 <ImageIcon className="w-8 h-8 text-brand-text-light/50 group-hover:scale-110 transition-transform duration-500" />
+                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
+                              </div>
+                            ))}
+                         </div>
+                       ) : (
+                         <div className="p-8 rounded-xl border-2 border-dashed border-brand-border/50 bg-brand-bg/20 text-center">
+                            <ImageIcon className="w-8 h-8 text-brand-text-light/30 mx-auto mb-2" />
+                            <p className="text-sm text-brand-text-light">ไม่มีรูปภาพหลักฐาน</p>
+                         </div>
+                       )}
+                    </div>
+                 </div>
+               </div>
+
+               {/* Footer Actions */}
+               <div className="p-4 bg-brand-bg/50 border-t border-brand-border/50 flex justify-end gap-3">
                   <Button
                     variant="outline"
-                    className="flex-1 text-brand-error hover:bg-brand-error/10"
+                    className="border-brand-error/20 text-brand-error hover:bg-brand-error/5 hover:border-brand-error/50 min-w-[120px]"
                     onClick={() => {
                       setSelectedJob(job);
                       setShowRejectModal(true);
@@ -333,7 +339,7 @@ export default function TeamReviewPage() {
                     ปฏิเสธ
                   </Button>
                   <Button
-                    className="flex-1"
+                    className="min-w-[120px] shadow-lg shadow-brand-primary/20"
                     onClick={() => {
                       setSelectedJob(job);
                       setShowApproveModal(true);
@@ -342,9 +348,8 @@ export default function TeamReviewPage() {
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     อนุมัติ
                   </Button>
-                </div>
-              </div>
-            </Card>
+               </div>
+            </div>
           ))}
         </div>
       )}
@@ -359,48 +364,47 @@ export default function TeamReviewPage() {
         title="ยืนยันการอนุมัติ"
       >
         {selectedJob && (
-          <div className="space-y-4">
-            <div className="p-4 bg-brand-success/10 rounded-lg">
-              <p className="font-medium text-brand-text-dark mb-2">
-                {selectedJob.serviceName}
-              </p>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-brand-success/5 border border-brand-success/20 rounded-xl">
+               <div className="p-3 bg-brand-success/10 rounded-full text-brand-success">
+                  <CheckCircle className="w-6 h-6" />
+               </div>
+               <div>
+                  <h4 className="font-bold text-brand-text-dark">อนุมัติงานนี้?</h4>
+                  <p className="text-sm text-brand-text-light">ระบบจะโอนเงินให้ Worker ทันที</p>
+               </div>
+            </div>
+            
+            <div className="space-y-3 bg-brand-bg/50 p-4 rounded-xl border border-brand-border/30">
               <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">จำนวน</span>
-                <span className="text-brand-text-dark">
-                  {selectedJob.completedQuantity} หน่วย
-                </span>
+                <span className="text-brand-text-light">งาน</span>
+                <span className="font-medium text-brand-text-dark">{selectedJob.serviceName}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-text-light">Worker</span>
-                <span className="text-brand-text-dark">
-                  @{selectedJob.worker.displayName}
-                </span>
+                <span className="font-medium text-brand-text-dark">@{selectedJob.worker.displayName}</span>
               </div>
-              <div className="flex justify-between text-sm mt-2 pt-2 border-t border-brand-border">
-                <span className="text-brand-text-light">ค่าจ้าง</span>
-                <span className="font-bold text-brand-success">
-                  ฿{selectedJob.workerPayout}
-                </span>
+              <div className="h-px bg-brand-border/50 my-2"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-brand-text-light">ยอดเงินที่โอน</span>
+                <span className="font-bold text-lg text-brand-success">฿{selectedJob.workerPayout}</span>
               </div>
             </div>
 
-            <p className="text-sm text-brand-text-light">
-              เมื่ออนุมัติแล้ว ระบบจะโอนเงินค่าจ้างให้ Worker โดยอัตโนมัติ
-            </p>
-
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3 justify-end pt-2">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowApproveModal(false);
                   setSelectedJob(null);
                 }}
+                className="flex-1"
               >
                 ยกเลิก
               </Button>
-              <Button onClick={handleApprove}>
+              <Button onClick={handleApprove} className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent">
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                อนุมัติ
+                ยืนยันอนุมัติ
               </Button>
             </div>
           </div>
@@ -418,29 +422,30 @@ export default function TeamReviewPage() {
         title="ปฏิเสธงาน"
       >
         {selectedJob && (
-          <div className="space-y-4">
-            <div className="p-4 bg-brand-error/10 rounded-lg">
-              <p className="font-medium text-brand-text-dark">
-                {selectedJob.serviceName}
-              </p>
-              <p className="text-sm text-brand-text-light mt-1">
-                Worker: @{selectedJob.worker.displayName}
-              </p>
+          <div className="space-y-6">
+             <div className="flex items-center gap-4 p-4 bg-brand-error/5 border border-brand-error/20 rounded-xl">
+               <div className="p-3 bg-brand-error/10 rounded-full text-brand-error">
+                  <AlertCircle className="w-6 h-6" />
+               </div>
+               <div>
+                  <h4 className="font-bold text-brand-text-dark">ไม่อนุมัติงานนี้?</h4>
+                  <p className="text-sm text-brand-text-light">งานจะถูกส่งกลับให้ Worker แก้ไข</p>
+               </div>
             </div>
 
-            <Textarea
-              label="เหตุผลที่ปฏิเสธ"
-              placeholder="อธิบายเหตุผลให้ Worker ทราบ..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              rows={3}
-            />
+            <div className="space-y-2">
+               <label className="text-sm font-medium text-brand-text-dark">ระบุเหตุผลที่ปฏิเสธ</label>
+               <Textarea
+                  placeholder="เช่น รูปหลักฐานไม่ชัดเจน, จำนวนยอดไม่ครบ..."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={4}
+                  className="bg-white"
+               />
+               <p className="text-xs text-brand-text-light">* Worker จะเห็นข้อความนี้เพื่อนำไปแก้ไขงาน</p>
+            </div>
 
-            <p className="text-sm text-brand-text-light">
-              งานจะถูกส่งกลับให้ Worker แก้ไขใหม่
-            </p>
-
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3 justify-end pt-2">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -448,17 +453,17 @@ export default function TeamReviewPage() {
                   setSelectedJob(null);
                   setRejectReason("");
                 }}
+                className="flex-1"
               >
                 ยกเลิก
               </Button>
               <Button
-                variant="outline"
-                className="text-brand-error hover:bg-brand-error/10"
+                className="flex-1 bg-brand-error hover:bg-brand-error/90 shadow-lg shadow-brand-error/20 border-transparent text-white"
                 onClick={handleReject}
                 disabled={!rejectReason.trim()}
               >
                 <XCircle className="w-4 h-4 mr-2" />
-                ปฏิเสธ
+                ยืนยันปฏิเสธ
               </Button>
             </div>
           </div>

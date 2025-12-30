@@ -38,33 +38,34 @@ export default function HubLayout({
   // Hub is public - no need to wait for hydration to show content
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-bg via-white to-brand-primary/5">
+    <div className="min-h-screen bg-brand-bg">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-brand-border">
+      <header className="sticky top-0 z-50 bg-brand-surface/90 backdrop-blur-md border-b border-brand-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/hub" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-gradient-to-br from-brand-primary to-brand-accent rounded-xl flex items-center justify-center shadow-sm">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-brand-text-dark">
-                MeeLike <span className="text-brand-primary">Hub</span>
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className="font-bold text-brand-text-dark text-lg">MeeLike</span>
+                <span className="text-xs font-medium text-brand-primary tracking-wider uppercase">Hub</span>
+              </div>
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1 bg-brand-bg/50 p-1 rounded-full border border-brand-border/50">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                       isActive
-                        ? "bg-brand-primary text-white"
-                        : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg"
+                        ? "bg-brand-surface text-brand-primary shadow-sm"
+                        : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-surface/50"
                     }`}
                   >
                     {item.label}

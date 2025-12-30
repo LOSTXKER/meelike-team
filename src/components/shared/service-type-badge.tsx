@@ -14,7 +14,7 @@ export function ServiceTypeBadge({ type, size = "sm", showIcon = true }: Service
   const isBot = type === "bot";
   
   return (
-    <Badge variant={isBot ? "info" : "success"} size={size}>
+    <Badge variant={isBot ? "bot" : "human"} size={size}>
       {showIcon && (
         isBot 
           ? <Bot className="w-3 h-3 mr-1" /> 

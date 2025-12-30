@@ -152,8 +152,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Seller */}
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-brand-secondary/20 to-brand-secondary-light/30 border border-brand-secondary/30">
-              <div className="w-16 h-16 rounded-full bg-brand-secondary flex items-center justify-center mb-6">
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-brand-secondary-light/30 to-brand-secondary-light/10 border border-brand-border">
+              <div className="w-16 h-16 rounded-full bg-brand-surface border border-brand-border flex items-center justify-center mb-6">
                 <Store className="w-8 h-8 text-brand-text-dark" />
               </div>
               <h3 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
@@ -299,7 +299,7 @@ export default function LandingPage() {
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature, j) => (
                     <li key={j} className="flex items-center gap-2 text-sm">
-                      <Star className="w-4 h-4 text-brand-secondary" />
+                      <Star className="w-4 h-4 text-brand-primary" />
                       <span className="text-brand-text-dark">{feature}</span>
                     </li>
                   ))}

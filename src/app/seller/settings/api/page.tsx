@@ -17,6 +17,9 @@ import {
   AlertTriangle,
   Code,
   ExternalLink,
+  ShieldCheck,
+  Server,
+  ChevronRight
 } from "lucide-react";
 
 interface ApiKey {
@@ -96,201 +99,193 @@ export default function ApiKeyPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
-      <PageHeader
-        title="API Keys"
-        description="จัดการ API Keys สำหรับเชื่อมต่อระบบ"
-        icon={Key}
-        actions={
-          <div className="flex items-center gap-2">
-            <Link href="/seller/settings">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                กลับ
-              </Button>
-            </Link>
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              สร้าง API Key
-            </Button>
-          </div>
-        }
-      />
-
-      {/* Warning */}
-      <Card className="bg-brand-warning/10 border-brand-warning/30" padding="md">
-        <div className="flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-brand-warning shrink-0" />
-          <div>
-            <p className="font-medium text-brand-text-dark">
-              เก็บ API Key ไว้อย่างปลอดภัย
-            </p>
-            <p className="text-sm text-brand-text-light mt-1">
-              อย่าเปิดเผย API Key ในที่สาธารณะ หากคิดว่ามีการรั่วไหล
-              ให้ยกเลิกและสร้างใหม่ทันที
-            </p>
-          </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/seller/settings">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <PageHeader
+            title="API Keys"
+            description="จัดการ API Keys สำหรับเชื่อมต่อระบบจากภายนอก"
+            icon={Key}
+          />
         </div>
-      </Card>
+        <Button 
+          onClick={() => setShowCreateModal(true)} 
+          className="shadow-lg shadow-brand-primary/20 rounded-xl"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          สร้าง API Key
+        </Button>
+      </div>
 
-      {/* API Keys List */}
-      <Card variant="bordered">
-        <div className="p-4 border-b border-brand-border">
-          <h2 className="font-semibold text-brand-text-dark flex items-center gap-2">
-            <Key className="w-5 h-5 text-brand-primary" />
-            API Keys ทั้งหมด ({apiKeys.length})
-          </h2>
-        </div>
-
-        <div className="divide-y divide-brand-border">
-          {apiKeys.map((apiKey) => (
-            <div key={apiKey.id} className="p-4 hover:bg-brand-bg/50 transition-colors">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-brand-text-dark">
-                      {apiKey.name}
-                    </p>
-                    <Badge
-                      variant={apiKey.status === "active" ? "success" : "error"}
-                      size="sm"
-                    >
-                      {apiKey.status === "active" ? "Active" : "Revoked"}
-                    </Badge>
-                  </div>
-
-                  {/* Key Display */}
-                  <div className="flex items-center gap-2">
-                    <code className="px-3 py-1.5 bg-brand-bg rounded font-mono text-sm text-brand-text-dark">
-                      {showKey === apiKey.id
-                        ? apiKey.key
-                        : apiKey.key.substring(0, 12) + "••••••••••••••••••••"}
-                    </code>
-                    <button
-                      onClick={() =>
-                        setShowKey(showKey === apiKey.id ? null : apiKey.id)
-                      }
-                      className="p-1.5 hover:bg-brand-bg rounded transition-colors"
-                    >
-                      {showKey === apiKey.id ? (
-                        <EyeOff className="w-4 h-4 text-brand-text-light" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-brand-text-light" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleCopy(apiKey.key)}
-                      className="p-1.5 hover:bg-brand-bg rounded transition-colors"
-                    >
-                      {copied ? (
-                        <CheckCircle2 className="w-4 h-4 text-brand-success" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-brand-text-light" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Permissions */}
-                  <div className="flex flex-wrap gap-1">
-                    {apiKey.permissions.map((perm) => (
-                      <Badge key={perm} variant="default" size="sm" className="bg-brand-bg">
-                        {perm}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {/* Meta */}
-                  <div className="flex items-center gap-4 text-xs text-brand-text-light">
-                    <span>
-                      สร้างเมื่อ{" "}
-                      {new Date(apiKey.createdAt).toLocaleDateString("th-TH")}
-                    </span>
-                    {apiKey.lastUsed && (
-                      <span>
-                        ใช้ล่าสุด{" "}
-                        {new Date(apiKey.lastUsed).toLocaleDateString("th-TH", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {apiKey.status === "active" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-brand-error hover:bg-brand-error/10"
-                    onClick={() => handleRevokeKey(apiKey.id)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    ยกเลิก
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* API Documentation */}
-      <Card variant="bordered" padding="lg">
-        <h3 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-          <Code className="w-5 h-5 text-brand-primary" />
-          เริ่มต้นใช้งาน API
-        </h3>
-
-        <div className="space-y-4">
-          <div className="p-4 bg-gray-900 rounded-lg text-green-400 font-mono text-sm overflow-x-auto">
-            <pre>{`curl -X POST https://api.meelike.com/v1/orders \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "service_id": "svc_xxx",
-    "quantity": 1000,
-    "target_url": "https://facebook.com/..."
-  }'`}</pre>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <a
-              href="#"
-              className="flex items-center gap-3 p-4 bg-brand-bg rounded-lg hover:bg-brand-bg/80 transition-colors"
-            >
-              <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
-                <Code className="w-5 h-5 text-brand-primary" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: API List */}
+        <div className="lg:col-span-2 space-y-6">
+           {/* Warning Banner */}
+           <div className="bg-[#FEF7E0] border border-[#FEEFC3] rounded-xl p-4 flex gap-3 shadow-sm">
+              <div className="p-2 bg-[#FFFBF0] rounded-lg h-fit">
+                 <AlertTriangle className="w-5 h-5 text-[#B06000]" />
               </div>
               <div>
-                <p className="font-medium text-brand-text-dark">API Documentation</p>
-                <p className="text-sm text-brand-text-light">
-                  ดูคู่มือการใช้งาน API แบบละเอียด
-                </p>
+                 <h4 className="font-bold text-[#B06000] text-sm">รักษาความปลอดภัยของ API Key</h4>
+                 <p className="text-xs text-[#B06000]/80 mt-1 leading-relaxed">
+                    API Key เปรียบเสมือนรหัสผ่านของคุณ อย่าแชร์ให้ผู้อื่น หรือฝังไว้ในโค้ดฝั่ง Client (Frontend) 
+                    หากสงสัยว่ามีคนรู้ Key ของคุณ ให้ทำการ Revoke และสร้างใหม่ทันที
+                 </p>
               </div>
-              <ExternalLink className="w-4 h-4 text-brand-text-light ml-auto" />
-            </a>
+           </div>
 
-            <a
-              href="#"
-              className="flex items-center gap-3 p-4 bg-brand-bg rounded-lg hover:bg-brand-bg/80 transition-colors"
-            >
-              <div className="w-10 h-10 bg-brand-info/10 rounded-lg flex items-center justify-center">
-                <RefreshCw className="w-5 h-5 text-brand-info" />
-              </div>
-              <div>
-                <p className="font-medium text-brand-text-dark">Webhooks</p>
-                <p className="text-sm text-brand-text-light">
-                  ตั้งค่ารับแจ้งเตือนอัตโนมัติ
-                </p>
-              </div>
-              <ExternalLink className="w-4 h-4 text-brand-text-light ml-auto" />
-            </a>
-          </div>
+           {/* Keys List */}
+           <div className="space-y-4">
+              {apiKeys.map((apiKey) => (
+                <Card 
+                  key={apiKey.id} 
+                  variant="elevated" 
+                  className={`border-none shadow-md transition-all ${apiKey.status === 'revoked' ? 'opacity-60 bg-gray-50' : 'hover:-translate-y-1 hover:shadow-lg'}`}
+                >
+                  <div className="p-6">
+                     <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                           <div className={`p-2 rounded-lg ${apiKey.status === 'active' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-gray-200 text-gray-500'}`}>
+                              <Key className="w-5 h-5" />
+                           </div>
+                           <div>
+                              <h3 className="font-bold text-brand-text-dark">{apiKey.name}</h3>
+                              <p className="text-xs text-brand-text-light">
+                                 สร้างเมื่อ {new Date(apiKey.createdAt).toLocaleDateString("th-TH")} 
+                                 {apiKey.lastUsed && ` • ใช้งานล่าสุด ${new Date(apiKey.lastUsed).toLocaleDateString("th-TH")}`}
+                              </p>
+                           </div>
+                        </div>
+                        <Badge
+                          variant={apiKey.status === "active" ? "success" : "default"}
+                          className={`px-2.5 py-0.5 capitalize ${apiKey.status === 'revoked' ? 'bg-gray-200 text-gray-500' : ''}`}
+                        >
+                          {apiKey.status}
+                        </Badge>
+                     </div>
+
+                     {/* Key Display */}
+                     <div className="bg-brand-bg/50 rounded-xl p-3 flex items-center justify-between border border-brand-border/30 mb-4 group/key">
+                        <code className="font-mono text-sm text-brand-text-dark truncate mr-4">
+                           {showKey === apiKey.id
+                             ? apiKey.key
+                             : apiKey.key.substring(0, 12) + "••••••••••••••••••••"}
+                        </code>
+                        <div className="flex items-center gap-1 opacity-50 group-hover/key:opacity-100 transition-opacity">
+                           <button
+                             onClick={() => setShowKey(showKey === apiKey.id ? null : apiKey.id)}
+                             className="p-1.5 hover:bg-white rounded-lg transition-colors text-brand-text-light hover:text-brand-primary shadow-sm border border-transparent hover:border-brand-border/30"
+                             title={showKey === apiKey.id ? "ซ่อน" : "แสดง"}
+                           >
+                             {showKey === apiKey.id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                           </button>
+                           <button
+                             onClick={() => handleCopy(apiKey.key)}
+                             className="p-1.5 hover:bg-white rounded-lg transition-colors text-brand-text-light hover:text-brand-primary shadow-sm border border-transparent hover:border-brand-border/30"
+                             title="คัดลอก"
+                           >
+                             {copied ? <CheckCircle2 className="w-4 h-4 text-brand-success" /> : <Copy className="w-4 h-4" />}
+                           </button>
+                        </div>
+                     </div>
+
+                     {/* Footer */}
+                     <div className="flex items-center justify-between pt-4 border-t border-brand-border/30">
+                        <div className="flex flex-wrap gap-2">
+                           {apiKey.permissions.map((perm) => (
+                             <span key={perm} className="text-[10px] bg-white border border-brand-border/50 px-2 py-1 rounded-md text-brand-text-light">
+                               {perm}
+                             </span>
+                           ))}
+                        </div>
+                        {apiKey.status === "active" && (
+                          <button
+                            onClick={() => handleRevokeKey(apiKey.id)}
+                            className="text-brand-error text-xs font-medium hover:underline flex items-center gap-1 hover:bg-brand-error/5 px-2 py-1 rounded-md transition-colors"
+                          >
+                            <Trash2 className="w-3 h-3" /> ยกเลิก Key
+                          </button>
+                        )}
+                     </div>
+                  </div>
+                </Card>
+              ))}
+           </div>
         </div>
-      </Card>
+
+        {/* Right Column: Documentation */}
+        <div className="lg:col-span-1 space-y-6">
+           <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 p-6 bg-brand-bg/30">
+              <h3 className="font-bold text-lg text-brand-text-dark mb-4 flex items-center gap-2">
+                 <Code className="w-5 h-5 text-brand-primary" />
+                 Quick Start
+              </h3>
+              
+              <div className="bg-[#1E1E1E] rounded-xl p-4 text-xs font-mono text-gray-300 overflow-x-auto border border-gray-700 shadow-inner mb-4">
+                 <div className="flex gap-1.5 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                 </div>
+                 <pre className="whitespace-pre-wrap break-all">
+<span className="text-purple-400">curl</span> -X POST \<br/>
+  https://api.meelike.com/v1/orders \<br/>
+  -H <span className="text-green-400">"Authorization: Bearer KEY"</span> \<br/>
+  -d <span className="text-orange-300">'{`{"service_id": "123", ...}'`}</span>
+                 </pre>
+              </div>
+
+              <div className="space-y-2">
+                 <Link href="#" className="block group">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-brand-border/50 hover:border-brand-primary/30 hover:shadow-md transition-all">
+                       <div className="p-2 bg-brand-primary/5 rounded-lg text-brand-primary group-hover:scale-110 transition-transform">
+                          <Code className="w-4 h-4" />
+                       </div>
+                       <div className="flex-1">
+                          <p className="font-bold text-sm text-brand-text-dark">API Documentation</p>
+                          <p className="text-xs text-brand-text-light">คู่มือการใช้งานฉบับเต็ม</p>
+                       </div>
+                       <ExternalLink className="w-4 h-4 text-brand-text-light group-hover:text-brand-primary" />
+                    </div>
+                 </Link>
+                 
+                 <Link href="#" className="block group">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-brand-border/50 hover:border-brand-primary/30 hover:shadow-md transition-all">
+                       <div className="p-2 bg-brand-info/5 rounded-lg text-brand-info group-hover:scale-110 transition-transform">
+                          <RefreshCw className="w-4 h-4" />
+                       </div>
+                       <div className="flex-1">
+                          <p className="font-bold text-sm text-brand-text-dark">Webhooks</p>
+                          <p className="text-xs text-brand-text-light">ตั้งค่าการแจ้งเตือน</p>
+                       </div>
+                       <ChevronRight className="w-4 h-4 text-brand-text-light group-hover:text-brand-primary" />
+                    </div>
+                 </Link>
+              </div>
+           </Card>
+
+           <div className="bg-brand-success/5 border border-brand-success/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                 <ShieldCheck className="w-5 h-5 text-brand-success" />
+                 <h4 className="font-bold text-brand-success text-sm">System Status</h4>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                 <span className="text-brand-text-light">API Service</span>
+                 <span className="flex items-center gap-1.5 text-brand-success font-medium">
+                    <span className="w-2 h-2 bg-brand-success rounded-full animate-pulse"></span>
+                    Operational
+                 </span>
+              </div>
+           </div>
+        </div>
+      </div>
 
       {/* Create API Key Modal */}
       <Modal
@@ -301,59 +296,67 @@ export default function ApiKeyPage() {
         }}
         title="สร้าง API Key ใหม่"
       >
-        <div className="space-y-4">
-          <Input
-            label="ชื่อ API Key"
-            placeholder="เช่น Production API, Development"
-            value={newKeyName}
-            onChange={(e) => setNewKeyName(e.target.value)}
-          />
+        <div className="space-y-6">
+          <div className="space-y-2">
+             <label className="text-sm font-bold text-brand-text-dark">ชื่อ API Key</label>
+             <Input
+               placeholder="เช่น Production, Testing App"
+               value={newKeyName}
+               onChange={(e) => setNewKeyName(e.target.value)}
+               className="bg-brand-bg/30"
+             />
+          </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-text-dark mb-2">
-              สิทธิ์การเข้าถึง
+            <label className="text-sm font-bold text-brand-text-dark block mb-3">
+              กำหนดสิทธิ์การใช้งาน (Permissions)
             </label>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-2">
               {[
-                { key: "orders:read", label: "อ่านข้อมูลออเดอร์", checked: true },
-                { key: "orders:write", label: "สร้าง/แก้ไขออเดอร์", checked: true },
-                { key: "services:read", label: "อ่านข้อมูลบริการ", checked: true },
-                { key: "services:write", label: "แก้ไขบริการ", checked: false },
-                { key: "team:read", label: "อ่านข้อมูลทีม", checked: false },
+                { key: "orders:read", label: "ดูข้อมูลออเดอร์ (Read Orders)", checked: true },
+                { key: "orders:write", label: "สร้าง/แก้ไขออเดอร์ (Write Orders)", checked: true },
+                { key: "services:read", label: "ดูรายการบริการ (Read Services)", checked: true },
+                { key: "services:write", label: "จัดการบริการ (Manage Services)", checked: false },
+                { key: "team:read", label: "ดูข้อมูลทีมงาน (Read Team)", checked: false },
               ].map((perm) => (
                 <label
                   key={perm.key}
-                  className="flex items-center gap-3 p-3 bg-brand-bg rounded-lg cursor-pointer hover:bg-brand-bg/80"
+                  className="flex items-start gap-3 p-3 bg-brand-bg/30 rounded-xl border border-transparent hover:border-brand-primary/30 cursor-pointer transition-all"
                 >
                   <input
                     type="checkbox"
                     defaultChecked={perm.checked}
-                    className="w-4 h-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
+                    className="w-4 h-4 mt-0.5 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
                   />
                   <div>
-                    <p className="font-medium text-brand-text-dark text-sm">
+                    <p className="font-bold text-brand-text-dark text-sm">
                       {perm.label}
                     </p>
-                    <p className="text-xs text-brand-text-light">{perm.key}</p>
+                    <code className="text-[10px] text-brand-text-light bg-white px-1.5 py-0.5 rounded border border-brand-border/30 mt-1 inline-block">{perm.key}</code>
                   </div>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex gap-3 justify-end pt-4 border-t border-brand-border/30">
             <Button
               variant="outline"
               onClick={() => {
                 setShowCreateModal(false);
                 setNewKeyName("");
               }}
+              className="px-6"
             >
               ยกเลิก
             </Button>
-            <Button onClick={handleCreateKey} disabled={!newKeyName.trim()}>
+            <Button 
+               onClick={handleCreateKey} 
+               disabled={!newKeyName.trim()}
+               className="px-6 shadow-lg shadow-brand-primary/20"
+            >
               <Key className="w-4 h-4 mr-2" />
-              สร้าง API Key
+              สร้าง Key
             </Button>
           </div>
         </div>

@@ -128,43 +128,47 @@ export default function NewOrderPage() {
   const selectedServiceData = mockServices.find((s) => s.id === selectedService);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-12">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/seller/orders">
-          <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
+          <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+            <ArrowLeft className="w-5 h-5" />
           </button>
         </Link>
         <PageHeader
           title="สร้างออเดอร์ใหม่"
-          description="สร้างออเดอร์แบบ Manual สำหรับลูกค้า"
+          description="สร้างออเดอร์แบบ Manual สำหรับลูกค้าที่สั่งซื้อผ่านแชท"
           icon={ShoppingCart}
         />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           {/* Customer Info */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-brand-primary" />
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+            <h2 className="font-bold text-lg text-brand-text-dark mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                <User className="w-5 h-5" />
+              </div>
               ข้อมูลลูกค้า
             </h2>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-5">
               <Input
                 label="ชื่อลูกค้า *"
                 placeholder="เช่น คุณสมชาย"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
+                className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
               <Select
                 label="ช่องทางติดต่อ"
                 value={contactType}
                 onChange={(e) => setContactType(e.target.value)}
                 options={contactTypes}
+                className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
               <Input
                 label="ข้อมูลติดต่อ *"
@@ -177,6 +181,7 @@ export default function NewOrderPage() {
                 }
                 value={contactValue}
                 onChange={(e) => setContactValue(e.target.value)}
+                className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
               <div className="sm:col-span-2">
                 <Textarea
@@ -185,19 +190,22 @@ export default function NewOrderPage() {
                   value={customerNote}
                   onChange={(e) => setCustomerNote(e.target.value)}
                   rows={2}
+                  className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
                 />
               </div>
             </div>
           </Card>
 
           {/* Add Service */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5 text-brand-primary" />
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+            <h2 className="font-bold text-lg text-brand-text-dark mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-secondary flex items-center justify-center text-brand-primary">
+                <Package className="w-5 h-5" />
+              </div>
               เพิ่มบริการ
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <Select
                 label="เลือกบริการ *"
                 value={selectedService}
@@ -209,21 +217,31 @@ export default function NewOrderPage() {
                     label: `${s.name} (฿${s.sellPrice}/หน่วย)`,
                   })),
                 ]}
+                className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
 
               {selectedServiceData && (
-                <div className="p-3 bg-brand-info/10 rounded-lg text-sm">
+                <div className="p-4 bg-brand-bg/50 border border-brand-border/30 rounded-xl text-sm animate-fade-in">
                   <div className="flex items-center gap-2 mb-2">
                     <ServiceTypeBadge type={selectedServiceData.serviceType} />
-                    <span className="text-brand-text-dark font-medium">
+                    <span className="text-brand-text-dark font-bold text-base">
                       {selectedServiceData.name}
                     </span>
                   </div>
-                  <p className="text-brand-text-light">
-                    ราคา: <span className="text-brand-primary font-medium">฿{selectedServiceData.sellPrice}</span> / หน่วย
-                    {" • "}
-                    ขั้นต่ำ {selectedServiceData.minQuantity.toLocaleString()} - สูงสุด {selectedServiceData.maxQuantity.toLocaleString()}
-                  </p>
+                  <div className="flex flex-wrap gap-4 text-brand-text-light mt-2">
+                     <span className="flex items-center gap-1">
+                        <span className="font-medium text-brand-primary">฿{selectedServiceData.sellPrice}</span>
+                        / หน่วย
+                     </span>
+                     <span className="w-px h-4 bg-brand-border/50 self-center"></span>
+                     <span>
+                        ขั้นต่ำ <b>{selectedServiceData.minQuantity.toLocaleString()}</b>
+                     </span>
+                     <span className="w-px h-4 bg-brand-border/50 self-center"></span>
+                     <span>
+                        สูงสุด <b>{selectedServiceData.maxQuantity.toLocaleString()}</b>
+                     </span>
+                  </div>
                 </div>
               )}
 
@@ -232,10 +250,11 @@ export default function NewOrderPage() {
                 placeholder="https://facebook.com/post/xxx หรือ https://instagram.com/p/xxx"
                 value={targetUrl}
                 onChange={(e) => setTargetUrl(e.target.value)}
-                leftIcon={<LinkIcon className="w-4 h-4" />}
+                leftIcon={<LinkIcon className="w-4 h-4 text-brand-text-light" />}
+                className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <Input
                   label="จำนวน *"
                   type="number"
@@ -248,11 +267,12 @@ export default function NewOrderPage() {
                   onChange={(e) => setQuantity(e.target.value)}
                   min={selectedServiceData?.minQuantity}
                   max={selectedServiceData?.maxQuantity}
+                  className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
                 />
                 <div className="flex items-end">
-                  <div className="p-3 bg-brand-bg rounded-lg flex-1">
-                    <p className="text-xs text-brand-text-light">ราคารวม</p>
-                    <p className="text-xl font-bold text-brand-primary">
+                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex-1">
+                    <p className="text-xs text-brand-text-light font-medium uppercase tracking-wide">ราคารวม</p>
+                    <p className="text-2xl font-bold text-brand-primary mt-1">
                       ฿{(parseInt(quantity || "0") * (selectedServiceData?.sellPrice || 0)).toLocaleString()}
                     </p>
                   </div>
@@ -266,53 +286,58 @@ export default function NewOrderPage() {
                   value={commentTemplates}
                   onChange={(e) => setCommentTemplates(e.target.value)}
                   rows={4}
+                  className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10 font-mono text-sm"
                 />
               )}
 
-              <Button onClick={handleAddItem} className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                เพิ่มรายการ
+              <Button onClick={handleAddItem} className="w-full h-12 rounded-xl shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all" variant="primary">
+                <Plus className="w-5 h-5 mr-2" />
+                เพิ่มลงรายการ
               </Button>
             </div>
           </Card>
 
           {/* Order Items */}
           {items.length > 0 && (
-            <Card variant="bordered" padding="lg">
-              <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-brand-primary" />
-                รายการสั่งซื้อ ({items.length})
+            <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+              <h2 className="font-bold text-lg text-brand-text-dark mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#E6F4EA] flex items-center justify-center text-[#1E8E3E]">
+                   <ShoppingCart className="w-5 h-5" />
+                </div>
+                รายการสั่งซื้อ <Badge variant="secondary" className="ml-2">{items.length}</Badge>
               </h2>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {items.map((item, index) => (
                   <div
                     key={item.id}
-                    className="p-4 bg-brand-bg rounded-lg flex items-center justify-between"
+                    className="p-4 bg-brand-bg/30 border border-brand-border/50 rounded-2xl flex items-center justify-between group hover:border-brand-primary/30 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <PlatformIcon platform={item.platform as Platform} size="lg" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-white rounded-xl shadow-sm">
+                         <PlatformIcon platform={item.platform as Platform} size="lg" />
+                      </div>
                       <div>
-                        <p className="font-medium text-brand-text-dark">
+                        <p className="font-bold text-brand-text-dark">
                           {index + 1}. {item.serviceName}
                         </p>
-                        <p className="text-sm text-brand-text-light truncate max-w-xs">
+                        <p className="text-sm text-brand-text-light truncate max-w-xs font-mono bg-white/50 px-1.5 rounded mt-1 inline-block">
                           {item.targetUrl}
                         </p>
-                        <p className="text-sm text-brand-text-light">
+                        <p className="text-sm text-brand-text-light mt-1">
                           {item.quantity.toLocaleString()} x ฿{item.unitPrice}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <p className="font-bold text-brand-primary text-lg">
+                    <div className="flex items-center gap-6">
+                      <p className="font-bold text-brand-primary text-xl">
                         ฿{item.subtotal.toLocaleString()}
                       </p>
                       <button
                         onClick={() => handleRemoveItem(item.id)}
-                        className="p-2 text-brand-error hover:bg-brand-error/10 rounded-lg transition-colors"
+                        className="p-2 text-brand-error/70 hover:text-brand-error hover:bg-brand-error/10 rounded-xl transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -324,35 +349,35 @@ export default function NewOrderPage() {
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 space-y-4">
-            <Card variant="bordered" padding="lg">
-              <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
+          <div className="sticky top-24 space-y-6">
+            <Card variant="elevated" padding="lg" className="border-none shadow-xl shadow-brand-primary/10">
+              <h2 className="font-bold text-lg text-brand-text-dark mb-6 flex items-center gap-3">
                 <Calculator className="w-5 h-5 text-brand-primary" />
                 สรุปออเดอร์
               </h2>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {/* Customer Summary */}
                 {customerName && (
-                  <div className="p-3 bg-brand-bg rounded-lg">
-                    <p className="text-sm text-brand-text-light">ลูกค้า</p>
-                    <p className="font-medium text-brand-text-dark">
+                  <div className="p-4 bg-brand-secondary/30 rounded-xl border border-brand-secondary">
+                    <p className="text-xs font-bold text-brand-primary uppercase tracking-wide mb-1">ลูกค้า</p>
+                    <p className="font-bold text-brand-text-dark text-lg">
                       {customerName}
                     </p>
                     {contactValue && (
-                      <p className="text-sm text-brand-text-light">
-                        {contactType.toUpperCase()}: {contactValue}
+                      <p className="text-sm text-brand-text-dark/80 mt-1 flex items-center gap-1.5">
+                        <span className="opacity-70">{contactType.toUpperCase()}:</span> {contactValue}
                       </p>
                     )}
                   </div>
                 )}
 
                 {/* Items Summary */}
-                <div className="space-y-2">
+                <div className="space-y-3 py-4 border-t border-b border-brand-border/50">
                   {items.length === 0 ? (
-                    <div className="text-center py-6 text-brand-text-light">
-                      <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">ยังไม่มีรายการ</p>
+                    <div className="text-center py-8 text-brand-text-light/60">
+                      <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm font-medium">ยังไม่มีรายการ</p>
                     </div>
                   ) : (
                     items.map((item, index) => (
@@ -372,20 +397,21 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Total */}
-                <div className="pt-3 border-t border-brand-border">
-                  <div className="flex justify-between items-center">
-                    <span className="text-brand-text-light">รวมทั้งสิ้น</span>
-                    <span className="text-2xl font-bold text-brand-primary">
+                <div className="">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-brand-text-light font-medium">รวมทั้งสิ้น</span>
+                    <span className="text-3xl font-bold text-brand-primary">
                       ฿{calculateTotal().toLocaleString()}
                     </span>
                   </div>
+                  <p className="text-xs text-right text-brand-text-light">ราคาสุทธิ</p>
                 </div>
 
                 {/* Submit Button */}
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || items.length === 0}
-                  className="w-full mt-4"
+                  className="w-full mt-2 h-12 text-base rounded-xl shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                   size="lg"
                 >
                   {isSubmitting ? (
@@ -399,22 +425,22 @@ export default function NewOrderPage() {
                 </Button>
 
                 {items.length === 0 && (
-                  <p className="text-xs text-center text-brand-text-light">
-                    กรุณาเพิ่มบริการอย่างน้อย 1 รายการ
+                  <p className="text-xs text-center text-brand-error/80 bg-brand-error/5 py-2 rounded-lg">
+                    * กรุณาเพิ่มบริการอย่างน้อย 1 รายการ
                   </p>
                 )}
               </div>
             </Card>
 
             {/* Tips */}
-            <Card variant="bordered" padding="md" className="bg-brand-info/5">
+            <Card variant="flat" padding="md" className="bg-[#E8F0FE] border border-[#D2E3FC]">
               <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-brand-info shrink-0" />
-                <div className="text-sm">
-                  <p className="font-medium text-brand-text-dark mb-1">
+                <AlertCircle className="w-5 h-5 text-[#1967D2] shrink-0 mt-0.5" />
+                <div className="text-sm text-[#1967D2]">
+                  <p className="font-bold mb-1">
                     เคล็ดลับ
                   </p>
-                  <ul className="text-brand-text-light space-y-1">
+                  <ul className="space-y-1.5 opacity-90">
                     <li>• สามารถเพิ่มหลายบริการในออเดอร์เดียวได้</li>
                     <li>• ตรวจสอบ URL ให้ถูกต้องก่อนสร้างออเดอร์</li>
                     <li>• ลูกค้าจะได้รับลิงก์ติดตามสถานะอัตโนมัติ</li>
