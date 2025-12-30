@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Progress, Modal, Textarea } from "@/components/ui";
+import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
 import { mockWorkers } from "@/lib/mock-data";
+import type { Platform } from "@/types";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -19,10 +21,7 @@ import {
   User,
   Star,
   Package,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
+  Paperclip,
 } from "lucide-react";
 
 // Mock pending review jobs
@@ -135,46 +134,32 @@ export default function TeamReviewPage() {
     }
   };
 
-  const getPlatformEmoji = (platform: string) => {
-    switch (platform) {
-      case "facebook": return <Facebook className="w-4 h-4" />;
-      case "instagram": return <Instagram className="w-4 h-4" />;
-      case "tiktok": return <Music2 className="w-4 h-4" />;
-      case "youtube": return <Youtube className="w-4 h-4" />;
-      default: return <Package className="w-4 h-4" />;
-    }
-  };
-
   const totalPayout = jobs.reduce((sum, j) => sum + j.workerPayout, 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/seller/team">
-            <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
-            </button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-              <CheckCircle2 className="w-7 h-7 text-brand-warning" />
-              รอตรวจสอบ
-            </h1>
-            <p className="text-brand-text-light mt-1">
-              ตรวจสอบและอนุมัติงานจาก Worker
-            </p>
+      <PageHeader
+        title="รอตรวจสอบ"
+        description="ตรวจสอบและอนุมัติงานจาก Worker"
+        icon={CheckCircle2}
+        actions={
+          <div className="flex items-center gap-4">
+            <Link href="/seller/team">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                กลับ
+              </Button>
+            </Link>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-brand-warning">{jobs.length} งาน</p>
+              <p className="text-sm text-brand-text-light">
+                รวม <span className="text-brand-success font-medium">฿{totalPayout}</span>
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-brand-text-light">รอตรวจสอบ</p>
-          <p className="text-2xl font-bold text-brand-warning">{jobs.length} งาน</p>
-          <p className="text-sm text-brand-text-light">
-            รวม <span className="text-brand-success font-medium">฿{totalPayout}</span>
-          </p>
-        </div>
-      </div>
+        }
+      />
 
       {/* Quick Actions */}
       {jobs.length > 0 && (
@@ -228,8 +213,8 @@ export default function TeamReviewPage() {
                 {/* Job Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="text-4xl">
-                      {getPlatformEmoji(job.platform)}
+                    <div className="w-12 h-12 bg-brand-bg rounded-lg flex items-center justify-center">
+                      <PlatformIcon platform={job.platform} className="w-6 h-6" />
                     </div>
                     <div>
                       <p className="font-semibold text-brand-text-dark text-lg">
@@ -293,8 +278,8 @@ export default function TeamReviewPage() {
                 {/* Proof Images */}
                 {job.proofImages.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-brand-text-dark mb-2">
-                      📎 หลักฐาน ({job.proofImages.length})
+                    <p className="text-sm font-medium text-brand-text-dark mb-2 flex items-center gap-1">
+                      <Paperclip className="w-4 h-4" /> หลักฐาน ({job.proofImages.length})
                     </p>
                     <div className="flex gap-2 overflow-x-auto">
                       {job.proofImages.map((_, index) => (

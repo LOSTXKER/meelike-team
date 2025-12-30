@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Button, Badge } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import {
   ArrowLeft,
   Crown,
@@ -99,22 +100,19 @@ export default function SubscriptionPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/seller/settings">
-          <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
-          </button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Crown className="w-7 h-7 text-brand-warning" />
-            Subscription
-          </h1>
-          <p className="text-brand-text-light">
-            จัดการแพ็คเกจและการสมัครสมาชิก
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Subscription"
+        description="จัดการแพ็คเกจและการสมัครสมาชิก"
+        icon={Crown}
+        actions={
+          <Link href="/seller/settings">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              กลับ
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Current Plan */}
       <Card className="bg-gradient-to-r from-brand-primary to-brand-secondary text-white overflow-hidden relative">

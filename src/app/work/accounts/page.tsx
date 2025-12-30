@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import { Card, Button, Input, Badge, Modal } from "@/components/ui";
+import { PageHeader, EmptyState } from "@/components/shared";
 import {
   Plus,
   Trash2,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
-  Settings,
   RefreshCw,
   Facebook,
   Instagram,
   Music2,
   Youtube,
-  ClipboardList,
+  Smartphone,
 } from "lucide-react";
 
 type Platform = "facebook" | "instagram" | "tiktok" | "youtube";
@@ -149,21 +149,16 @@ export default function WorkerAccountsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Settings className="w-7 h-7 text-brand-primary" />
-            บัญชี Social Media
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            จัดการบัญชีที่ใช้รับงาน
-          </p>
-        </div>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          เพิ่มบัญชี
-        </Button>
-      </div>
+      <PageHeader
+        title="บัญชี Social Media"
+        description="จัดการบัญชีที่ใช้รับงาน"
+        icon={Smartphone}
+        action={
+          <Button onClick={() => setShowAddModal(true)} leftIcon={<Plus className="w-4 h-4" />}>
+            เพิ่มบัญชี
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -237,7 +232,7 @@ export default function WorkerAccountsPage() {
                       {platformConfig[account.platform].name}
                     </p>
                     <div className="flex items-center gap-4 mt-1 text-xs text-brand-text-light">
-                      <span>✅ {account.jobsCompleted} งานสำเร็จ</span>
+                      <span>{account.jobsCompleted} งานสำเร็จ</span>
                       {account.lastUsed && (
                         <span>
                           ใช้ล่าสุด{" "}
@@ -275,7 +270,7 @@ export default function WorkerAccountsPage() {
       {/* Tips */}
       <Card variant="bordered" padding="lg" className="bg-brand-info/5">
         <h3 className="font-semibold text-brand-text-dark mb-2">
-          💡 เคล็ดลับ
+          เคล็ดลับ
         </h3>
         <ul className="text-sm text-brand-text-light space-y-1">
           <li>• เพิ่มบัญชีที่มีความเคลื่อนไหวและเป็นของคุณเองเท่านั้น</li>

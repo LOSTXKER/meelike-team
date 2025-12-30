@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, Button, Input, Badge, Progress } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
   User,
@@ -15,10 +16,8 @@ import {
   TrendingUp,
   Calendar,
   CheckCircle2,
-  Target,
   Trophy,
   Flame,
-  ClipboardList,
 } from "lucide-react";
 
 export default function WorkerProfilePage() {
@@ -63,15 +62,11 @@ export default function WorkerProfilePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-          <User className="w-7 h-7 text-brand-primary" />
-          โปรไฟล์ของฉัน
-        </h1>
-        <p className="text-brand-text-light mt-1">
-          จัดการข้อมูลและดูสถิติการทำงาน
-        </p>
-      </div>
+      <PageHeader
+        title="โปรไฟล์ของฉัน"
+        description="จัดการข้อมูลและดูสถิติการทำงาน"
+        icon={User}
+      />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Column - Stats */}
@@ -209,7 +204,7 @@ export default function WorkerProfilePage() {
           {/* Change Password */}
           <Card variant="bordered" padding="lg">
             <h2 className="font-semibold text-brand-text-dark mb-4">
-              🔒 เปลี่ยนรหัสผ่าน
+              เปลี่ยนรหัสผ่าน
             </h2>
             <div className="grid gap-4">
               <Input

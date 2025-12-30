@@ -3,20 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Button, Badge, Progress, Input } from "@/components/ui";
+import { PageHeader, ServiceTypeBadge, StatusBadge, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { mockOrders } from "@/lib/mock-data";
 import type { Order } from "@/types";
 import { Plus, Search, Filter, Eye, MoreVertical, Package, User, Calendar } from "lucide-react";
 
 type OrderStatus = "all" | "pending" | "processing" | "completed" | "cancelled";
-
-const statusLabels: Record<string, { label: string; variant: "warning" | "info" | "success" | "error" }> = {
-  pending: { label: "รอดำเนินการ", variant: "warning" },
-  confirmed: { label: "ยืนยันแล้ว", variant: "info" },
-  processing: { label: "กำลังทำ", variant: "info" },
-  completed: { label: "เสร็จแล้ว", variant: "success" },
-  cancelled: { label: "ยกเลิก", variant: "error" },
-};
 
 export default function OrdersPage() {
   const [orders] = useState<Order[]>(mockOrders);
@@ -46,22 +39,16 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Package className="w-7 h-7 text-brand-primary" />
-            ออเดอร์
-          </h1>
-          <p className="text-brand-text-light">
-            จัดการออเดอร์ทั้งหมดจากลูกค้า
-          </p>
-        </div>
-        <Link href="/seller/orders/new">
-          <Button leftIcon={<Plus className="w-4 h-4" />}>
-            สร้างออเดอร์ใหม่
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="ออเดอร์"
+        description="จัดการออเดอร์ทั้งหมดจากลูกค้า"
+        icon={Package}
+        action={
+          <Link href="/seller/orders/new">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>สร้างออเดอร์ใหม่</Button>
+          </Link>
+        }
+      />
 
       {/* Stats Tabs */}
       <div className="flex flex-wrap gap-2">
@@ -113,17 +100,8 @@ export default function OrdersPage() {
                   <h3 className="font-semibold text-brand-text-dark">
                     {order.orderNumber}
                   </h3>
-                  <Badge variant={statusLabels[order.status]?.variant || "warning"}>
-                    {statusLabels[order.status]?.label || order.status}
-                  </Badge>
-                  <Badge
-                    variant={
-                      order.paymentStatus === "paid" ? "success" : "warning"
-                    }
-                    size="sm"
-                  >
-                    {order.paymentStatus === "paid" ? "ชำระแล้ว" : "รอชำระ"}
-                  </Badge>
+                  <StatusBadge status={order.status} type="order" />
+                  <StatusBadge status={order.paymentStatus} type="payment" size="sm" />
                 </div>
                 <p className="text-sm text-brand-text-light mt-1 flex items-center gap-1">
                   <User className="w-3 h-3" />
@@ -162,12 +140,7 @@ export default function OrdersPage() {
                         {item.serviceName}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge
-                          variant={item.serviceType === "bot" ? "info" : "success"}
-                          size="sm"
-                        >
-                          {item.serviceType === "bot" ? "Bot" : "คนจริง"}
-                        </Badge>
+                        <ServiceTypeBadge type={item.serviceType} />
                         <span className="text-xs text-brand-text-light">
                           {item.quantity.toLocaleString()} x{" "}
                           {formatCurrency(item.unitPrice)}
@@ -244,8 +217,17 @@ export default function OrdersPage() {
         ))}
 
         {filteredOrders.length === 0 && (
-          <Card variant="bordered" className="text-center py-12">
-            <p className="text-brand-text-light">ไม่พบออเดอร์</p>
+          <Card variant="bordered">
+            <EmptyState
+              icon={Package}
+              title="ไม่พบออเดอร์"
+              description="ลองเปลี่ยนตัวกรองหรือสร้างออเดอร์ใหม่"
+              action={
+                <Link href="/seller/orders/new">
+                  <Button>สร้างออเดอร์ใหม่</Button>
+                </Link>
+              }
+            />
           </Card>
         )}
       </div>

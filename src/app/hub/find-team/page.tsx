@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
+import { PageHeader, PlatformIcon } from "@/components/shared";
 import {
   Search,
   User,
@@ -15,12 +16,7 @@ import {
   Briefcase,
   Award,
   Calendar,
-  Facebook,
-  Instagram,
-  Music2,
   Trophy,
-  Medal,
-  Sparkle,
   UserPlus,
 } from "lucide-react";
 
@@ -145,16 +141,6 @@ const findTeamPosts = [
   },
 ];
 
-const getPlatformIcon = (platform: string) => {
-  const iconClass = "w-4 h-4 inline-block";
-  switch (platform) {
-    case "facebook": return <Facebook className={iconClass} />;
-    case "instagram": return <Instagram className={iconClass} />;
-    case "tiktok": return <Music2 className={iconClass} />;
-    default: return null;
-  }
-};
-
 const getLevelColor = (level: string) => {
   switch (level) {
     case "Platinum": return "bg-purple-100 text-purple-700";
@@ -181,23 +167,17 @@ export default function FindTeamPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Search className="w-7 h-7 text-brand-info" />
-            หาทีม
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            Worker ที่กำลังหาทีมเข้าร่วม
-          </p>
-        </div>
-        <Link href="/hub/post/new?type=find-team">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            โพสต์หาทีม
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="หาทีม"
+        description="Worker ที่กำลังหาทีมเข้าร่วม"
+        icon={Search}
+        iconClassName="text-brand-info"
+        action={
+          <Link href="/hub/post/new?type=find-team">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์หาทีม</Button>
+          </Link>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -336,7 +316,7 @@ export default function FindTeamPage() {
                       key={platform}
                       className="px-2 py-1 bg-brand-primary/10 rounded text-xs text-brand-primary flex items-center gap-1"
                     >
-                      {getPlatformIcon(platform)}
+                      <PlatformIcon platform={platform} className="w-4 h-4" />
                       <span>{platform}</span>
                     </span>
                   ))}

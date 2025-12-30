@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
+import { PageHeader, PlatformIcon } from "@/components/shared";
 import {
   Search,
   Briefcase,
@@ -17,9 +18,6 @@ import {
   DollarSign,
   CheckCircle2,
   Zap,
-  Facebook,
-  Instagram,
-  Music2,
   Flame,
 } from "lucide-react";
 
@@ -149,16 +147,6 @@ const outsourceJobs = [
   },
 ];
 
-const getPlatformIcon = (platform: string) => {
-  const iconClass = "w-4 h-4 inline-block";
-  switch (platform) {
-    case "facebook": return <Facebook className={iconClass} />;
-    case "instagram": return <Instagram className={iconClass} />;
-    case "tiktok": return <Music2 className={iconClass} />;
-    default: return null;
-  }
-};
-
 const getJobTypeLabel = (type: string) => {
   switch (type) {
     case "like": return "ไลค์";
@@ -202,23 +190,17 @@ export default function OutsourcePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Briefcase className="w-7 h-7 text-brand-warning" />
-            โยนงาน
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            งานที่แม่ทีมต้องการโยนให้ทีมอื่นช่วยทำ
-          </p>
-        </div>
-        <Link href="/hub/post/new?type=outsource">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            โพสต์โยนงาน
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="โยนงาน"
+        description="งานที่แม่ทีมต้องการโยนให้ทีมอื่นช่วยทำ"
+        icon={Briefcase}
+        iconClassName="text-brand-warning"
+        action={
+          <Link href="/hub/post/new?type=outsource">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์โยนงาน</Button>
+          </Link>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -356,7 +338,7 @@ export default function OutsourcePage() {
                 <div className="p-3 bg-brand-bg rounded-lg">
                   <p className="text-xs text-brand-text-light">Platform</p>
                   <p className="font-medium text-brand-text-dark flex items-center gap-1">
-                    {getPlatformIcon(job.platform)}
+                    <PlatformIcon platform={job.platform} className="w-4 h-4" />
                     <span>{job.platform}</span>
                   </p>
                 </div>

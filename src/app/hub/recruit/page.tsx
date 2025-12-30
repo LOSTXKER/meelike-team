@@ -3,23 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
+import { PageHeader, PlatformIcon } from "@/components/shared";
 import {
   Search,
   Users,
   Star,
   Clock,
-  Filter,
   Plus,
   Heart,
   MessageCircle,
   Eye,
-  MapPin,
   DollarSign,
   CheckCircle2,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
   Flame,
 } from "lucide-react";
 
@@ -116,17 +111,6 @@ const recruitPosts = [
   },
 ];
 
-const getPlatformIcon = (platform: string) => {
-  const iconClass = "w-4 h-4 inline-block";
-  switch (platform) {
-    case "facebook": return <Facebook className={iconClass} />;
-    case "instagram": return <Instagram className={iconClass} />;
-    case "tiktok": return <Music2 className={iconClass} />;
-    case "youtube": return <Youtube className={iconClass} />;
-    default: return null;
-  }
-};
-
 export default function RecruitPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("all");
@@ -143,23 +127,16 @@ export default function RecruitPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Users className="w-7 h-7 text-brand-primary" />
-            🔍 หาลูกทีม
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            ประกาศรับสมัคร Worker เข้าทีมของคุณ
-          </p>
-        </div>
-        <Link href="/hub/post/new?type=recruit">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            โพสต์หาลูกทีม
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="หาลูกทีม"
+        description="ประกาศรับสมัคร Worker เข้าทีมของคุณ"
+        icon={Users}
+        action={
+          <Link href="/hub/post/new?type=recruit">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์หาลูกทีม</Button>
+          </Link>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -274,7 +251,7 @@ export default function RecruitPage() {
                     key={platform}
                     className="px-3 py-1 bg-brand-bg rounded-full text-sm flex items-center gap-1"
                   >
-                    {getPlatformIcon(platform)}
+                    <PlatformIcon platform={platform} className="w-4 h-4" />
                     <span>{platform}</span>
                   </span>
                 ))}
@@ -294,7 +271,7 @@ export default function RecruitPage() {
                   </ul>
                 </div>
                 <div className="p-3 bg-brand-success/10 rounded-lg">
-                  <p className="font-medium text-brand-text-dark mb-2">🎁 สิ่งที่จะได้รับ</p>
+                  <p className="font-medium text-brand-text-dark mb-2">สิ่งที่จะได้รับ</p>
                   <ul className="space-y-1 text-sm text-brand-text-light">
                     {post.benefits.map((benefit, i) => (
                       <li key={i}>✓ {benefit}</li>

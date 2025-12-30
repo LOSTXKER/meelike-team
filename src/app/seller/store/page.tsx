@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuthStore } from "@/lib/store";
 import { Card, Button, Input, Textarea, Select, Badge, Avatar } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import type { StoreTheme } from "@/types";
 import { Camera, Save, ExternalLink, Copy, Palette, Check, Store, CreditCard, Award } from "lucide-react";
 
@@ -48,31 +49,19 @@ export default function StoreSettingsPage() {
   return (
     <div className="space-y-6 animate-fade-in max-w-3xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Store className="w-7 h-7 text-brand-primary" />
-            ตั้งค่าร้าน
-          </h1>
-          <p className="text-brand-text-light">
-            จัดการข้อมูลและรูปลักษณ์หน้าร้านของคุณ
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <a
-            href={`/s/${storeData.storeSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="outline" leftIcon={<ExternalLink className="w-4 h-4" />}>
-              ดูหน้าร้าน
-            </Button>
-          </a>
-          <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="w-4 h-4" />}>
-            บันทึก
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="ตั้งค่าร้าน"
+        description="จัดการข้อมูลและรูปลักษณ์หน้าร้านของคุณ"
+        icon={Store}
+        action={
+          <div className="flex items-center gap-3">
+            <a href={`/s/${storeData.storeSlug}`} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" leftIcon={<ExternalLink className="w-4 h-4" />}>ดูหน้าร้าน</Button>
+            </a>
+            <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="w-4 h-4" />}>บันทึก</Button>
+          </div>
+        }
+      />
 
       {/* Store URL */}
       <Card variant="bordered" className="bg-brand-secondary/10">

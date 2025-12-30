@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Card, Button, Badge, Avatar } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { mockTeam, mockTeamMembers } from "@/lib/mock-data";
-import { Users, Star, ClipboardList, ArrowRight, Plus, Search } from "lucide-react";
+import { Users, Star, ClipboardList, ArrowRight, Plus, Lightbulb } from "lucide-react";
 
 export default function WorkerTeamsPage() {
   // Mock: Worker is in 2 teams
@@ -13,22 +14,16 @@ export default function WorkerTeamsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Users className="w-7 h-7 text-brand-primary" />
-            ทีมของฉัน
-          </h1>
-          <p className="text-brand-text-light">
-            ทีมที่คุณเข้าร่วมอยู่ ({myTeams.length} ทีม)
-          </p>
-        </div>
-        <Link href="/work/teams/search">
-          <Button leftIcon={<Plus className="w-4 h-4" />}>
-            เข้าร่วมทีมใหม่
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="ทีมของฉัน"
+        description={`ทีมที่คุณเข้าร่วมอยู่ (${myTeams.length} ทีม)`}
+        icon={Users}
+        action={
+          <Link href="/work/teams/search">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>เข้าร่วมทีมใหม่</Button>
+          </Link>
+        }
+      />
 
       {/* Teams */}
       <div className="space-y-4">
@@ -77,7 +72,7 @@ export default function WorkerTeamsPage() {
 
             <div className="pt-4">
               <p className="text-sm text-brand-text-light mb-2">
-                🏷️ ประเภทงาน: ไลค์ FB, เม้น FB, Follow
+                ประเภทงาน: ไลค์ FB, เม้น FB, Follow
               </p>
               <div className="flex gap-2">
                 <Link href={`/work/teams/${team.id}/jobs`} className="flex-1">
@@ -95,7 +90,7 @@ export default function WorkerTeamsPage() {
       {/* Tips */}
       <Card variant="bordered" className="bg-brand-secondary/10">
         <div className="flex items-start gap-4">
-          <div className="text-2xl">💡</div>
+          <div className="w-10 h-10 bg-brand-info/10 rounded-lg flex items-center justify-center"><Lightbulb className="w-5 h-5 text-brand-info" /></div>
           <div>
             <h3 className="font-semibold text-brand-text-dark">
               ยังไม่มีทีม?

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { Card, Button, Badge, Progress, StatsCard } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { formatCurrency, formatDate, getLevelInfo } from "@/lib/utils";
 import { mockWorkerStats } from "@/lib/mock-data";
 import {
@@ -77,13 +78,12 @@ export default function WorkerEarningsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-          <DollarSign className="w-7 h-7 text-brand-success" />
-          รายได้
-        </h1>
-        <p className="text-brand-text-light">ติดตามรายได้และถอนเงิน</p>
-      </div>
+      <PageHeader
+        title="รายได้"
+        description="ติดตามรายได้และถอนเงิน"
+        icon={DollarSign}
+        iconClassName="text-brand-success"
+      />
 
       {/* Balance Card */}
       <Card className="bg-gradient-to-br from-brand-primary to-brand-primary/80 text-white">

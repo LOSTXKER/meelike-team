@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input, Modal } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { mockWorkers, mockTeam } from "@/lib/mock-data";
 import {
   ArrowLeft,
@@ -143,24 +144,19 @@ export default function TeamPayoutsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <PageHeader
+        title="จ่ายเงินทีม"
+        description="จัดการการจ่ายเงินให้ Worker"
+        icon={DollarSign}
+        actions={
           <Link href="/seller/team">
-            <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
-            </button>
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              กลับ
+            </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-              <DollarSign className="w-7 h-7 text-brand-success" />
-              จ่ายเงินทีม
-            </h1>
-            <p className="text-brand-text-light mt-1">
-              จัดการการจ่ายเงินให้ Worker
-            </p>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

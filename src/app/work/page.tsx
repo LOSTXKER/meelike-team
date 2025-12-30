@@ -203,7 +203,7 @@ export default function WorkerDashboard() {
             <Card variant="bordered" className="text-center py-8">
               <p className="text-brand-text-light">ยังไม่มีงานจากทีมของคุณ</p>
               <Link href="/work/teams/search" className="inline-block mt-3">
-                <Button variant="outline">🔍 ค้นหาทีมใหม่</Button>
+                <Button variant="outline">ค้นหาทีมใหม่</Button>
               </Link>
             </Card>
           )}

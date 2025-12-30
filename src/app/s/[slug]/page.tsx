@@ -4,22 +4,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Card, Button, Badge, Avatar, Input } from "@/components/ui";
+import { ServiceTypeBadge, PlatformIcon } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { mockSeller, mockServices } from "@/lib/mock-data";
+import type { Platform } from "@/types";
 import {
   Star,
   ShoppingBag,
   MessageCircle,
-  Phone,
   Clock,
   Zap,
   Users,
   Search,
   Store,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
+  Flame,
 } from "lucide-react";
 
 type ServiceFilter = "all" | "facebook" | "instagram" | "tiktok" | "youtube";
@@ -105,7 +103,7 @@ export default function StorePage() {
               </div>
               <p className="mt-3 text-brand-text-light">{store.bio}</p>
               <p className="mt-2 text-sm text-brand-primary">
-                📱 LINE: {store.lineId}
+                LINE: {store.lineId}
               </p>
             </div>
           </div>
@@ -149,7 +147,7 @@ export default function StorePage() {
             href={`/s/${slug}`}
             className="px-6 py-3 font-medium text-brand-primary border-b-2 border-brand-primary"
           >
-            🛒 บริการ
+            บริการ
           </Link>
           <Link
             href={`/s/${slug}/reviews`}
@@ -196,14 +194,7 @@ export default function StorePage() {
                       {service.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge
-                        variant={
-                          service.serviceType === "bot" ? "info" : "success"
-                        }
-                        size="sm"
-                      >
-                        {service.serviceType === "bot" ? "Bot" : "คนจริง"}
-                      </Badge>
+                      <ServiceTypeBadge type={service.serviceType} />
                     </div>
                     {service.description && (
                       <p className="text-sm text-brand-text-light mt-2">
@@ -233,7 +224,7 @@ export default function StorePage() {
                   </p>
                   <Link href={`/s/${slug}/order?service=${service.id}`}>
                     <Button size="sm" className="mt-3">
-                      🛒 สั่งซื้อ
+                      สั่งซื้อ
                     </Button>
                   </Link>
                 </div>

@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import { Card, Button, Badge, Modal, Input, Select, Textarea } from "@/components/ui";
+import { PageHeader, ServiceTypeBadge } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { mockServices } from "@/lib/mock-data";
 import type { StoreService } from "@/types";
 import {
   Plus,
-  Search,
-  Filter,
-  Edit,
   Edit2,
   Trash2,
   ToggleLeft,
@@ -46,20 +44,16 @@ export default function ServicesPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Package className="w-7 h-7 text-brand-primary" />
-            จัดการบริการ
-          </h1>
-          <p className="text-brand-text-light">
-            จัดการบริการ Bot และคนจริงที่เปิดขายในร้าน
-          </p>
-        </div>
-        <Button onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
-          เพิ่มบริการใหม่
-        </Button>
-      </div>
+      <PageHeader
+        title="จัดการบริการ"
+        description="จัดการบริการ Bot และคนจริงที่เปิดขายในร้าน"
+        icon={Package}
+        action={
+          <Button onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
+            เพิ่มบริการใหม่
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -125,12 +119,7 @@ export default function ServicesPage() {
                     {service.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant={service.serviceType === "bot" ? "info" : "success"}
-                      size="sm"
-                    >
-                      {service.serviceType === "bot" ? "Bot" : "คนจริง"}
-                    </Badge>
+                    <ServiceTypeBadge type={service.serviceType} />
                     <Badge
                       variant={service.isActive ? "success" : "outline"}
                       size="sm"

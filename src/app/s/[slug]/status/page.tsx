@@ -130,7 +130,7 @@ export default function OrderStatusPage() {
           <div className="space-y-4">
             <div>
               <h2 className="font-semibold text-brand-text-dark mb-1">
-                🔍 ค้นหาออเดอร์
+                ค้นหาออเดอร์
               </h2>
               <p className="text-sm text-brand-text-light">
                 กรอกเลขออเดอร์เพื่อตรวจสอบสถานะ

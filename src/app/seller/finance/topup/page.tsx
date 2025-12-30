@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Button, Input, Badge } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
   ArrowLeft,
@@ -57,15 +58,11 @@ export default function TopupPage() {
             <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
           </button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Wallet className="w-7 h-7 text-brand-primary" />
-            เติมเงิน
-          </h1>
-          <p className="text-brand-text-light">
-            ยอดเงินปัจจุบัน: <span className="text-brand-primary font-semibold">฿{balance.toLocaleString()}</span>
-          </p>
-        </div>
+        <PageHeader
+          title="เติมเงิน"
+          description={`ยอดเงินปัจจุบัน: ฿${balance.toLocaleString()}`}
+          icon={Wallet}
+        />
       </div>
 
       {/* Progress Steps */}

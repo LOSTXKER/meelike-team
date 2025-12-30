@@ -221,7 +221,7 @@ export default function JobDetailPage() {
           {/* Instructions */}
           <Card variant="bordered" padding="lg">
             <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              📝 คำแนะนำการทำงาน
+              คำแนะนำการทำงาน
             </h2>
 
             <div className="p-4 bg-brand-info/10 rounded-xl">

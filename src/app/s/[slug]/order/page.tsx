@@ -101,7 +101,7 @@ export default function OrderPage() {
               <CheckCircle className="w-8 h-8 text-brand-success" />
             </div>
             <h1 className="text-2xl font-bold text-brand-text-dark">
-              ✅ สั่งซื้อสำเร็จ!
+              สั่งซื้อสำเร็จ!
             </h1>
             <p className="text-brand-text-light mt-2">
               ออเดอร์ #ORD-2024-001
@@ -109,7 +109,7 @@ export default function OrderPage() {
 
             <div className="mt-6 p-4 bg-brand-bg rounded-lg text-left">
               <p className="text-sm text-brand-text-light mb-2">
-                💡 ร้านค้าจะตรวจสอบการชำระเงินและเริ่มดำเนินการ
+                ร้านค้าจะตรวจสอบการชำระเงินและเริ่มดำเนินการ
                 <br />
                 โดยปกติใช้เวลา 5-30 นาที
               </p>
@@ -133,11 +133,11 @@ export default function OrderPage() {
 
             <div className="flex gap-3 mt-6">
               <Link href={`/s/${slug}/track/ORD-2024-001`} className="flex-1">
-                <Button className="w-full">🔍 ติดตามสถานะ</Button>
+                <Button className="w-full">ติดตามสถานะ</Button>
               </Link>
               <Link href={`/s/${slug}`} className="flex-1">
                 <Button variant="outline" className="w-full">
-                  🏠 กลับหน้าร้าน
+                  กลับหน้าร้าน
                 </Button>
               </Link>
             </div>
@@ -157,7 +157,7 @@ export default function OrderPage() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <h1 className="font-semibold text-brand-text-dark">🛒 สั่งซื้อ</h1>
+          <h1 className="font-semibold text-brand-text-dark">สั่งซื้อ</h1>
         </div>
       </header>
 
@@ -390,7 +390,7 @@ export default function OrderPage() {
                 ชื่อบัญชี: นาย จอห์น บูสต์
               </p>
               <p className="text-brand-text-light mt-2">
-                📱 PromptPay: 080-xxx-xxxx
+                PromptPay: 080-xxx-xxxx
               </p>
               <Button
                 type="button"
@@ -460,7 +460,7 @@ export default function OrderPage() {
             isLoading={isSubmitting}
             disabled={cart.length === 0}
           >
-            ✅ ยืนยันสั่งซื้อ {formatCurrency(calculateTotal())}
+            ยืนยันสั่งซื้อ {formatCurrency(calculateTotal())}
           </Button>
         </form>
       </div>

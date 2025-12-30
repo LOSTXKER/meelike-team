@@ -3,25 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input, Progress } from "@/components/ui";
+import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
 import { mockJobs, mockWorkers, mockTeam } from "@/lib/mock-data";
+import type { Platform } from "@/types";
 import {
   ClipboardList,
   Search,
-  Filter,
   Clock,
   CheckCircle2,
-  XCircle,
-  PlayCircle,
   Users,
-  ExternalLink,
   ChevronRight,
   Calendar,
   Target,
   Package,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
   Star,
 } from "lucide-react";
 
@@ -143,36 +137,21 @@ export default function TeamJobsPage() {
     completed: allJobs.filter((j) => j.status === "completed").length,
   };
 
-  const getPlatformEmoji = (platform: string) => {
-    switch (platform) {
-      case "facebook": return <Facebook className="w-4 h-4" />;
-      case "instagram": return <Instagram className="w-4 h-4" />;
-      case "tiktok": return <Music2 className="w-4 h-4" />;
-      case "youtube": return <Youtube className="w-4 h-4" />;
-      default: return <Package className="w-4 h-4" />;
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <ClipboardList className="w-7 h-7 text-brand-primary" />
-            งานทั้งหมด
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            จัดการงานที่มอบหมายให้ทีม
-          </p>
-        </div>
-        <Link href="/seller/team/review">
-          <Button variant="secondary">
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            รอตรวจสอบ ({stats.pendingReview})
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="งานทั้งหมด"
+        description="จัดการงานที่มอบหมายให้ทีม"
+        icon={ClipboardList}
+        action={
+          <Link href="/seller/team/review">
+            <Button variant="secondary" leftIcon={<CheckCircle2 className="w-4 h-4" />}>
+              รอตรวจสอบ ({stats.pendingReview})
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -237,10 +216,7 @@ export default function TeamJobsPage() {
       <Card variant="bordered">
         <div className="divide-y divide-brand-border">
           {filteredJobs.length === 0 ? (
-            <div className="p-8 text-center">
-              <ClipboardList className="w-12 h-12 text-brand-text-light mx-auto mb-3" />
-              <p className="text-brand-text-light">ไม่พบงานที่ค้นหา</p>
-            </div>
+            <EmptyState icon={ClipboardList} title="ไม่พบงานที่ค้นหา" className="py-8" />
           ) : (
             filteredJobs.map((job) => {
               const progress = (job.completedQuantity / job.quantity) * 100;
@@ -252,9 +228,7 @@ export default function TeamJobsPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
-                      <div className="text-3xl">
-                        {getPlatformEmoji(job.platform)}
-                      </div>
+                      <PlatformIcon platform={job.platform as Platform} size="lg" />
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-brand-text-dark">

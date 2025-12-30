@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Progress } from "@/components/ui";
+import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState } from "@/components/shared";
 import { mockJobs, mockTeams } from "@/lib/mock-data";
+import type { Platform, ServiceMode } from "@/types";
 import {
   Briefcase,
   Clock,
@@ -14,11 +16,6 @@ import {
   Timer,
   Target,
   Upload,
-  Package,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
   Users,
 } from "lucide-react";
 
@@ -138,16 +135,6 @@ export default function WorkerJobsPage() {
 
   const currentJobs = workerJobs[activeTab];
 
-  const getPlatformEmoji = (platform: string) => {
-    switch (platform) {
-      case "facebook": return <Facebook className="w-4 h-4" />;
-      case "instagram": return <Instagram className="w-4 h-4" />;
-      case "tiktok": return <Music2 className="w-4 h-4" />;
-      case "youtube": return <Youtube className="w-4 h-4" />;
-      default: return <Package className="w-4 h-4" />;
-    }
-  };
-
   const getTimeRemaining = (deadline: string) => {
     const diff = new Date(deadline).getTime() - Date.now();
     const hours = Math.floor(diff / 3600000);
@@ -158,15 +145,11 @@ export default function WorkerJobsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-          <Briefcase className="w-7 h-7 text-brand-primary" />
-          งานของฉัน
-        </h1>
-        <p className="text-brand-text-light mt-1">
-          จัดการงานทั้งหมดที่คุณรับมา
-        </p>
-      </div>
+      <PageHeader
+        title="งานของฉัน"
+        description="จัดการงานทั้งหมดที่คุณรับมา"
+        icon={Briefcase}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -227,8 +210,8 @@ export default function WorkerJobsPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-3xl flex items-center justify-center w-12 h-12 rounded-lg bg-brand-bg">
-                      {getPlatformEmoji(job.platform)}
+                    <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-brand-bg">
+                      <PlatformIcon platform={job.platform} className="w-6 h-6" />
                     </div>
                     <div>
                       <p className="font-semibold text-brand-text-dark">

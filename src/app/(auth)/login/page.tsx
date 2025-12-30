@@ -144,7 +144,7 @@ export default function LoginPage() {
                 }
               }}
             >
-              🚀 เข้าสู่ระบบ Demo ({role === "seller" ? "Seller" : "Worker"})
+              เข้าสู่ระบบ Demo ({role === "seller" ? "Seller" : "Worker"})
             </Button>
           </div>
         </Card>

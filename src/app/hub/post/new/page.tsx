@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, Badge, Button, Input, Textarea, Select } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
   ArrowLeft,
@@ -191,13 +192,7 @@ export default function NewPostPage() {
             <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
           </button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-brand-primary" />
-            สร้างโพสต์ใหม่
-          </h1>
-          <p className="text-brand-text-light">โพสต์ใน MeeLike Hub</p>
-        </div>
+        <PageHeader title="สร้างโพสต์ใหม่" description="โพสต์ใน MeeLike Hub" icon={Sparkles} />
       </div>
 
       {/* Post Type Selection */}

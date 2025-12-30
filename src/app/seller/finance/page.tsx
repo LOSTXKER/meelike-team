@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
   Wallet,
@@ -73,23 +73,16 @@ export default function FinancePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Wallet className="w-7 h-7 text-brand-primary" />
-            การเงิน
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            จัดการยอดเงินและธุรกรรมทั้งหมด
-          </p>
-        </div>
-        <Link href="/seller/finance/topup">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            เติมเงิน
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="การเงิน"
+        description="จัดการยอดเงินและธุรกรรมทั้งหมด"
+        icon={Wallet}
+        action={
+          <Link href="/seller/finance/topup">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>เติมเงิน</Button>
+          </Link>
+        }
+      />
 
       {/* Balance Card */}
       <Card className="bg-gradient-to-br from-brand-primary to-brand-secondary text-white overflow-hidden relative">

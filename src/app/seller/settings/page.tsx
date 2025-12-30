@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, Button, Input, Badge } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
   User,
@@ -43,15 +44,11 @@ export default function SellerSettingsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-          <User className="w-7 h-7 text-brand-primary" />
-          ตั้งค่าโปรไฟล์
-        </h1>
-        <p className="text-brand-text-light mt-1">
-          จัดการข้อมูลส่วนตัวและการตั้งค่าบัญชี
-        </p>
-      </div>
+      <PageHeader
+        title="ตั้งค่าโปรไฟล์"
+        description="จัดการข้อมูลส่วนตัวและการตั้งค่าบัญชี"
+        icon={User}
+      />
 
       {/* Profile Picture */}
       <Card variant="bordered" padding="lg">

@@ -1,0 +1,143 @@
+import {
+  LayoutDashboard,
+  Store,
+  Package,
+  ShoppingBag,
+  Users,
+  ClipboardList,
+  CheckCircle,
+  DollarSign,
+  Wallet,
+  CreditCard,
+  History,
+  UserCircle,
+  Crown,
+  Key,
+  Home,
+  Search,
+  Clock,
+  Smartphone,
+  User,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
+
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  badge?: number;
+}
+
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+export type NavConfig = (NavItem | NavGroup)[];
+
+export const SELLER_NAV: NavConfig = [
+  {
+    label: "แดชบอร์ด",
+    href: "/seller",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Hub ตลาดกลาง",
+    href: "/hub",
+    icon: Sparkles,
+  },
+  {
+    label: "ร้านค้า",
+    items: [
+      { label: "ตั้งค่าร้าน", href: "/seller/store", icon: Store },
+      { label: "จัดการบริการ", href: "/seller/services", icon: Package },
+      { label: "ออเดอร์", href: "/seller/orders", icon: ShoppingBag },
+    ],
+  },
+  {
+    label: "ทีมงาน",
+    items: [
+      { label: "สมาชิก", href: "/seller/team", icon: Users },
+      { label: "งานทั้งหมด", href: "/seller/team/jobs", icon: ClipboardList },
+      { label: "รอตรวจสอบ", href: "/seller/team/review", icon: CheckCircle, badge: 5 },
+      { label: "จ่ายเงิน", href: "/seller/team/payouts", icon: DollarSign },
+    ],
+  },
+  {
+    label: "การเงิน",
+    items: [
+      { label: "ยอดเงิน", href: "/seller/finance", icon: Wallet },
+      { label: "เติมเงิน", href: "/seller/finance/topup", icon: CreditCard },
+      { label: "ประวัติ", href: "/seller/finance/history", icon: History },
+    ],
+  },
+  {
+    label: "ตั้งค่า",
+    items: [
+      { label: "โปรไฟล์", href: "/seller/settings", icon: UserCircle },
+      { label: "Subscription", href: "/seller/settings/subscription", icon: Crown },
+      { label: "API Keys", href: "/seller/settings/api", icon: Key },
+    ],
+  },
+];
+
+export const WORKER_NAV: NavConfig = [
+  {
+    label: "หน้าแรก",
+    href: "/work",
+    icon: Home,
+  },
+  {
+    label: "Hub ตลาดกลาง",
+    href: "/hub",
+    icon: Sparkles,
+  },
+  {
+    label: "ทีมของฉัน",
+    items: [
+      { label: "ทีมที่เข้าร่วม", href: "/work/teams", icon: Users },
+      { label: "ค้นหาทีม", href: "/work/teams/search", icon: Search },
+    ],
+  },
+  {
+    label: "งานของฉัน",
+    items: [
+      { label: "กำลังทำ", href: "/work/jobs", icon: Clock, badge: 2 },
+      { label: "รอตรวจสอบ", href: "/work/jobs?tab=pending", icon: CheckCircle, badge: 3 },
+      { label: "เสร็จแล้ว", href: "/work/jobs?tab=completed", icon: ClipboardList },
+    ],
+  },
+  {
+    label: "รายได้",
+    items: [
+      { label: "ยอดสะสม", href: "/work/earnings", icon: Wallet },
+      { label: "ถอนเงิน", href: "/work/earnings/withdraw", icon: CreditCard },
+      { label: "ประวัติ", href: "/work/earnings/history", icon: History },
+    ],
+  },
+  {
+    label: "บัญชี Social",
+    items: [
+      { label: "จัดการบัญชี", href: "/work/accounts", icon: Smartphone },
+    ],
+  },
+  {
+    label: "โปรไฟล์",
+    href: "/work/profile",
+    icon: User,
+  },
+];
+
+export const WORKER_BOTTOM_NAV: NavItem[] = [
+  { label: "หน้าแรก", href: "/work", icon: Home },
+  { label: "งาน", href: "/work/jobs", icon: ClipboardList },
+  { label: "ทีม", href: "/work/teams", icon: Users },
+  { label: "รายได้", href: "/work/earnings", icon: Wallet },
+  { label: "โปรไฟล์", href: "/work/profile", icon: User },
+];
+
+export function isNavGroup(item: NavItem | NavGroup): item is NavGroup {
+  return "items" in item;
+}
+

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui";
 
 const navItems = [
   { href: "/hub", label: "หน้าหลัก", icon: Home },
-  { href: "/hub/recruit", label: "🔍 หาลูกทีม", icon: Users },
+  { href: "/hub/recruit", label: "หาลูกทีม", icon: Users },
   { href: "/hub/find-team", label: "หาทีม", icon: Search },
   { href: "/hub/outsource", label: "โยนงาน", icon: Briefcase },
 ];

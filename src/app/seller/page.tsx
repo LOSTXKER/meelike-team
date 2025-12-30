@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { StatsCard, Card, Badge, Button, Progress, Avatar } from "@/components/ui";
+import { ServiceTypeBadge, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { mockOrders, mockJobClaims, mockWorkers, mockSellerStats } from "@/lib/mock-data";
 import {
@@ -9,18 +11,15 @@ import {
   ShoppingBag,
   Users,
   Star,
-  TrendingUp,
   ArrowRight,
   CheckCircle,
   XCircle,
-  Clock,
   Package,
   Bell,
   ClipboardList,
   Store,
   CreditCard,
 } from "lucide-react";
-import Link from "next/link";
 
 export default function SellerDashboard() {
   const { user } = useAuthStore();
@@ -133,14 +132,7 @@ export default function SellerDashboard() {
                           <span className="text-brand-text-dark">
                             {item.serviceName}
                           </span>
-                          <Badge
-                            variant={
-                              item.serviceType === "bot" ? "info" : "success"
-                            }
-                            size="sm"
-                          >
-                            {item.serviceType === "bot" ? "Bot" : "คนจริง"}
-                          </Badge>
+                        <ServiceTypeBadge type={item.serviceType} />
                         </div>
                         <span className="text-brand-text-light">
                           {item.completedQuantity}/{item.quantity}
@@ -226,10 +218,11 @@ export default function SellerDashboard() {
               })}
 
               {pendingReviews.length === 0 && (
-                <div className="text-center py-8 text-brand-text-light">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-2 text-brand-success" />
-                  <p>ไม่มีงานรอตรวจสอบ</p>
-                </div>
+                <EmptyState
+                  icon={CheckCircle}
+                  title="ไม่มีงานรอตรวจสอบ"
+                  className="py-8"
+                />
               )}
             </div>
           </Card>

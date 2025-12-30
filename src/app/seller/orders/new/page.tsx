@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Input, Select, Textarea } from "@/components/ui";
+import { PageHeader, PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import { mockServices } from "@/lib/mock-data";
+import type { Platform, ServiceMode } from "@/types";
 import {
   ArrowLeft,
   Plus,
@@ -17,10 +19,6 @@ import {
   Calculator,
   CheckCircle2,
   AlertCircle,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
 } from "lucide-react";
 
 interface OrderItem {
@@ -60,17 +58,6 @@ export default function NewOrderPage() {
   const [targetUrl, setTargetUrl] = useState("");
   const [quantity, setQuantity] = useState("");
   const [commentTemplates, setCommentTemplates] = useState("");
-
-  const getPlatformEmoji = (platform: string) => {
-    switch (platform) {
-      case "facebook": return <Facebook className="w-4 h-4" />;
-      case "instagram": return <Instagram className="w-4 h-4" />;
-      case "tiktok": return <Music2 className="w-4 h-4" />;
-      case "youtube": return <Youtube className="w-4 h-4" />;
-      case "twitter": return <Package className="w-4 h-4" />;
-      default: return <Package className="w-4 h-4" />;
-    }
-  };
 
   const handleAddItem = () => {
     if (!selectedService || !targetUrl || !quantity) {
@@ -149,15 +136,11 @@ export default function NewOrderPage() {
             <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
           </button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <ShoppingCart className="w-7 h-7 text-brand-primary" />
-            สร้างออเดอร์ใหม่
-          </h1>
-          <p className="text-brand-text-light mt-1">
-            สร้างออเดอร์แบบ Manual สำหรับลูกค้า
-          </p>
-        </div>
+        <PageHeader
+          title="สร้างออเดอร์ใหม่"
+          description="สร้างออเดอร์แบบ Manual สำหรับลูกค้า"
+          icon={ShoppingCart}
+        />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -223,7 +206,7 @@ export default function NewOrderPage() {
                   { value: "", label: "-- เลือกบริการ --" },
                   ...mockServices.map((s) => ({
                     value: s.id,
-                    label: `${getPlatformEmoji(s.category)} ${s.name} (฿${s.sellPrice}/หน่วย)`,
+                    label: `${s.name} (฿${s.sellPrice}/หน่วย)`,
                   })),
                 ]}
               />
@@ -231,9 +214,7 @@ export default function NewOrderPage() {
               {selectedServiceData && (
                 <div className="p-3 bg-brand-info/10 rounded-lg text-sm">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="info" size="sm">
-                      {selectedServiceData.serviceType === "bot" ? "Bot" : "คนจริง"}
-                    </Badge>
+                    <ServiceTypeBadge type={selectedServiceData.serviceType} />
                     <span className="text-brand-text-dark font-medium">
                       {selectedServiceData.name}
                     </span>
@@ -310,9 +291,7 @@ export default function NewOrderPage() {
                     className="p-4 bg-brand-bg rounded-lg flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="text-2xl">
-                        {getPlatformEmoji(item.platform)}
-                      </div>
+                      <PlatformIcon platform={item.platform as Platform} size="lg" />
                       <div>
                         <p className="font-medium text-brand-text-dark">
                           {index + 1}. {item.serviceName}
@@ -433,7 +412,7 @@ export default function NewOrderPage() {
                 <AlertCircle className="w-5 h-5 text-brand-info shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium text-brand-text-dark mb-1">
-                    💡 เคล็ดลับ
+                    เคล็ดลับ
                   </p>
                   <ul className="text-brand-text-light space-y-1">
                     <li>• สามารถเพิ่มหลายบริการในออเดอร์เดียวได้</li>

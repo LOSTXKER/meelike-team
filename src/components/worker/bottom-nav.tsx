@@ -3,25 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, Users, ClipboardList, Wallet, Sparkles } from "lucide-react";
-
-const navItems = [
-  { href: "/work", icon: Home, label: "หน้าแรก" },
-  { href: "/work/teams", icon: Users, label: "ทีม" },
-  { href: "/hub", icon: Sparkles, label: "Hub" },
-  { href: "/work/jobs", icon: ClipboardList, label: "งาน" },
-  { href: "/work/earnings", icon: Wallet, label: "รายได้" },
-];
+import { WORKER_BOTTOM_NAV } from "@/lib/constants/navigation";
 
 export function WorkerBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-brand-surface border-t border-brand-border lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border lg:hidden z-50">
       <div className="flex items-center justify-around h-16">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || 
-            (item.href !== "/work" && pathname.startsWith(item.href));
+        {WORKER_BOTTOM_NAV.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = item.icon;
           
           return (
             <Link
@@ -34,7 +26,7 @@ export function WorkerBottomNav() {
                   : "text-brand-text-light hover:text-brand-text-dark"
               )}
             >
-              <item.icon className="w-5 h-5" />
+              <Icon className="w-5 h-5" />
               <span className="text-xs mt-1">{item.label}</span>
             </Link>
           );
@@ -43,4 +35,3 @@ export function WorkerBottomNav() {
     </nav>
   );
 }
-

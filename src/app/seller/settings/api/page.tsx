@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Button, Badge, Input, Modal } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import {
   ArrowLeft,
   Key,
@@ -97,28 +98,25 @@ export default function ApiKeyPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/seller/settings">
-            <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
-            </button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-              <Key className="w-7 h-7 text-brand-primary" />
-              API Keys
-            </h1>
-            <p className="text-brand-text-light">
-              จัดการ API Keys สำหรับเชื่อมต่อระบบ
-            </p>
+      <PageHeader
+        title="API Keys"
+        description="จัดการ API Keys สำหรับเชื่อมต่อระบบ"
+        icon={Key}
+        actions={
+          <div className="flex items-center gap-2">
+            <Link href="/seller/settings">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                กลับ
+              </Button>
+            </Link>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              สร้าง API Key
+            </Button>
           </div>
-        </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          สร้าง API Key
-        </Button>
-      </div>
+        }
+      />
 
       {/* Warning */}
       <Card className="bg-brand-warning/10 border-brand-warning/30" padding="md">
@@ -126,7 +124,7 @@ export default function ApiKeyPage() {
           <AlertTriangle className="w-5 h-5 text-brand-warning shrink-0" />
           <div>
             <p className="font-medium text-brand-text-dark">
-              ⚠️ เก็บ API Key ไว้อย่างปลอดภัย
+              เก็บ API Key ไว้อย่างปลอดภัย
             </p>
             <p className="text-sm text-brand-text-light mt-1">
               อย่าเปิดเผย API Key ในที่สาธารณะ หากคิดว่ามีการรั่วไหล

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Button, Badge, Avatar, Input, Modal, StatsCard } from "@/components/ui";
+import { PageHeader } from "@/components/shared";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { mockTeam, mockTeamMembers, mockWorkers } from "@/lib/mock-data";
 import { 
@@ -10,12 +11,9 @@ import {
   UserPlus, 
   Search, 
   Copy, 
-  QrCode, 
-  Settings,
+  QrCode,
   Star,
   CheckCircle,
-  Clock,
-  Ban,
   MoreVertical,
   RefreshCw,
   ClipboardList,
@@ -64,23 +62,16 @@ export default function TeamPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-            <Users className="w-7 h-7 text-brand-primary" />
-            ทีมงาน
-          </h1>
-          <p className="text-brand-text-light">
-            จัดการสมาชิกทีม {team.name}
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsInviteModalOpen(true)}
-          leftIcon={<UserPlus className="w-4 h-4" />}
-        >
-          เชิญสมาชิกใหม่
-        </Button>
-      </div>
+      <PageHeader
+        title="ทีมงาน"
+        description={`จัดการสมาชิกทีม ${team.name}`}
+        icon={Users}
+        action={
+          <Button onClick={() => setIsInviteModalOpen(true)} leftIcon={<UserPlus className="w-4 h-4" />}>
+            เชิญสมาชิกใหม่
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -337,7 +328,7 @@ export default function TeamPage() {
           {/* QR Code */}
           <div className="text-center">
             <label className="block text-sm font-medium text-brand-text-dark mb-2">
-              📱 QR Code
+              QR Code
             </label>
             <div className="inline-block p-4 bg-white rounded-lg border border-brand-border">
               <div className="w-32 h-32 bg-brand-bg flex items-center justify-center">

@@ -3,26 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
+import { PlatformIcon } from "@/components/shared";
 import {
   Search,
   Users,
   Briefcase,
   Star,
-  MapPin,
   Clock,
   TrendingUp,
-  Filter,
   ChevronRight,
   Heart,
   MessageCircle,
   Eye,
   Sparkles,
-  Facebook,
-  Instagram,
-  Music2,
-  Youtube,
-  Twitter,
-  Globe,
   Zap,
   Flame,
 } from "lucide-react";
@@ -178,24 +171,6 @@ const postTypeConfig: Record<string, { label: string; color: "info" | "success" 
   recruit: { label: "หาลูกทีม", color: "info" },
   "find-team": { label: "หาทีม", color: "success" },
   outsource: { label: "โยนงาน", color: "warning" },
-};
-
-const getPlatformIcon = (platform: string) => {
-  const iconClass = "w-4 h-4 inline-block";
-  switch (platform) {
-    case "facebook": 
-      return <Facebook className={iconClass} />;
-    case "instagram": 
-      return <Instagram className={iconClass} />;
-    case "tiktok": 
-      return <Music2 className={iconClass} />;
-    case "youtube": 
-      return <Youtube className={iconClass} />;
-    case "twitter":
-      return <Twitter className={iconClass} />;
-    default: 
-      return <Globe className={iconClass} />;
-  }
 };
 
 export default function HubPage() {
@@ -390,7 +365,7 @@ export default function HubPage() {
                     key={platform}
                     className="px-2 py-1 bg-brand-bg rounded text-sm flex items-center gap-1"
                   >
-                    {getPlatformIcon(platform)}
+                    <PlatformIcon platform={platform} className="w-4 h-4" />
                     <span>{platform}</span>
                   </span>
                 ))}
