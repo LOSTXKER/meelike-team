@@ -1,26 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ==========================================
+   MeeLike Theme - Light Mode
+   ========================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Colors */
+  --brand-bg: #FFFAF5;
+  --brand-surface: #FFFFFF;
+  --brand-text-dark: #473B30;
+  --brand-text-light: #937058;
+  --brand-primary: #937058;
+  --brand-primary-light: #C9B7AB;
+  --brand-secondary: #FCD77F;
+  --brand-secondary-light: #FDE8BD;
+  --brand-accent: #F892A2;
+  --brand-border: #EAE5E0;
+  
+  /* System Colors */
+  --brand-success: #6A994E;
+  --brand-warning: #FCD77F;
+  --brand-error: #BC4749;
+  --brand-info: #A6CDE3;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
+/* ==========================================
+   MeeLike Theme - Dark Mode
+   ========================================== */
+.dark {
+  --brand-bg: #211d1a;
+  --brand-surface: #2c2825;
+  --brand-text-dark: #FFFAF5;
+  --brand-text-light: #C9B7AB;
+  --brand-primary: #FCD77F;
+  --brand-secondary: #937058;
+  --brand-accent: #F892A2;
+  --brand-border: #3a3532;
+  --brand-primary-light: #937058;
+  --brand-secondary-light: #473B30;
+}
+
+/* ==========================================
+   Tailwind Theme Integration
+   ========================================== */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Colors */
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-text-dark: var(--brand-text-dark);
+  --color-brand-text-light: var(--brand-text-light);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-light: var(--brand-secondary-light);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-border: var(--brand-border);
+  --color-brand-success: var(--brand-success);
+  --color-brand-warning: var(--brand-warning);
+  --color-brand-error: var(--brand-error);
+  --color-brand-info: var(--brand-info);
+  
+  /* Fonts */
+  --font-sans: 'Sarabun', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ==========================================
+   Base Styles
+   ========================================== */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--brand-bg);
+  color: var(--brand-text-dark);
+  font-family: 'Sarabun', sans-serif;
+}
+
+/* ==========================================
+   Custom Scrollbar
+   ========================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--brand-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-primary-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-primary);
+}
+
+/* ==========================================
+   Store Themes
+   ========================================== */
+[data-theme="ocean"] {
+  --brand-primary: #2563eb;
+  --brand-secondary: #06b6d4;
+  --brand-primary-light: #93c5fd;
+}
+
+[data-theme="purple"] {
+  --brand-primary: #7c3aed;
+  --brand-secondary: #a855f7;
+  --brand-primary-light: #c4b5fd;
+}
+
+[data-theme="dark"] {
+  --brand-primary: #1f2937;
+  --brand-secondary: #374151;
+  --brand-primary-light: #6b7280;
+}
+
+[data-theme="sakura"] {
+  --brand-primary: #ec4899;
+  --brand-secondary: #f472b6;
+  --brand-primary-light: #fbcfe8;
+}
+
+[data-theme="red"] {
+  --brand-primary: #dc2626;
+  --brand-secondary: #f87171;
+  --brand-primary-light: #fecaca;
+}
+
+[data-theme="green"] {
+  --brand-primary: #16a34a;
+  --brand-secondary: #4ade80;
+  --brand-primary-light: #bbf7d0;
+}
+
+[data-theme="orange"] {
+  --brand-primary: #ea580c;
+  --brand-secondary: #fb923c;
+  --brand-primary-light: #fed7aa;
+}
+
+[data-theme="minimal"] {
+  --brand-primary: #000000;
+  --brand-secondary: #ffffff;
+  --brand-primary-light: #d1d5db;
+}
+
+/* ==========================================
+   Animation
+   ========================================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s infinite;
 }
