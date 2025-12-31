@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Badge, Button, Progress } from "@/components/ui";
-import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState } from "@/components/shared";
+import { useRouter } from "next/navigation";
+import { Card, Badge, Button, Progress, WorkerJobsSkeleton } from "@/components/ui";
+import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact } from "@/components/shared";
+import type { FilterOption } from "@/components/shared";
 import { mockJobs, mockTeams } from "@/lib/mock-data";
 import type { Platform, ServiceMode } from "@/types";
 import {
@@ -12,7 +14,6 @@ import {
   CheckCircle2,
   PlayCircle,
   ExternalLink,
-  ChevronRight,
   Timer,
   Target,
   Upload,
@@ -21,13 +22,8 @@ import {
 
 type TabType = "in_progress" | "pending_review" | "completed";
 
-const tabConfig = {
-  in_progress: { label: "กำลังทำ", icon: <PlayCircle className="w-4 h-4" /> },
-  pending_review: { label: "รอตรวจสอบ", icon: <Clock className="w-4 h-4" /> },
-  completed: { label: "เสร็จแล้ว", icon: <CheckCircle2 className="w-4 h-4" /> },
-};
-
 export default function WorkerJobsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("in_progress");
 
   // Mock jobs data for worker
@@ -142,8 +138,40 @@ export default function WorkerJobsPage() {
     return `${hours}ชม. ${minutes}น.`;
   };
 
+  // Stats data for StatsGridCompact
+  const statsData = [
+    {
+      label: "กำลังทำ",
+      value: workerJobs.in_progress.length,
+      icon: PlayCircle,
+      iconColor: "text-brand-warning",
+      iconBgColor: "bg-brand-warning/10",
+    },
+    {
+      label: "รอตรวจสอบ",
+      value: workerJobs.pending_review.length,
+      icon: Clock,
+      iconColor: "text-brand-info",
+      iconBgColor: "bg-brand-info/10",
+    },
+    {
+      label: "เสร็จแล้ว",
+      value: workerJobs.completed.length,
+      icon: CheckCircle2,
+      iconColor: "text-brand-success",
+      iconBgColor: "bg-brand-success/10",
+    },
+  ];
+
+  // Tab options for SegmentedControl
+  const tabOptions: FilterOption<TabType>[] = [
+    { key: "in_progress", label: "กำลังทำ", icon: <PlayCircle className="w-4 h-4" />, count: workerJobs.in_progress.length },
+    { key: "pending_review", label: "รอตรวจสอบ", icon: <Clock className="w-4 h-4" />, count: workerJobs.pending_review.length },
+    { key: "completed", label: "เสร็จแล้ว", icon: <CheckCircle2 className="w-4 h-4" />, count: workerJobs.completed.length },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
       <PageHeader
         title="งานของฉัน"
@@ -151,83 +179,60 @@ export default function WorkerJobsPage() {
         icon={Briefcase}
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card variant="bordered" padding="md" className="text-center">
-          <div className="text-2xl font-bold text-brand-warning">
-            {workerJobs.in_progress.length}
-          </div>
-          <p className="text-sm text-brand-text-light">กำลังทำ</p>
-        </Card>
-        <Card variant="bordered" padding="md" className="text-center">
-          <div className="text-2xl font-bold text-brand-info">
-            {workerJobs.pending_review.length}
-          </div>
-          <p className="text-sm text-brand-text-light">รอตรวจสอบ</p>
-        </Card>
-        <Card variant="bordered" padding="md" className="text-center">
-          <div className="text-2xl font-bold text-brand-success">
-            {workerJobs.completed.length}
-          </div>
-          <p className="text-sm text-brand-text-light">เสร็จแล้ว</p>
-        </Card>
-      </div>
+      {/* Stats - Using StatsGridCompact */}
+      <StatsGridCompact stats={statsData} columns={3} />
 
-      {/* Tabs */}
-      <div className="flex rounded-lg bg-brand-bg p-1">
-        {(Object.keys(tabConfig) as TabType[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all ${
-              activeTab === tab
-                ? "bg-brand-surface text-brand-primary shadow-sm"
-                : "text-brand-text-light hover:text-brand-text-dark"
-            }`}
-          >
-            {tabConfig[tab].icon}
-            <span className="hidden sm:inline">{tabConfig[tab].label}</span>
-            <Badge variant={tab === "pending_review" ? "warning" : "default"} size="sm">
-              {workerJobs[tab].length}
-            </Badge>
-          </button>
-        ))}
-      </div>
+      {/* Tabs - Using SegmentedControl */}
+      <SegmentedControl
+        options={tabOptions}
+        activeOption={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* Jobs List */}
       <div className="space-y-4">
         {currentJobs.length === 0 ? (
-          <Card variant="bordered" padding="lg" className="text-center">
-            <div className="py-8 space-y-3">
-              <Briefcase className="w-12 h-12 text-brand-text-light mx-auto" />
-              <p className="text-brand-text-light">ไม่มีงานในหมวดนี้</p>
+          <Card variant="elevated" padding="lg" className="text-center border-none shadow-lg shadow-brand-primary/5 py-12">
+            <div className="w-16 h-16 bg-brand-bg rounded-2xl flex items-center justify-center mx-auto mb-4 border border-brand-border">
+              <Briefcase className="w-8 h-8 text-brand-text-light" />
             </div>
+            <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่มีงานในหมวดนี้</p>
+            <p className="text-brand-text-light text-sm">ลองเลือกสถานะอื่น หรือรับงานใหม่เพิ่ม</p>
           </Card>
         ) : (
           currentJobs.map((job) => (
-            <Card key={job.id} variant="bordered" padding="md" className="hover:shadow-md transition-shadow">
-              <div className="space-y-4">
+            <Card 
+              key={job.id} 
+              variant="elevated" 
+              padding="lg" 
+              className="border-none shadow-md hover:shadow-lg transition-all duration-300 group cursor-pointer hover:-translate-y-1"
+              onClick={() => router.push(`/work/jobs/${job.id}`)}
+            >
+              <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-brand-bg">
-                      <PlatformIcon platform={job.platform} className="w-6 h-6" />
+                  <div className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-bg border border-brand-border/50 shadow-sm group-hover:scale-105 transition-transform duration-300">
+                      <PlatformIcon platform={job.platform} className="w-7 h-7" />
                     </div>
                     <div>
-                      <p className="font-semibold text-brand-text-dark">
+                      <h3 className="font-bold text-xl text-brand-text-dark group-hover:text-brand-primary transition-colors mb-1">
                         {job.serviceName}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-brand-text-light">
-                        <span><Users className="w-4 h-4 inline-block mr-1" />{job.teamName}</span>
-                        <Badge variant="success" size="sm">คนจริง</Badge>
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" size="sm" className="bg-brand-bg text-brand-text-light border-brand-border/50">
+                          <Users className="w-3 h-3 mr-1" />
+                          {job.teamName}
+                        </Badge>
+                        <ServiceTypeBadge type={job.type} />
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-brand-primary">
+                  <div className="text-right bg-brand-bg/30 p-2.5 rounded-xl border border-brand-border/30">
+                    <p className="text-2xl font-bold text-brand-primary leading-none">
                       ฿{(job.quantity * job.pricePerUnit).toFixed(0)}
                     </p>
-                    <p className="text-xs text-brand-text-light">
+                    <p className="text-xs font-medium text-brand-text-light uppercase tracking-wide mt-1">
                       ฿{job.pricePerUnit}/หน่วย
                     </p>
                   </div>
@@ -235,31 +240,35 @@ export default function WorkerJobsPage() {
 
                 {/* Progress */}
                 {activeTab === "in_progress" && (
-                  <div className="space-y-2">
+                  <div className="bg-brand-bg/30 rounded-xl p-4 border border-brand-border/30 space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-brand-text-light flex items-center gap-1">
-                        <Target className="w-4 h-4" />
+                      <span className="text-brand-text-dark font-medium flex items-center gap-2">
+                        <div className="p-1 rounded bg-brand-primary/10">
+                          <Target className="w-3.5 h-3.5 text-brand-primary" />
+                        </div>
                         ความคืบหน้า
                       </span>
-                      <span className="font-medium text-brand-text-dark">
-                        {job.completedQuantity}/{job.quantity}
+                      <span className="font-bold text-brand-text-dark">
+                        {job.completedQuantity} <span className="text-brand-text-light font-normal">/ {job.quantity}</span>
                       </span>
                     </div>
                     <Progress
                       value={(job.completedQuantity / job.quantity) * 100}
+                      className="h-2.5"
                     />
-                    <div className="flex items-center justify-between text-xs">
-                      <a
-                        href={job.targetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-brand-primary hover:underline flex items-center gap-1"
+                    <div className="flex items-center justify-between pt-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(job.targetUrl, '_blank');
+                        }}
+                        className="text-brand-primary hover:text-brand-primary/80 font-medium text-sm flex items-center gap-1.5 transition-colors"
                       >
-                        <ExternalLink className="w-3 h-3" />
-                        ดูลิงก์งาน
-                      </a>
-                      <span className="text-brand-warning flex items-center gap-1">
-                        <Timer className="w-3 h-3" />
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        ลิงก์งาน
+                      </button>
+                      <span className="flex items-center gap-1.5 text-xs font-medium bg-brand-warning/10 text-brand-warning px-2 py-1 rounded-lg border border-brand-warning/20">
+                        <Timer className="w-3.5 h-3.5" />
                         เหลือ {getTimeRemaining(job.deadline!)}
                       </span>
                     </div>
@@ -268,46 +277,48 @@ export default function WorkerJobsPage() {
 
                 {/* Pending Review Info */}
                 {activeTab === "pending_review" && (
-                  <div className="flex items-center justify-between text-sm bg-brand-bg rounded-lg p-3">
-                    <span className="text-brand-text-light">
-                      ส่งงานเมื่อ{" "}
-                      {new Date(job.submittedAt!).toLocaleDateString("th-TH", {
+                  <div className="flex items-center justify-between text-sm bg-brand-warning/5 border border-brand-warning/20 rounded-xl p-4">
+                    <span className="text-brand-text-dark flex items-center gap-2">
+                      <div className="p-1 rounded bg-brand-warning/10">
+                        <Clock className="w-3.5 h-3.5 text-brand-warning" />
+                      </div>
+                      ส่งงานเมื่อ <span className="font-medium">{new Date(job.submittedAt!).toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         hour: "2-digit",
                         minute: "2-digit",
-                      })}
+                      })}</span>
                     </span>
-                    <Badge variant="warning">รอ Seller ตรวจสอบ</Badge>
+                    <Badge variant="warning" className="uppercase tracking-wide font-bold">รอตรวจสอบ</Badge>
                   </div>
                 )}
 
                 {/* Completed Info */}
                 {activeTab === "completed" && (
-                  <div className="flex items-center justify-between text-sm bg-brand-success/10 rounded-lg p-3">
-                    <span className="text-brand-text-light">
-                      เสร็จเมื่อ{" "}
-                      {new Date(job.completedAt!).toLocaleDateString("th-TH", {
+                  <div className="flex items-center justify-between text-sm bg-brand-success/5 border border-brand-success/20 rounded-xl p-4">
+                    <span className="text-brand-text-dark flex items-center gap-2">
+                      <div className="p-1 rounded bg-brand-success/10">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-brand-success" />
+                      </div>
+                      เสร็จเมื่อ <span className="font-medium">{new Date(job.completedAt!).toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
-                      })}
+                      })}</span>
                     </span>
-                    <span className="font-semibold text-brand-success">
-                      +฿{job.earnings}
-                    </span>
+                    <Badge variant="success" className="uppercase tracking-wide font-bold">+฿{job.earnings}</Badge>
                   </div>
                 )}
 
-                {/* Actions */}
+                {/* Actions - Prevent Card onClick propagation */}
                 {activeTab === "in_progress" && (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <ExternalLink className="w-4 h-4 mr-1" />
+                  <div className="grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="outline" className="w-full bg-white hover:bg-brand-bg/50 border-brand-border/50 shadow-sm" onClick={() => window.open(job.targetUrl, '_blank')}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
                       เปิดลิงก์
                     </Button>
-                    <Button size="sm" className="flex-1">
-                      <Upload className="w-4 h-4 mr-1" />
+                    <Button className="w-full shadow-md shadow-brand-primary/20" onClick={() => router.push(`/work/jobs/${job.id}`)}>
+                      <Upload className="w-4 h-4 mr-2" />
                       ส่งงาน
                     </Button>
                   </div>

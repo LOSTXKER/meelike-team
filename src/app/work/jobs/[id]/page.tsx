@@ -21,6 +21,7 @@ import {
   Facebook,
   ClipboardList,
   Star,
+  DollarSign,
 } from "lucide-react";
 
 export default function JobDetailPage() {
@@ -67,31 +68,41 @@ export default function JobDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link href="/work/jobs">
-            <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
+            <button className="p-3 hover:bg-white bg-white/60 backdrop-blur-sm border border-brand-border/50 rounded-xl transition-all shadow-sm group">
+              <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
             </button>
           </Link>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-brand-text-dark">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight">
                 {job.serviceName}
               </h1>
-              <Badge variant="info">กำลังทำ</Badge>
+              <Badge variant="warning" className="text-sm px-2.5 py-0.5 shadow-sm animate-pulse">
+                <Clock className="w-3 h-3 mr-1" />
+                กำลังทำ
+              </Badge>
             </div>
-            <p className="text-brand-text-light text-sm">
-              จาก {job.teamName}
-            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <Badge variant="secondary" className="bg-brand-bg text-brand-text-dark border-brand-border/50 font-medium px-3 py-1">
+                <Users className="w-3.5 h-3.5 mr-1.5 text-brand-text-light" />
+                {job.teamName}
+              </Badge>
+              <Badge variant="success" size="sm" className="px-3 py-1">
+                <DollarSign className="w-3.5 h-3.5 mr-1" />
+                จ่ายไว
+              </Badge>
+            </div>
           </div>
         </div>
 
-        <Button onClick={() => setShowSubmitModal(true)}>
-          <Upload className="w-4 h-4 mr-2" />
-          ส่งงาน
+        <Button onClick={() => setShowSubmitModal(true)} size="lg" className="shadow-lg shadow-brand-primary/20 px-8">
+          <Upload className="w-5 h-5 mr-2" />
+          ส่งงานทันที
         </Button>
       </div>
 
@@ -99,118 +110,132 @@ export default function JobDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Progress Card */}
-          <Card variant="bordered" padding="lg">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-brand-text-dark flex items-center gap-2">
-                <Target className="w-5 h-5 text-brand-primary" />
-                ความคืบหน้า
-              </h2>
-              <button
-                onClick={() => setIsWorking(!isWorking)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  isWorking
-                    ? "bg-brand-success/10 text-brand-success"
-                    : "bg-brand-warning/10 text-brand-warning"
-                }`}
-              >
-                {isWorking ? (
-                  <>
-                    <Pause className="w-4 h-4" />
-                    กำลังทำ
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    หยุดพัก
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Progress Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-3 bg-brand-bg rounded-xl text-center">
-                  <p className="text-2xl font-bold text-brand-success">
-                    {job.completedQuantity}
-                  </p>
-                  <p className="text-xs text-brand-text-light">เสร็จแล้ว</p>
-                </div>
-                <div className="p-3 bg-brand-bg rounded-xl text-center">
-                  <p className="text-2xl font-bold text-brand-warning">
-                    {remainingQuantity}
-                  </p>
-                  <p className="text-xs text-brand-text-light">เหลืออีก</p>
-                </div>
-                <div className="p-3 bg-brand-bg rounded-xl text-center">
-                  <p className="text-2xl font-bold text-brand-primary">
-                    {job.quantity}
-                  </p>
-                  <p className="text-xs text-brand-text-light">ทั้งหมด</p>
-                </div>
+          <Card variant="elevated" padding="lg" className="border-none shadow-xl shadow-brand-primary/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-bold text-brand-text-dark flex items-center gap-3">
+                  <div className="p-2.5 bg-brand-primary/10 rounded-xl">
+                    <Target className="w-6 h-6 text-brand-primary" />
+                  </div>
+                  ความคืบหน้างาน
+                </h2>
+                <button
+                  onClick={() => setIsWorking(!isWorking)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                    isWorking
+                      ? "bg-brand-success/10 text-brand-success border border-brand-success/20 hover:bg-brand-success/20"
+                      : "bg-brand-warning/10 text-brand-warning border border-brand-warning/20 hover:bg-brand-warning/20"
+                  }`}
+                >
+                  {isWorking ? (
+                    <>
+                      <Pause className="w-4 h-4 fill-current" />
+                      กำลังทำงาน
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-current" />
+                      หยุดพัก
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-brand-text-light">
-                    ความคืบหน้า
-                  </span>
-                  <span className="font-semibold text-brand-text-dark">
-                    {Math.round(progress)}%
-                  </span>
+              <div className="space-y-8">
+                {/* Progress Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-5 bg-brand-success/5 border border-brand-success/10 rounded-2xl text-center relative overflow-hidden group hover:border-brand-success/30 transition-all">
+                    <div className="absolute inset-0 bg-brand-success/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <p className="text-4xl font-bold text-brand-success mb-1 relative z-10">
+                      {job.completedQuantity}
+                    </p>
+                    <p className="text-xs font-bold text-brand-text-light uppercase tracking-wider relative z-10">เสร็จแล้ว</p>
+                  </div>
+                  <div className="p-5 bg-brand-warning/5 border border-brand-warning/10 rounded-2xl text-center relative overflow-hidden group hover:border-brand-warning/30 transition-all">
+                    <div className="absolute inset-0 bg-brand-warning/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <p className="text-4xl font-bold text-brand-warning mb-1 relative z-10">
+                      {remainingQuantity}
+                    </p>
+                    <p className="text-xs font-bold text-brand-text-light uppercase tracking-wider relative z-10">เหลืออีก</p>
+                  </div>
+                  <div className="p-5 bg-brand-bg border border-brand-border/50 rounded-2xl text-center relative overflow-hidden group hover:border-brand-primary/20 transition-all">
+                    <p className="text-4xl font-bold text-brand-primary mb-1 relative z-10">
+                      {job.quantity}
+                    </p>
+                    <p className="text-xs font-bold text-brand-text-light uppercase tracking-wider relative z-10">เป้าหมาย</p>
+                  </div>
                 </div>
-                <Progress value={progress} size="lg" />
-              </div>
 
-              {/* Update Progress */}
-              <div className="flex items-center gap-3 pt-2">
-                <input
-                  type="number"
-                  placeholder="จำนวนที่ทำเพิ่ม"
-                  className="flex-1 px-4 py-2 bg-brand-surface border border-brand-border rounded-lg text-brand-text-dark focus:outline-none focus:border-brand-primary"
-                />
-                <Button variant="secondary">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  อัปเดต
-                </Button>
+                {/* Progress Bar */}
+                <div className="space-y-3 bg-brand-bg/30 p-5 rounded-2xl border border-brand-border/30">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-brand-text-dark font-medium flex items-center gap-2">
+                      <Target className="w-4 h-4 text-brand-primary" />
+                      ความคืบหน้าปัจจุบัน
+                    </span>
+                    <span className="font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-md">
+                      {Math.round(progress)}%
+                    </span>
+                  </div>
+                  <Progress value={progress} size="lg" className="h-4 shadow-inner" />
+                </div>
+
+                {/* Update Progress */}
+                <div className="flex items-center gap-4 pt-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      placeholder="ระบุจำนวนที่ทำเพิ่ม..."
+                      className="w-full pl-5 pr-4 py-4 bg-white border border-brand-border rounded-xl text-lg text-brand-text-dark focus:outline-none focus:ring-4 focus:ring-brand-primary/10 focus:border-brand-primary transition-all shadow-sm placeholder:text-brand-text-light/50"
+                    />
+                  </div>
+                  <Button size="lg" variant="secondary" className="shadow-md border-brand-border/50 h-[60px] px-8 text-base">
+                    <CheckCircle2 className="w-6 h-6 mr-2 text-brand-success" />
+                    อัปเดต
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
 
           {/* Target Link */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              <ExternalLink className="w-5 h-5 text-brand-primary" />
-              ลิงก์งาน
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+            <h2 className="text-lg font-bold text-brand-text-dark mb-4 flex items-center gap-2">
+              <div className="p-2 bg-brand-primary/10 rounded-lg">
+                <ExternalLink className="w-5 h-5 text-brand-primary" />
+              </div>
+              ลิงก์เป้าหมาย
             </h2>
 
-            <div className="p-4 bg-brand-bg rounded-xl">
-              <div className="flex items-center gap-3">
-                <Facebook className="w-8 h-8 text-blue-500" />
+            <div className="p-5 bg-brand-bg/50 border border-brand-border/50 rounded-2xl transition-all hover:bg-brand-bg hover:shadow-inner">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                  <Facebook className="w-7 h-7 text-[#1877F2]" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-brand-text-dark truncate">
+                  <p className="font-bold text-brand-text-dark truncate text-lg">
                     {job.targetUrl}
                   </p>
-                  <p className="text-sm text-brand-text-light">
-                    Facebook Post
+                  <p className="text-sm text-brand-text-light font-medium">
+                    ประเภท: Facebook Post
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-3 mt-6">
                 <a
                   href={job.targetUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1"
                 >
-                  <Button variant="default" className="w-full">
+                  <Button variant="default" className="w-full shadow-md shadow-brand-primary/20">
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    เปิดลิงก์
+                    เปิดลิงก์ทำงาน
                   </Button>
                 </a>
-                <Button variant="outline" className="flex items-center gap-1">
+                <Button variant="outline" className="flex items-center gap-2 bg-white shadow-sm border-brand-border/50">
                   <ClipboardList className="w-4 h-4" />
                   คัดลอก
                 </Button>
@@ -219,25 +244,30 @@ export default function JobDetailPage() {
           </Card>
 
           {/* Instructions */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+            <h2 className="text-lg font-bold text-brand-text-dark mb-4 flex items-center gap-2">
+              <div className="p-2 bg-brand-info/10 rounded-lg">
+                <ClipboardList className="w-5 h-5 text-brand-info" />
+              </div>
               คำแนะนำการทำงาน
             </h2>
 
-            <div className="p-4 bg-brand-info/10 rounded-xl">
-              <p className="text-brand-text-dark">{job.instructions}</p>
+            <div className="p-5 bg-brand-info/5 border border-brand-info/10 rounded-2xl mb-4">
+              <p className="text-brand-text-dark font-medium leading-relaxed">{job.instructions}</p>
             </div>
 
-            <div className="mt-4 p-4 bg-brand-warning/10 rounded-xl flex gap-3">
-              <AlertCircle className="w-5 h-5 text-brand-warning shrink-0" />
+            <div className="p-5 bg-brand-warning/5 border border-brand-warning/10 rounded-2xl flex gap-4">
+              <div className="p-2 bg-white rounded-full shadow-sm h-fit">
+                <AlertCircle className="w-6 h-6 text-brand-warning shrink-0" />
+              </div>
               <div>
-                <p className="font-medium text-brand-text-dark">
+                <p className="font-bold text-brand-text-dark text-lg mb-2">
                   ข้อควรระวัง
                 </p>
-                <ul className="text-sm text-brand-text-light mt-1 space-y-1">
-                  <li>• ห้ามใช้บอทหรือ Auto Like</li>
-                  <li>• ใช้แอคที่มีความเคลื่อนไหวเท่านั้น</li>
-                  <li>• ถ้าพบปัญหาให้แจ้งทีมทันที</li>
+                <ul className="text-sm text-brand-text-dark/80 space-y-2 font-medium">
+                  <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-warning" /> ห้ามใช้บอทหรือ Auto Like เด็ดขาด</li>
+                  <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-warning" /> ใช้บัญชีที่มีความเคลื่อนไหว มีรูปโปรไฟล์จริง</li>
+                  <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-warning" /> หากพบลิงก์เสีย ให้แจ้งทีมทันที</li>
                 </ul>
               </div>
             </div>
@@ -247,82 +277,99 @@ export default function JobDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Earnings */}
-          <Card className="bg-gradient-to-br from-brand-success to-green-600 text-white">
-            <div className="p-6">
-              <p className="text-white/80 text-sm">รายได้จากงานนี้</p>
-              <p className="text-3xl font-bold mt-1">
+          <Card className="bg-gradient-to-br from-brand-success to-[#1E8E3E] text-white border-none shadow-xl shadow-brand-success/20 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            <div className="p-6 relative z-10">
+              <div className="flex items-center gap-2 mb-2 text-white/90 font-medium">
+                <div className="p-1 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                รายได้จากงานนี้
+              </div>
+              <p className="text-4xl font-bold mt-2 tracking-tight">
                 ฿{job.earnedSoFar.toFixed(2)}
               </p>
-              <p className="text-white/60 text-sm mt-2">
-                จาก ฿{job.totalEarnings.toFixed(2)} (฿{job.pricePerUnit}/หน่วย)
-              </p>
+              <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-sm">
+                <span className="text-white/80">ทั้งหมด ฿{job.totalEarnings.toFixed(2)}</span>
+                <span className="px-2 py-1 bg-white/20 rounded-lg text-xs font-semibold backdrop-blur-sm">฿{job.pricePerUnit}/หน่วย</span>
+              </div>
             </div>
           </Card>
 
           {/* Time Info */}
-          <Card variant="bordered" padding="lg">
-            <h3 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-brand-primary" />
-              เวลา
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+            <h3 className="font-bold text-brand-text-dark mb-4 flex items-center gap-2">
+              <div className="p-2 bg-brand-primary/10 rounded-lg">
+                <Clock className="w-5 h-5 text-brand-primary" />
+              </div>
+              ข้อมูลเวลา
             </h3>
 
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">เริ่มงาน</span>
-                <span className="text-brand-text-dark">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-sm p-3 bg-brand-bg/50 rounded-xl">
+                <span className="text-brand-text-light font-medium">เริ่มงาน</span>
+                <span className="text-brand-text-dark font-bold">
                   {new Date(job.startedAt).toLocaleTimeString("th-TH", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}
+                  })} น.
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">กำหนดส่ง</span>
-                <span className="text-brand-text-dark">
+              <div className="flex justify-between items-center text-sm p-3 bg-brand-bg/50 rounded-xl">
+                <span className="text-brand-text-light font-medium">กำหนดส่ง</span>
+                <span className="text-brand-text-dark font-bold">
                   {new Date(job.deadline).toLocaleTimeString("th-TH", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}
+                  })} น.
                 </span>
               </div>
-              <div className="pt-3 border-t border-brand-border">
+              <div className="pt-4 border-t border-brand-border/50">
                 <div className="flex justify-between items-center">
-                  <span className="text-brand-text-light text-sm">
+                  <span className="text-brand-text-light text-sm font-medium">
                     เหลือเวลา
                   </span>
-                  <span className="font-semibold text-brand-warning">
+                  <Badge variant="warning" className="text-sm px-3 py-1 shadow-sm">
+                    <Clock className="w-3.5 h-3.5 mr-1.5" />
                     {getTimeRemaining()}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </div>
           </Card>
 
           {/* Team Info */}
-          <Card variant="bordered" padding="lg">
-            <h3 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              ทีม
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+            <h3 className="font-bold text-brand-text-dark mb-4 flex items-center gap-2">
+              <div className="p-2 bg-brand-accent/10 rounded-lg">
+                <Users className="w-5 h-5 text-brand-accent" />
+              </div>
+              เกี่ยวกับทีม
             </h3>
 
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center text-xl font-bold text-brand-primary">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-accent rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-brand-primary/20">
                 {job.teamLogo}
               </div>
               <div>
-                <p className="font-medium text-brand-text-dark">
+                <p className="font-bold text-brand-text-dark text-xl mb-1">
                   {job.teamName}
                 </p>
-                <p className="text-sm text-brand-text-light flex items-center gap-1">
-                  <Star className="w-4 h-4" />
-                  4.9 • 1,234 งาน
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold px-2 py-0.5 bg-brand-warning/10 text-brand-warning rounded-md flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-brand-warning" /> 4.9
+                  </span>
+                  <span className="text-xs text-brand-text-light font-medium flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-brand-border" />
+                    1,234 งาน
+                  </span>
+                </div>
               </div>
             </div>
 
-            <Button variant="outline" className="w-full mt-4" size="sm">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              ติดต่อทีม
+            <Button variant="outline" className="w-full shadow-sm bg-white hover:bg-brand-bg/50 border-brand-border/50 h-12 text-base font-medium" size="lg">
+              <MessageSquare className="w-5 h-5 mr-2 text-brand-primary" />
+              ติดต่อทีมงาน
             </Button>
           </Card>
         </div>

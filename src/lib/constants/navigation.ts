@@ -14,8 +14,6 @@ import {
   Crown,
   Key,
   Home,
-  Search,
-  Clock,
   Smartphone,
   User,
   Sparkles,
@@ -95,18 +93,14 @@ export const WORKER_NAV: NavConfig = [
   },
   {
     label: "ทีมของฉัน",
-    items: [
-      { label: "ทีมที่เข้าร่วม", href: "/work/teams", icon: Users },
-      { label: "ค้นหาทีม", href: "/work/teams/search", icon: Search },
-    ],
+    href: "/work/teams",
+    icon: Users,
   },
   {
     label: "งานของฉัน",
-    items: [
-      { label: "กำลังทำ", href: "/work/jobs", icon: Clock, badge: 2 },
-      { label: "รอตรวจสอบ", href: "/work/jobs?tab=pending", icon: CheckCircle, badge: 3 },
-      { label: "เสร็จแล้ว", href: "/work/jobs?tab=completed", icon: ClipboardList },
-    ],
+    href: "/work/jobs",
+    icon: ClipboardList,
+    badge: 5,
   },
   {
     label: "รายได้",
@@ -118,9 +112,8 @@ export const WORKER_NAV: NavConfig = [
   },
   {
     label: "บัญชี Social",
-    items: [
-      { label: "จัดการบัญชี", href: "/work/accounts", icon: Smartphone },
-    ],
+    href: "/work/accounts",
+    icon: Smartphone,
   },
   {
     label: "โปรไฟล์",

@@ -4,4 +4,7 @@ export { PlatformIcon } from "./platform-icon";
 export { StatusBadge } from "./status-badge";
 export { EmptyState } from "./empty-state";
 export { LoadingScreen } from "./loading-screen";
-
+export { StatsGrid, StatsGridCompact } from "./stats-grid";
+export { FilterBar, SegmentedControl } from "./filter-bar";
+export type { StatItem } from "./stats-grid";
+export type { FilterOption } from "./filter-bar";

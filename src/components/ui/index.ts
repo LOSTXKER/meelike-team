@@ -8,5 +8,17 @@ export { Progress } from "./progress";
 export { Avatar } from "./avatar";
 export { Modal } from "./modal";
 export { StatsCard } from "./stats-card";
-
-
+export {
+  Skeleton,
+  SkeletonText,
+  SkeletonAvatar,
+  SkeletonButton,
+  SkeletonCard,
+  SkeletonStatsCard,
+  SkeletonTable,
+  SkeletonJobCard,
+  SkeletonBalanceCard,
+  WorkerDashboardSkeleton,
+  WorkerJobsSkeleton,
+  WorkerEarningsSkeleton,
+} from "./skeleton";

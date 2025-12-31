@@ -1,285 +1,389 @@
 "use client";
 
 import Link from "next/link";
+import { Card, Button, Badge, Progress } from "@/components/ui";
+import { StatsGrid } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
-import { Card, Button, Badge, Progress, Avatar } from "@/components/ui";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
-import { mockJobs, mockTeam, mockWorkerStats, mockJobClaims } from "@/lib/mock-data";
+import { mockWorkerStats } from "@/lib/mock-data";
 import {
   Wallet,
-  ArrowRight,
+  TrendingUp,
+  CheckCircle2,
   Clock,
-  CheckCircle,
-  Flame,
+  PlayCircle,
+  ExternalLink,
+  ChevronRight,
   Trophy,
   Star,
-  ShoppingBag,
-  ClipboardList,
-  DollarSign,
-  Users,
+  Zap,
+  Crown,
+  Target,
+  ArrowUpRight,
+  Sparkles,
+  Camera,
+  Flame,
+  Award,
+  Shield,
+  CreditCard,
+  History,
 } from "lucide-react";
 
 export default function WorkerDashboard() {
   const { user } = useAuthStore();
   const worker = user?.worker;
-  const levelInfo = getLevelInfo(worker?.level || "bronze");
+  const levelInfo = getLevelInfo(worker?.level || "gold");
 
-  const availableJobs = mockJobs.filter(
-    (job) => job.status === "open" || job.status === "in_progress"
-  );
+  // Calculate level progress
+  const levelThresholds = {
+    bronze: { min: 0, max: 50, next: "Silver" },
+    silver: { min: 51, max: 200, next: "Gold" },
+    gold: { min: 201, max: 500, next: "Platinum" },
+    platinum: { min: 501, max: 1000, next: "VIP" },
+    vip: { min: 1001, max: Infinity, next: "VIP" },
+  };
+  const currentThreshold = levelThresholds[worker?.level || "gold"]; // Default to gold for demo
+  const jobsForNextLevel = currentThreshold.max - (worker?.totalJobsCompleted || 245);
+  const progressToNextLevel = 75; // Demo value
 
-  const myPendingClaims = mockJobClaims.filter(
-    (claim) => claim.workerId === worker?.id && claim.status === "claimed"
-  );
+  // Stats for the new Grid (from Profile)
+  const dashboardStats = [
+    {
+      label: "งานสำเร็จ",
+      value: "245",
+      icon: CheckCircle2,
+      iconColor: "text-brand-success",
+      iconBgColor: "bg-brand-success/10",
+    },
+    {
+      label: "รายได้รวม",
+      value: formatCurrency(12500),
+      icon: TrendingUp,
+      iconColor: "text-brand-primary",
+      iconBgColor: "bg-brand-primary/10",
+    },
+    {
+      label: "ต่อเนื่อง",
+      value: "7 วัน",
+      icon: Flame,
+      iconColor: "text-brand-warning",
+      iconBgColor: "bg-brand-warning/10",
+    },
+    {
+      label: "อัตราสำเร็จ",
+      value: "98%",
+      icon: Shield,
+      iconColor: "text-brand-info",
+      iconBgColor: "bg-brand-info/10",
+    },
+  ];
+
+  const achievements = [
+    { icon: <Trophy className="w-6 h-6" />, title: "Top Worker", desc: "อันดับ 1 ประจำสัปดาห์", color: "text-yellow-500", bg: "bg-yellow-500/10" },
+    { icon: <Flame className="w-6 h-6" />, title: "7 Day Streak", desc: "ทำงานติดต่อกัน 7 วัน", color: "text-orange-500", bg: "bg-orange-500/10" },
+    { icon: <Star className="w-6 h-6" />, title: "5 Star Rating", desc: "คะแนนเฉลี่ย 4.9+", color: "text-purple-500", bg: "bg-purple-500/10" },
+    { icon: <CheckCircle2 className="w-6 h-6" />, title: "100% Success", desc: "งานสำเร็จ 100 งาน", color: "text-green-500", bg: "bg-green-500/10" },
+  ];
+
+  // Mock Active Jobs
+  const activeJobs = [
+    {
+      id: "job-1",
+      title: "ไลค์ Facebook แฟนเพจ",
+      team: "JohnBoost Team",
+      deadline: "2 ชม.",
+      payout: 20,
+      progress: 65,
+      total: 100,
+    },
+    {
+      id: "job-2",
+      title: "Follow Instagram",
+      team: "SocialPro",
+      deadline: "5 ชม.",
+      payout: 15,
+      progress: 20,
+      total: 50,
+    },
+  ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Welcome */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-fade-in pb-20 lg:pb-0 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-brand-text-dark">
-            👋 สวัสดี {worker?.displayName}
+            สวัสดี, {worker?.displayName || "นุ่น"} 👋
           </h1>
-          <div className="flex items-center gap-3 mt-1">
-            <span className={`font-medium ${levelInfo.color}`}>
-              {levelInfo.name}
-            </span>
-            <span className="text-brand-text-light">•</span>
-            <span className="flex items-center gap-1 text-brand-text-light">
-              <Star className="w-4 h-4 text-brand-warning" />
-              {worker?.rating}
-            </span>
-          </div>
+          <p className="text-brand-text-light">
+            วันนี้คุณพร้อมสร้างรายได้หรือยัง?
+          </p>
         </div>
+        <Link href="/hub">
+          <Button className="shadow-lg shadow-brand-primary/20 rounded-full px-6">
+            <Sparkles className="w-4 h-4 mr-2" />
+            หางานใหม่
+          </Button>
+        </Link>
       </div>
 
-      {/* Balance Card */}
-      <Card className="bg-gradient-to-br from-brand-primary to-brand-primary/80 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white/80 text-sm flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
-              ยอดเงินสะสม
-            </p>
-            <p className="text-3xl font-bold mt-1">
-              {formatCurrency(mockWorkerStats.availableBalance)}
-            </p>
-            <div className="flex items-center gap-4 mt-2 text-sm text-white/80">
-              <span>รอตรวจสอบ: {formatCurrency(mockWorkerStats.pendingBalance)}</span>
-              <span>ถอนขั้นต่ำ: ฿100</span>
+      <div className="grid lg:grid-cols-12 gap-8">
+        {/* Left Column: Profile & Achievements (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Profile Card (Moved from Profile Page) */}
+          <Card variant="elevated" padding="none" className="overflow-hidden border-none shadow-xl shadow-brand-primary/10 relative group">
+            {/* Header Gradient */}
+            <div className="h-24 bg-gradient-to-br from-brand-primary via-brand-primary/80 to-brand-accent relative">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
             </div>
-          </div>
-          <Link href="/work/earnings/withdraw">
-            <Button
-              variant="secondary"
-              className="bg-white text-brand-primary hover:bg-white/90"
-            >
-              💸 ถอนเงิน
-            </Button>
-          </Link>
-        </div>
-      </Card>
+            
+            <div className="relative px-6 pb-6">
+              <div className="relative inline-block -mt-12">
+                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl shadow-xl border-4 border-white text-brand-primary font-bold">
+                  {(worker?.displayName || "น").charAt(0)}
+                </div>
+                <div className="absolute bottom-0 right-0 p-1.5 bg-brand-text-dark text-white rounded-full border-2 border-white shadow-sm">
+                  <Camera className="w-3 h-3" />
+                </div>
+              </div>
+              
+              <div className="mt-3">
+                <h2 className="text-xl font-bold text-brand-text-dark">
+                  {worker?.displayName || "นุ่น"}
+                </h2>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <Badge variant="warning" className="shadow-sm font-bold px-2 py-0.5 text-xs">
+                    <Trophy className="w-3 h-3 mr-1" />
+                    {levelInfo.name}
+                  </Badge>
+                  <Badge variant="secondary" className="shadow-sm px-2 py-0.5 text-xs">
+                    <Star className="w-3 h-3 mr-1 fill-brand-warning text-brand-warning" />
+                    4.9
+                  </Badge>
+                  <Badge variant="success" className="shadow-sm px-2 py-0.5 text-xs">
+                    #1 ประจำสัปดาห์
+                  </Badge>
+                </div>
+              </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card variant="bordered">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-warning/20">
-              <Flame className="w-5 h-5 text-brand-warning" />
+              {/* Level Progress */}
+              <div className="mt-6 p-4 bg-brand-bg/50 rounded-xl border border-brand-border/50">
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="text-brand-text-light font-medium flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5" />
+                    ความคืบหน้าสู่ {currentThreshold.next}
+                  </span>
+                  <span className="font-bold text-brand-primary">
+                    {progressToNextLevel}%
+                  </span>
+                </div>
+                <Progress value={progressToNextLevel} className="h-2 mb-3" />
+                <div className="flex justify-between items-center text-xs">
+                  <span className="bg-brand-primary/10 text-brand-primary px-2 py-1 rounded-md font-medium">
+                    ค่าธรรมเนียม {levelInfo.fee}%
+                  </span>
+                  <span className="bg-brand-success/10 text-brand-success px-2 py-1 rounded-md font-medium">
+                    โบนัส +{levelInfo.bonus}%
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-brand-text-dark">
-                {mockWorkerStats.streak}
-              </p>
-              <p className="text-xs text-brand-text-light">วันติดต่อกัน</p>
-            </div>
-          </div>
-        </Card>
-        <Card variant="bordered">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-success/10">
-              <CheckCircle className="w-5 h-5 text-brand-success" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-brand-text-dark">
-                {worker?.totalJobsCompleted}
-              </p>
-              <p className="text-xs text-brand-text-light">งานสำเร็จ</p>
-            </div>
-          </div>
-        </Card>
-        <Card variant="bordered">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-info/20">
-              <Clock className="w-5 h-5 text-brand-info" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-brand-text-dark">
-                {myPendingClaims.length}
-              </p>
-              <p className="text-xs text-brand-text-light">รอส่งงาน</p>
-            </div>
-          </div>
-        </Card>
-        <Card variant="bordered">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-accent/10">
-              <Trophy className="w-5 h-5 text-brand-accent" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-brand-text-dark">
-                #{mockWorkerStats.weeklyRank}
-              </p>
-              <p className="text-xs text-brand-text-light">อันดับสัปดาห์</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
 
-      {/* Available Jobs */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-brand-text-dark flex items-center gap-2">
-            <Flame className="w-5 h-5 text-brand-error" />
-            งานจากทีมของฉัน ({availableJobs.length})
-          </h2>
-          <Link
-            href="/work/teams"
-            className="text-sm text-brand-primary hover:underline flex items-center gap-1"
-          >
-            ดูทั้งหมด <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="space-y-3">
-          {availableJobs.map((job) => (
-            <Card key={job.id} variant="bordered">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-xs text-brand-text-light mb-1 flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    ทีม: {mockTeam.name}
-                  </p>
-                  <h3 className="font-semibold text-brand-text-dark">
-                    <span>{job.title || `${job.targetQuantity} ${job.type}`}</span>
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="info" size="sm" className="flex items-center gap-1">
-                      <Star className="w-3 h-3" />
-                      แม่ทีม 4.9
-                    </Badge>
-                    <Badge variant="success" size="sm">
-                      จ่ายไว
-                    </Badge>
+          {/* Achievements (Moved from Profile Page) */}
+          <Card variant="elevated" className="border-none shadow-lg">
+            <h3 className="font-bold text-brand-text-dark mb-4 flex items-center gap-2 text-base">
+              <Award className="w-5 h-5 text-brand-accent" />
+              ความสำเร็จ
+              <Sparkles className="w-4 h-4 text-brand-warning" />
+            </h3>
+            <div className="space-y-3">
+              {achievements.map((ach, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 bg-brand-bg/50 rounded-xl hover:bg-brand-bg transition-colors group cursor-default"
+                >
+                  <div className={`p-2 rounded-xl shadow-sm ${ach.bg} ${ach.color} group-hover:scale-110 transition-transform`}>
+                    {ach.icon}
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text-dark text-sm">
+                      {ach.title}
+                    </p>
+                    <p className="text-xs text-brand-text-light">
+                      {ach.desc}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-brand-success">
-                    {formatCurrency(job.pricePerUnit)}/{job.type === "view" ? "view" : "หน่วย"}
-                  </p>
-                  <p className="text-xs text-brand-text-light mt-1">
-                    เหลือ {job.targetQuantity - job.claimedQuantity}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-3 border-t border-brand-border">
-                <div className="flex items-center gap-2 text-sm text-brand-text-light">
-                  <Clock className="w-4 h-4" />
-                  {job.endsAt
-                    ? `ปิดใน ${Math.round(
-                        (new Date(job.endsAt).getTime() - Date.now()) / (1000 * 60 * 60)
-                      )} ชม.`
-                    : "ไม่จำกัดเวลา"}
-                </div>
-                <Link href={`/work/jobs/${job.id}`}>
-                  <Button size="sm">รับงาน →</Button>
-                </Link>
-              </div>
-            </Card>
-          ))}
-
-          {availableJobs.length === 0 && (
-            <Card variant="bordered" className="text-center py-8">
-              <p className="text-brand-text-light">ยังไม่มีงานจากทีมของคุณ</p>
-              <Link href="/work/teams/search" className="inline-block mt-3">
-                <Button variant="outline">ค้นหาทีมใหม่</Button>
-              </Link>
-            </Card>
-          )}
+              ))}
+            </div>
+          </Card>
         </div>
-      </div>
 
-      {/* My Pending Jobs */}
-      {myPendingClaims.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-brand-text-dark flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-brand-primary" />
-              งานของฉัน ({myPendingClaims.length} รอส่ง)
-            </h2>
-            <Link
-              href="/work/my-jobs"
-              className="text-sm text-brand-primary hover:underline flex items-center gap-1"
-            >
-              ดูทั้งหมด <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {myPendingClaims.slice(0, 2).map((claim) => {
-              const job = mockJobs.find((j) => j.id === claim.jobId);
-              return (
-                <Card key={claim.id} variant="bordered">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-brand-text-dark">
-                        {job?.title || "งาน"}
-                      </h3>
-                      <p className="text-sm text-brand-text-light mt-1 flex items-center gap-1">
-                        <ShoppingBag className="w-3 h-3" />
-                        {mockTeam.name} • รับ {claim.quantity} รายการ •{" "}
-                        {formatCurrency(claim.earnAmount)}
-                      </p>
+        {/* Right Column: Wallet, Stats, Jobs (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Wallet Card (Moved to Right Top) */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] text-white border-none shadow-xl shadow-[#8C6A54]/20 relative overflow-hidden md:col-span-2">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10" />
+              <div className="p-6 relative z-10">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <p className="text-white/80 text-sm font-medium mb-1 flex items-center gap-2">
+                      <Wallet className="w-4 h-4" /> ยอดเงินคงเหลือ
+                    </p>
+                    <h2 className="text-5xl font-bold tracking-tight mb-2">
+                      {formatCurrency(mockWorkerStats.availableBalance)}
+                    </h2>
+                    <div className="flex items-center gap-4 text-sm text-white/70">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> รอตรวจสอบ {formatCurrency(mockWorkerStats.pendingBalance)}
+                      </span>
+                      <span className="w-1 h-1 bg-white/30 rounded-full" />
+                      <span>
+                        ถอนแล้ว {formatCurrency(mockWorkerStats.totalEarned)}
+                      </span>
                     </div>
-                    <Link href={`/work/my-jobs/${claim.id}/submit`}>
-                      <Button size="sm" variant="secondary">
-                        ส่งงาน →
+                  </div>
+                  
+                  <div className="flex gap-3 w-full md:w-auto">
+                    <Link href="/work/earnings/withdraw" className="flex-1 md:flex-none">
+                      <Button variant="secondary" className="w-full md:w-auto bg-white text-[#8C6A54] hover:bg-white/90 border-transparent shadow-lg font-bold px-6 h-12">
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        ถอนเงิน
+                      </Button>
+                    </Link>
+                    <Link href="/work/earnings" className="flex-1 md:flex-none">
+                      <Button variant="secondary" className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm px-6 h-12">
+                        <History className="w-4 h-4 mr-2" />
+                        ประวัติ
                       </Button>
                     </Link>
                   </div>
-                </Card>
-              );
-            })}
+                </div>
+              </div>
+            </Card>
           </div>
-        </div>
-      )}
 
-      {/* Streak Bonus */}
-      <Card variant="bordered" className="bg-gradient-to-r from-brand-warning/10 to-transparent">
-        <div className="flex items-center gap-4">
-          <Flame className="w-10 h-10 text-brand-error" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-brand-text-dark">
-              Streak: {mockWorkerStats.streak} วัน
-            </h3>
-            <p className="text-sm text-brand-text-light">
-              ทำงานติดต่อกัน 7 วัน รับโบนัส ฿15!
-            </p>
-            <Progress
-              value={(mockWorkerStats.streak / 7) * 100}
-              className="mt-2"
-              size="sm"
-              variant="warning"
-            />
+          {/* Stats Grid (Updated with Profile Stats) */}
+          <StatsGrid stats={dashboardStats} columns={4} />
+
+          {/* Active Jobs Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-brand-text-dark flex items-center gap-2">
+                <PlayCircle className="w-5 h-5 text-brand-primary" />
+                งานที่กำลังทำอยู่ ({activeJobs.length})
+              </h2>
+              <Link href="/work/jobs" className="text-sm text-brand-primary hover:underline flex items-center gap-1">
+                ดูทั้งหมด <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {activeJobs.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-4">
+                {activeJobs.map((job) => (
+                  <Link href={`/work/jobs/${job.id}`} key={job.id}>
+                    <Card variant="elevated" className="h-full hover:shadow-lg transition-all duration-300 border-l-4 border-l-brand-primary group cursor-pointer hover:-translate-y-1">
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-bold text-brand-text-dark group-hover:text-brand-primary transition-colors line-clamp-1 text-lg">
+                              {job.title}
+                            </h3>
+                            <p className="text-xs text-brand-text-light mt-1 flex items-center gap-1">
+                              จาก {job.team}
+                            </p>
+                          </div>
+                          <Badge variant="primary" className="bg-brand-primary/10 text-brand-primary border-none text-sm px-2.5 py-1">
+                            ฿{job.payout}
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <div className="flex justify-between text-xs text-brand-text-light font-medium">
+                            <span className="flex items-center gap-1.5">
+                              <Target className="w-3.5 h-3.5 text-brand-primary" /> 
+                              {job.progress}/{job.total}
+                            </span>
+                            <span className="text-brand-warning flex items-center gap-1.5 bg-brand-warning/10 px-2 py-0.5 rounded-md">
+                              <Clock className="w-3.5 h-3.5" /> เหลือ {job.deadline}
+                            </span>
+                          </div>
+                          <Progress value={(job.progress / job.total) * 100} className="h-2" />
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={PlayCircle}
+                title="ไม่มีงานที่กำลังทำ"
+                description="ไปที่ Hub ตลาดกลางเพื่อค้นหางานใหม่ๆ"
+                action={
+                  <Link href="/hub">
+                    <Button variant="outline">ไปที่ Hub</Button>
+                  </Link>
+                }
+              />
+            )}
           </div>
-          <div className="text-right">
-            <p className="text-xs text-brand-text-light">โบนัสถัดไป</p>
-            <p className="font-bold text-brand-warning">+฿15</p>
+
+          {/* Recommended Jobs */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-brand-text-dark flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-brand-warning" />
+                งานแนะนำสำหรับคุณ
+              </h2>
+              <Link href="/hub" className="text-sm text-brand-primary hover:underline flex items-center gap-1">
+                ดูงานทั้งหมด <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              {[1, 2].map((i) => (
+                <Card key={i} variant="elevated" className="hover:shadow-lg transition-all duration-300 group cursor-pointer border-none shadow-md">
+                  <div className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${i === 1 ? 'bg-[#1877F2]/10 text-[#1877F2]' : 'bg-gray-800/10 text-gray-800'}`}>
+                        {i === 1 ? (
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.962.925-1.962 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        ) : (
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.49-3.35-3.98-5.6-1.11-5.5 2.62-10.58 8.04-11.81 2.78-.59 5.53.17 7.78 1.83v-3.93c-2.16-1.49-4.81-2.06-7.41-1.4C6.06 2.7 3.33 5.42 2.11 8.2c-1.9 4.55-.4 10.3 3.64 13.44 2.44 1.91 5.76 2.39 8.66 1.22 1.97-1.02 3.33-2.92 3.73-5.06.33-1.9.25-3.8.3-5.69V.02z"/></svg>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-bold text-brand-text-dark text-lg group-hover:text-brand-primary transition-colors">
+                            {i === 1 ? "กดไลค์เพจท่องเที่ยว" : "ดูวิดีโอ TikTok"}
+                          </h3>
+                          <Badge variant="success" className="bg-brand-success/10 text-brand-success border-none">
+                            ฿{i === 1 ? "0.5" : "0.2"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-brand-text-light mt-1">
+                          {i === 1 ? "ต้องการ 500 คน • จ่ายทันที" : "ต้องการ 1,000 คน • ง่ายมาก"}
+                        </p>
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className="text-xs font-medium text-brand-text-light bg-brand-bg px-2 py-1 rounded-md">
+                            {i === 1 ? "Facebook" : "TikTok"}
+                          </span>
+                          <span className="text-xs font-medium text-brand-text-light bg-brand-bg px-2 py-1 rounded-md">
+                            {i === 1 ? "Human" : "Bot"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
-

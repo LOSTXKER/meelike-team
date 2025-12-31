@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button, Input, Badge, Progress } from "@/components/ui";
-import { PageHeader } from "@/components/shared";
+import { Card, Button, Input, Badge } from "@/components/ui";
 import { useAuthStore } from "@/lib/store";
 import {
   User,
@@ -11,13 +10,9 @@ import {
   Lock,
   Camera,
   Save,
-  Star,
-  Award,
-  TrendingUp,
-  Calendar,
-  CheckCircle2,
-  Trophy,
-  Flame,
+  ClipboardList,
+  Building2,
+  Settings,
 } from "lucide-react";
 
 export default function WorkerProfilePage() {
@@ -42,132 +37,52 @@ export default function WorkerProfilePage() {
     alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
   };
 
-  const stats = {
-    totalJobs: 245,
-    rating: 4.9,
-    totalEarnings: 12500,
-    level: "Gold",
-    streak: 7,
-    rank: 1,
-    nextLevelProgress: 75,
-  };
-
-  const achievements = [
-    { icon: <Trophy className="w-6 h-6" />, title: "Top Worker", desc: "อันดับ 1 ประจำสัปดาห์", color: "text-yellow-500" },
-    { icon: <Flame className="w-6 h-6" />, title: "7 Day Streak", desc: "ทำงานติดต่อกัน 7 วัน", color: "text-orange-500" },
-    { icon: <Star className="w-6 h-6" />, title: "5 Star Rating", desc: "คะแนนเฉลี่ย 4.9+", color: "text-purple-500" },
-    { icon: <CheckCircle2 className="w-6 h-6" />, title: "100% Success", desc: "งานสำเร็จ 100 งาน", color: "text-green-500" },
-  ];
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
-      <PageHeader
-        title="โปรไฟล์ของฉัน"
-        description="จัดการข้อมูลและดูสถิติการทำงาน"
-        icon={User}
-      />
+      <div>
+        <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight flex items-center gap-3">
+          <span className="p-2.5 bg-brand-primary/10 rounded-xl">
+            <Settings className="w-7 h-7 text-brand-primary" />
+          </span>
+          ตั้งค่าบัญชี
+        </h1>
+        <p className="text-brand-text-light mt-2 text-lg">
+          จัดการข้อมูลส่วนตัวและรหัสผ่าน
+        </p>
+      </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left Column - Stats */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Profile Card */}
-          <Card variant="bordered" padding="lg" className="text-center">
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Left Column - Quick Profile & Navigation (Optional future nav) */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Simple Profile Card */}
+          <Card variant="elevated" className="border-none shadow-lg text-center py-8">
             <div className="relative inline-block">
-              <div className="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center text-4xl mx-auto">
-                น
+              <div className="w-32 h-32 bg-brand-bg rounded-full flex items-center justify-center text-5xl shadow-md border-4 border-white text-brand-primary font-bold mx-auto">
+                {formData.displayName.charAt(0)}
               </div>
-              <button className="absolute bottom-0 right-0 w-8 h-8 bg-brand-primary text-white rounded-full flex items-center justify-center shadow-lg">
-                <Camera className="w-4 h-4" />
+              <button className="absolute bottom-0 right-0 w-10 h-10 bg-brand-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-brand-primary/90 transition-colors border-2 border-white">
+                <Camera className="w-5 h-5" />
               </button>
             </div>
-            <h2 className="text-xl font-bold text-brand-text-dark mt-4">
+            <h2 className="text-2xl font-bold text-brand-text-dark mt-4">
               {formData.displayName}
             </h2>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <Badge variant="warning">{stats.level}</Badge>
-              <span className="text-brand-text-light">•</span>
-              <span className="flex items-center gap-1 text-brand-warning">
-                <Star className="w-4 h-4 fill-current" />
-                {stats.rating}
-              </span>
-            </div>
-
-            {/* Level Progress */}
-            <div className="mt-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">ถึง Platinum</span>
-                <span className="font-medium text-brand-text-dark">
-                  {stats.nextLevelProgress}%
-                </span>
-              </div>
-              <Progress value={stats.nextLevelProgress} />
-            </div>
-          </Card>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card variant="bordered" padding="sm" className="text-center">
-              <CheckCircle2 className="w-5 h-5 text-brand-success mx-auto mb-1" />
-              <p className="text-xl font-bold text-brand-text-dark">
-                {stats.totalJobs}
-              </p>
-              <p className="text-xs text-brand-text-light">งานสำเร็จ</p>
-            </Card>
-            <Card variant="bordered" padding="sm" className="text-center">
-              <TrendingUp className="w-5 h-5 text-brand-primary mx-auto mb-1" />
-              <p className="text-xl font-bold text-brand-text-dark">
-                ฿{stats.totalEarnings.toLocaleString()}
-              </p>
-              <p className="text-xs text-brand-text-light">รายได้รวม</p>
-            </Card>
-            <Card variant="bordered" padding="sm" className="text-center">
-              <Calendar className="w-5 h-5 text-brand-warning mx-auto mb-1" />
-              <p className="text-xl font-bold text-brand-text-dark">
-                {stats.streak} วัน
-              </p>
-              <p className="text-xs text-brand-text-light">ทำงานติดต่อกัน</p>
-            </Card>
-            <Card variant="bordered" padding="sm" className="text-center">
-              <Award className="w-5 h-5 text-brand-info mx-auto mb-1" />
-              <p className="text-xl font-bold text-brand-text-dark">
-                #{stats.rank}
-              </p>
-              <p className="text-xs text-brand-text-light">อันดับสัปดาห์</p>
-            </Card>
-          </div>
-
-          {/* Achievements */}
-          <Card variant="bordered" padding="md">
-            <h3 className="font-semibold text-brand-text-dark mb-3 flex items-center gap-1">
-              <Award className="w-4 h-4" />
-              ความสำเร็จ
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {achievements.map((ach, index) => (
-                <div
-                  key={index}
-                  className="p-2 bg-brand-bg rounded-lg text-center"
-                >
-                  <span className={`flex items-center justify-center mb-1 ${ach.color}`}>{ach.icon}</span>
-                  <p className="text-xs font-medium text-brand-text-dark mt-1">
-                    {ach.title}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <p className="text-brand-text-light text-sm mt-1">{formData.email}</p>
           </Card>
         </div>
 
         {/* Right Column - Forms */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-brand-primary" />
+          <Card variant="elevated" className="border-none shadow-lg">
+            <h2 className="text-lg font-bold text-brand-text-dark mb-6 flex items-center gap-3 border-b border-brand-border/50 pb-4">
+              <div className="p-2 bg-brand-primary/10 rounded-xl">
+                <ClipboardList className="w-5 h-5 text-brand-primary" />
+              </div>
               ข้อมูลพื้นฐาน
             </h2>
-            <div className="grid gap-4">
+            <div className="grid gap-5">
               <Input
                 label="ชื่อที่แสดง"
                 name="displayName"
@@ -175,7 +90,7 @@ export default function WorkerProfilePage() {
                 onChange={handleChange}
                 leftIcon={<User className="w-4 h-4" />}
               />
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <Input
                   label="อีเมล"
                   type="email"
@@ -197,16 +112,24 @@ export default function WorkerProfilePage() {
                 name="lineId"
                 value={formData.lineId}
                 onChange={handleChange}
+                leftIcon={
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                  </svg>
+                }
               />
             </div>
           </Card>
 
           {/* Change Password */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4">
+          <Card variant="elevated" className="border-none shadow-lg">
+            <h2 className="text-lg font-bold text-brand-text-dark mb-6 flex items-center gap-3 border-b border-brand-border/50 pb-4">
+              <div className="p-2 bg-brand-warning/10 rounded-xl">
+                <Lock className="w-5 h-5 text-brand-warning" />
+              </div>
               เปลี่ยนรหัสผ่าน
             </h2>
-            <div className="grid gap-4">
+            <div className="grid gap-5">
               <Input
                 label="รหัสผ่านปัจจุบัน"
                 type="password"
@@ -215,7 +138,7 @@ export default function WorkerProfilePage() {
                 onChange={handleChange}
                 leftIcon={<Lock className="w-4 h-4" />}
               />
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <Input
                   label="รหัสผ่านใหม่"
                   type="password"
@@ -237,34 +160,42 @@ export default function WorkerProfilePage() {
           </Card>
 
           {/* Bank Account */}
-          <Card variant="bordered" padding="lg">
-            <h2 className="font-semibold text-brand-text-dark mb-4">
-              🏦 บัญชีธนาคาร (สำหรับถอนเงิน)
+          <Card variant="elevated" className="border-none shadow-lg">
+            <h2 className="text-lg font-bold text-brand-text-dark mb-6 flex items-center gap-3 border-b border-brand-border/50 pb-4">
+              <div className="p-2 bg-brand-success/10 rounded-xl">
+                <Building2 className="w-5 h-5 text-brand-success" />
+              </div>
+              บัญชีธนาคาร
+              <Badge variant="info" size="sm">สำหรับถอนเงิน</Badge>
             </h2>
-            <div className="grid gap-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid gap-5">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
+                  <label className="block text-sm font-bold text-brand-text-dark mb-2">
                     ธนาคาร
                   </label>
-                  <select className="w-full bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-brand-text-dark focus:outline-none focus:border-brand-primary">
+                  <select className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-brand-text-dark focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-sm transition-all">
                     <option>ธนาคารกสิกรไทย</option>
                     <option>ธนาคารไทยพาณิชย์</option>
                     <option>ธนาคารกรุงเทพ</option>
                     <option>ธนาคารกรุงไทย</option>
+                    <option>ธนาคารกรุงศรีอยุธยา</option>
+                    <option>ธนาคารทหารไทยธนชาต</option>
                   </select>
                 </div>
                 <Input label="เลขบัญชี" placeholder="xxx-x-xxxxx-x" />
               </div>
-              <Input label="ชื่อบัญชี" placeholder="ชื่อ นามสกุล" />
+              <Input label="ชื่อบัญชี" placeholder="ชื่อ-นามสกุล ตามบัญชีธนาคาร" />
             </div>
           </Card>
 
           {/* Save Button */}
-          <div className="flex justify-end gap-3">
-            <Button variant="outline">ยกเลิก</Button>
-            <Button onClick={handleSave}>
-              <Save className="w-4 h-4 mr-2" />
+          <div className="flex justify-end gap-4 pt-4">
+            <Button variant="outline" className="bg-white border-brand-border/50 shadow-sm hover:bg-brand-bg px-6">
+              ยกเลิก
+            </Button>
+            <Button onClick={handleSave} size="lg" className="shadow-xl shadow-brand-primary/20 px-8">
+              <Save className="w-5 h-5 mr-2" />
               บันทึกการเปลี่ยนแปลง
             </Button>
           </div>
