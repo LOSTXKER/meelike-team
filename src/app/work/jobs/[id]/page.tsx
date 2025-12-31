@@ -88,7 +88,7 @@ export default function JobDetailPage() {
               </Badge>
             </div>
             <div className="flex items-center gap-3 mt-2">
-              <Badge variant="secondary" className="bg-brand-bg text-brand-text-dark border-brand-border/50 font-medium px-3 py-1">
+              <Badge variant="default" className="bg-brand-bg text-brand-text-dark border-brand-border/50 font-medium px-3 py-1">
                 <Users className="w-3.5 h-3.5 mr-1.5 text-brand-text-light" />
                 {job.teamName}
               </Badge>
@@ -230,7 +230,7 @@ export default function JobDetailPage() {
                   rel="noopener noreferrer"
                   className="flex-1"
                 >
-                  <Button variant="default" className="w-full shadow-md shadow-brand-primary/20">
+                  <Button variant="primary" className="w-full shadow-md shadow-brand-primary/20">
                     <ExternalLink className="w-4 h-4 mr-2" />
                     เปิดลิงก์ทำงาน
                   </Button>

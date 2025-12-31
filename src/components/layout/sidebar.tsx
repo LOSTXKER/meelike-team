@@ -143,7 +143,7 @@ function NavItemComponent({
         {sidebarOpen && <span className="font-medium">{item.label}</span>}
       </div>
       {sidebarOpen && item.badge && (
-        <Badge variant={isActive ? "secondary" : "error"} size="sm" className={isActive ? "bg-white/20 text-white" : ""}>
+        <Badge variant={isActive ? "default" : "error"} size="sm" className={isActive ? "bg-white/20 text-white" : ""}>
           {item.badge}
         </Badge>
       )}

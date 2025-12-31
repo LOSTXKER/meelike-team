@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
 import { PageHeader, PlatformIcon } from "@/components/shared";
+import type { Platform } from "@/types";
 import {
   Search,
   Briefcase,
@@ -341,7 +342,7 @@ export default function OutsourcePage() {
                 <div className="p-3 bg-brand-bg rounded-lg">
                   <p className="text-xs text-brand-text-light">Platform</p>
                   <p className="font-medium text-brand-text-dark flex items-center gap-1">
-                    <PlatformIcon platform={job.platform} className="w-4 h-4" />
+                    <PlatformIcon platform={job.platform as Platform} className="w-4 h-4" />
                     <span>{job.platform}</span>
                   </p>
                 </div>

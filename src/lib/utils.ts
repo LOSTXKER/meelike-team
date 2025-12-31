@@ -90,13 +90,13 @@ export function getStatusColor(status: string): string {
   return colors[status] || "bg-gray-100 text-gray-600";
 }
 
-export function getLevelInfo(level: string): { icon: string; name: string; color: string } {
-  const levels: Record<string, { icon: string; name: string; color: string }> = {
-    bronze: { icon: "bronze", name: "Bronze", color: "text-amber-600" },
-    silver: { icon: "silver", name: "Silver", color: "text-gray-400" },
-    gold: { icon: "gold", name: "Gold", color: "text-yellow-500" },
-    platinum: { icon: "platinum", name: "Platinum", color: "text-cyan-400" },
-    vip: { icon: "vip", name: "VIP", color: "text-purple-500" },
+export function getLevelInfo(level: string): { icon: string; name: string; color: string; fee: number; bonus: number } {
+  const levels: Record<string, { icon: string; name: string; color: string; fee: number; bonus: number }> = {
+    bronze: { icon: "bronze", name: "Bronze", color: "text-amber-600", fee: 10, bonus: 0 },
+    silver: { icon: "silver", name: "Silver", color: "text-gray-400", fee: 8, bonus: 2 },
+    gold: { icon: "gold", name: "Gold", color: "text-yellow-500", fee: 6, bonus: 5 },
+    platinum: { icon: "platinum", name: "Platinum", color: "text-cyan-400", fee: 4, bonus: 8 },
+    vip: { icon: "vip", name: "VIP", color: "text-purple-500", fee: 2, bonus: 10 },
   };
   return levels[level] || levels.bronze;
 }

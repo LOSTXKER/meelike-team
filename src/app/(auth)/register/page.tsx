@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, Card } from "@/components/ui";
 import { useAuthStore } from "@/lib/store";
 import { Mail, Lock, User, Store, Phone, Sparkles } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoading } = useAuthStore();
@@ -198,3 +198,10 @@ export default function RegisterPage() {
   );
 }
 
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-bg flex items-center justify-center">กำลังโหลด...</div>}>
+      <RegisterForm />
+    </Suspense>
+  );
+}

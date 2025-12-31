@@ -304,7 +304,7 @@ export default function NewOrderPage() {
                 <div className="w-10 h-10 rounded-xl bg-[#E6F4EA] flex items-center justify-center text-[#1E8E3E]">
                    <ShoppingCart className="w-5 h-5" />
                 </div>
-                รายการสั่งซื้อ <Badge variant="secondary" className="ml-2">{items.length}</Badge>
+                รายการสั่งซื้อ <Badge variant="default" className="ml-2">{items.length}</Badge>
               </h2>
 
               <div className="space-y-4">
@@ -433,7 +433,7 @@ export default function NewOrderPage() {
             </Card>
 
             {/* Tips */}
-            <Card variant="flat" padding="md" className="bg-[#E8F0FE] border border-[#D2E3FC]">
+            <Card variant="bordered" padding="md" className="bg-[#E8F0FE] border border-[#D2E3FC]">
               <div className="flex gap-3">
                 <AlertCircle className="w-5 h-5 text-[#1967D2] shrink-0 mt-0.5" />
                 <div className="text-sm text-[#1967D2]">

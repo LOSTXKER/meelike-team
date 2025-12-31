@@ -32,7 +32,9 @@ export default function HubLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { isAuthenticated, user, role, _hasHydrated } = useAuthStore();
+  const { user, hasHydrated } = useAuthStore();
+  const isAuthenticated = !!user;
+  const role = user?.role;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Hub is public - no need to wait for hydration to show content
@@ -96,7 +98,7 @@ export default function HubLayout({
                       <User className="w-4 h-4 text-brand-primary" />
                     </div>
                     <span className="hidden sm:block text-sm font-medium text-brand-text-dark">
-                      {user?.displayName || "ผู้ใช้"}
+                      {user?.seller?.storeName || user?.worker?.displayName || "ผู้ใช้"}
                     </span>
                   </Link>
                 </>

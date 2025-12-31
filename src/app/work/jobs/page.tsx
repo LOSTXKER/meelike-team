@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Progress, WorkerJobsSkeleton } from "@/components/ui";
 import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
-import { mockJobs, mockTeams } from "@/lib/mock-data";
+import { mockJobs } from "@/lib/mock-data";
 import type { Platform, ServiceMode } from "@/types";
 import {
   Briefcase,
@@ -213,18 +213,18 @@ export default function WorkerJobsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
                     <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-bg border border-brand-border/50 shadow-sm group-hover:scale-105 transition-transform duration-300">
-                      <PlatformIcon platform={job.platform} className="w-7 h-7" />
+                      <PlatformIcon platform={job.platform as Platform} className="w-7 h-7" />
                     </div>
                     <div>
                       <h3 className="font-bold text-xl text-brand-text-dark group-hover:text-brand-primary transition-colors mb-1">
                         {job.serviceName}
                       </h3>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" size="sm" className="bg-brand-bg text-brand-text-light border-brand-border/50">
+                        <Badge variant="default" size="sm" className="bg-brand-bg text-brand-text-light border-brand-border/50">
                           <Users className="w-3 h-3 mr-1" />
                           {job.teamName}
                         </Badge>
-                        <ServiceTypeBadge type={job.type} />
+                        <ServiceTypeBadge type={job.type as ServiceMode} />
                       </div>
                     </div>
                   </div>
@@ -269,7 +269,7 @@ export default function WorkerJobsPage() {
                       </button>
                       <span className="flex items-center gap-1.5 text-xs font-medium bg-brand-warning/10 text-brand-warning px-2 py-1 rounded-lg border border-brand-warning/20">
                         <Timer className="w-3.5 h-3.5" />
-                        เหลือ {getTimeRemaining(job.deadline!)}
+                        เหลือ {getTimeRemaining((job as { deadline?: string }).deadline || "")}
                       </span>
                     </div>
                   </div>
@@ -282,7 +282,7 @@ export default function WorkerJobsPage() {
                       <div className="p-1 rounded bg-brand-warning/10">
                         <Clock className="w-3.5 h-3.5 text-brand-warning" />
                       </div>
-                      ส่งงานเมื่อ <span className="font-medium">{new Date(job.submittedAt!).toLocaleDateString("th-TH", {
+                      ส่งงานเมื่อ <span className="font-medium">{new Date((job as { submittedAt?: string }).submittedAt || "").toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         hour: "2-digit",
@@ -300,13 +300,13 @@ export default function WorkerJobsPage() {
                       <div className="p-1 rounded bg-brand-success/10">
                         <CheckCircle2 className="w-3.5 h-3.5 text-brand-success" />
                       </div>
-                      เสร็จเมื่อ <span className="font-medium">{new Date(job.completedAt!).toLocaleDateString("th-TH", {
+                      เสร็จเมื่อ <span className="font-medium">{new Date((job as { completedAt?: string }).completedAt || "").toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
                       })}</span>
                     </span>
-                    <Badge variant="success" className="uppercase tracking-wide font-bold">+฿{job.earnings}</Badge>
+                    <Badge variant="success" className="uppercase tracking-wide font-bold">+฿{(job as { earnings?: number }).earnings || 0}</Badge>
                   </div>
                 )}
 

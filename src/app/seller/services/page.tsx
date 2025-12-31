@@ -392,10 +392,10 @@ export default function ServicesPage() {
             <Select
               label="แพลตฟอร์ม"
               options={[
-                { value: "facebook", label: "Facebook", icon: <Facebook className="w-4 h-4" /> },
-                { value: "instagram", label: "Instagram", icon: <Instagram className="w-4 h-4" /> },
-                { value: "tiktok", label: "TikTok", icon: <Music2 className="w-4 h-4" /> },
-                { value: "youtube", label: "YouTube", icon: <Youtube className="w-4 h-4" /> },
+                { value: "facebook", label: "📘 Facebook" },
+                { value: "instagram", label: "📸 Instagram" },
+                { value: "tiktok", label: "🎵 TikTok" },
+                { value: "youtube", label: "📺 YouTube" },
                 { value: "twitter", label: "🐦 Twitter" },
               ]}
               defaultValue={editingService?.category}

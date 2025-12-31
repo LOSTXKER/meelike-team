@@ -303,7 +303,7 @@ export default function SubscriptionPage() {
                                 ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary-dark"
                                 : "bg-white text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
                           }`}
-                          variant={isCurrent ? "outline" : isPopular ? "default" : "outline"}
+                          variant={isCurrent ? "outline" : isPopular ? "primary" : "outline"}
                        >
                           {isCurrent ? "ใช้งานอยู่" : plan.price === null ? "ติดต่อฝ่ายขาย" : "เลือกแพ็คเกจนี้"}
                        </Button>

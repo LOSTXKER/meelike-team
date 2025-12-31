@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Card, Button, Badge, Progress, Avatar } from "@/components/ui";
 import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
+import type { Platform, ServiceMode } from "@/types";
 import {
   ArrowLeft,
   Briefcase,
@@ -214,7 +215,7 @@ export default function TeamJobsPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-brand-bg border border-brand-border/50 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                      <PlatformIcon platform={job.platform} className="w-7 h-7" />
+                      <PlatformIcon platform={job.platform as Platform} className="w-7 h-7" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -226,7 +227,7 @@ export default function TeamJobsPage() {
                             <Zap className="w-3 h-3 mr-1" /> ด่วน
                           </Badge>
                         )}
-                        <ServiceTypeBadge type={job.type} />
+                        <ServiceTypeBadge type={job.type as ServiceMode} />
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-sm text-brand-text-light">
                         <span className="flex items-center gap-1">
@@ -270,7 +271,7 @@ export default function TeamJobsPage() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-brand-bg border border-brand-border/50 flex items-center justify-center shadow-sm">
-                        <PlatformIcon platform={job.platform} className="w-7 h-7" />
+                        <PlatformIcon platform={job.platform as Platform} className="w-7 h-7" />
                       </div>
                       <div>
                         <h3 className="font-bold text-lg text-brand-text-dark group-hover:text-brand-primary transition-colors">

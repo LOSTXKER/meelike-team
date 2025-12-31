@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Card, Button, Badge, Progress } from "@/components/ui";
-import { StatsGrid } from "@/components/shared";
+import { StatsGrid, EmptyState } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { mockWorkerStats } from "@/lib/mock-data";
@@ -156,7 +156,7 @@ export default function WorkerDashboard() {
                     <Trophy className="w-3 h-3 mr-1" />
                     {levelInfo.name}
                   </Badge>
-                  <Badge variant="secondary" className="shadow-sm px-2 py-0.5 text-xs">
+                  <Badge variant="default" className="shadow-sm px-2 py-0.5 text-xs">
                     <Star className="w-3 h-3 mr-1 fill-brand-warning text-brand-warning" />
                     4.9
                   </Badge>
@@ -295,7 +295,7 @@ export default function WorkerDashboard() {
                               จาก {job.team}
                             </p>
                           </div>
-                          <Badge variant="primary" className="bg-brand-primary/10 text-brand-primary border-none text-sm px-2.5 py-1">
+                          <Badge variant="info" className="bg-brand-primary/10 text-brand-primary border-none text-sm px-2.5 py-1">
                             ฿{job.payout}
                           </Badge>
                         </div>

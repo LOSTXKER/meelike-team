@@ -35,7 +35,7 @@ export default function WorkerTeamsPage() {
                 <div>
                   <h3 className="font-bold text-brand-text-dark text-xl flex items-center gap-2">
                     {team.name}
-                    <Badge variant="secondary" className="bg-brand-bg text-brand-text-light font-normal text-xs border-brand-border/50">
+                    <Badge variant="default" className="bg-brand-bg text-brand-text-light font-normal text-xs border-brand-border/50">
                       ID: {team.id}
                     </Badge>
                   </h3>

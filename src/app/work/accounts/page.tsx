@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, Button, Input, Badge, Modal } from "@/components/ui";
 import { PageHeader, EmptyState } from "@/components/shared";
 import {
@@ -36,7 +36,7 @@ interface SocialAccount {
 
 const platformConfig: Record<
   Platform,
-  { name: string; icon: JSX.Element; color: string; bgColor: string; placeholder: string; gradient: string }
+  { name: string; icon: React.ReactNode; color: string; bgColor: string; placeholder: string; gradient: string }
 > = {
   facebook: {
     name: "Facebook",
@@ -238,7 +238,7 @@ export default function WorkerAccountsPage() {
               <ClipboardList className="w-5 h-5 text-brand-primary" />
             </div>
             บัญชีทั้งหมด
-            <Badge variant="secondary" className="ml-1">{accounts.length}</Badge>
+            <Badge variant="default" className="ml-1">{accounts.length}</Badge>
           </h2>
           <div className="flex items-center gap-2 text-sm text-brand-text-light">
             <Shield className="w-4 h-4 text-brand-success" />

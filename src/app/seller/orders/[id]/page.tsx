@@ -52,10 +52,10 @@ export default function OrderDetailPage() {
   // Mock find order
   const order = mockOrders.find((o) => o.id === orderId) || mockOrders[0];
 
-  // Helper for customer data (mock data uses customer object)
-  const customerName = order.customer?.name || order.buyerName || "ลูกค้า";
-  const customerContact = order.customer?.contactValue || order.buyerContact || "";
-  const paymentProof = order.paymentProof || order.paymentProofUrl;
+  // Helper for customer data
+  const customerName = order.customer?.name || "ลูกค้า";
+  const customerContact = order.customer?.contactValue || "";
+  const paymentProof = order.paymentProof;
 
   const getServiceInfo = (serviceId: string) => {
     return mockServices.find((s) => s.id === serviceId);
@@ -134,7 +134,7 @@ export default function OrderDetailPage() {
               <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
                 <Package className="w-5 h-5" />
               </div>
-              รายการสั่งซื้อ <Badge variant="secondary" className="ml-2">{order.items.length}</Badge>
+              รายการสั่งซื้อ <Badge variant="default" className="ml-2">{order.items.length}</Badge>
             </h2>
 
             <div className="space-y-6">
@@ -151,11 +151,11 @@ export default function OrderDetailPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-2xl border border-brand-border/20">
-                          {service?.platform === "facebook"
+                          {service?.category === "facebook"
                             ? <Facebook className="w-6 h-6 text-[#1877F2]" />
-                            : service?.platform === "instagram"
+                            : service?.category === "instagram"
                             ? <Instagram className="w-6 h-6 text-[#E4405F]" />
-                            : service?.platform === "tiktok"
+                            : service?.category === "tiktok"
                             ? <Music2 className="w-6 h-6 text-black" />
                             : <Youtube className="w-6 h-6 text-[#FF0000]" />}
                         </div>
@@ -166,12 +166,12 @@ export default function OrderDetailPage() {
                           <div className="flex items-center gap-2 mt-1.5">
                             <Badge
                               variant={
-                                service?.type === "bot" ? "bot" : "human"
+                                service?.serviceType === "bot" ? "bot" : "human"
                               }
                               size="sm"
                               className="shadow-none border-none"
                             >
-                              {service?.type === "bot" ? "Bot Service" : "Real Human"}
+                              {service?.serviceType === "bot" ? "Bot Service" : "Real Human"}
                             </Badge>
                             <span className="text-sm font-medium text-brand-text-light px-2 py-0.5 bg-brand-bg rounded-md">
                               จำนวน {item.quantity.toLocaleString()}
@@ -181,10 +181,10 @@ export default function OrderDetailPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-brand-primary text-xl">
-                          ฿{(item.subtotal || item.totalPrice || 0).toLocaleString()}
+                          ฿{(item.subtotal || 0).toLocaleString()}
                         </p>
                         <p className="text-sm text-brand-text-light">
-                          ฿{item.unitPrice || item.pricePerUnit || 0} / หน่วย
+                          ฿{item.unitPrice || 0} / หน่วย
                         </p>
                       </div>
                     </div>
@@ -236,7 +236,7 @@ export default function OrderDetailPage() {
                     </div>
 
                     {/* Actions for human services */}
-                    {service?.type === "human" &&
+                    {service?.serviceType === "human" &&
                       order.status === "processing" && (
                         <div className="flex gap-2 pt-2">
                           <Button
@@ -264,7 +264,7 @@ export default function OrderDetailPage() {
                 ยอดรวมทั้งหมด
               </span>
               <span className="text-3xl font-bold text-brand-primary">
-                ฿{(order.total || order.totalAmount || 0).toLocaleString()}
+                ฿{(order.total || 0).toLocaleString()}
               </span>
             </div>
           </Card>
@@ -355,7 +355,7 @@ export default function OrderDetailPage() {
                   <p className="font-bold text-brand-text-dark text-lg">
                     {customerName}
                   </p>
-                  <Badge variant="secondary" size="sm" className="mt-1">ลูกค้าใหม่</Badge>
+                  <Badge variant="default" size="sm" className="mt-1">ลูกค้าใหม่</Badge>
                 </div>
               </div>
 
@@ -496,7 +496,7 @@ export default function OrderDetailPage() {
             <div className="flex justify-between">
               <span className="text-brand-text-light">จำนวนเงิน</span>
               <span className="font-bold text-brand-primary">
-                ฿{(order.total || order.totalAmount || 0).toLocaleString()}
+                ฿{(order.total || 0).toLocaleString()}
               </span>
             </div>
           </div>

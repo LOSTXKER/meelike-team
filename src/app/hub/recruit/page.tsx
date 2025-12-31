@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
 import { PageHeader, PlatformIcon } from "@/components/shared";
+import type { Platform } from "@/types";
 import {
   Search,
   Users,
@@ -255,7 +256,7 @@ export default function RecruitPage() {
                     key={platform}
                     className="px-3 py-1 bg-brand-bg rounded-full text-sm flex items-center gap-1"
                   >
-                    <PlatformIcon platform={platform} className="w-4 h-4" />
+                    <PlatformIcon platform={platform as Platform} className="w-4 h-4" />
                     <span>{platform}</span>
                   </span>
                 ))}

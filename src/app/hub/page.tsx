@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
 import { PlatformIcon } from "@/components/shared";
+import type { Platform } from "@/types";
 import {
   Search,
   Users,
@@ -363,7 +364,7 @@ export default function HubPage() {
                     key={platform}
                     className="px-3 py-1.5 bg-brand-bg border border-brand-border/50 rounded-lg text-xs font-medium text-brand-text-dark flex items-center gap-1.5"
                   >
-                    <PlatformIcon platform={platform} className="w-3.5 h-3.5" />
+                    <PlatformIcon platform={platform as Platform} className="w-3.5 h-3.5" />
                     <span className="capitalize">{platform}</span>
                   </span>
                 ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Card, Button, Input, Textarea, Select, Badge } from "@/components/ui";
@@ -14,6 +14,10 @@ import {
   Upload,
   Copy,
   CheckCircle,
+  ClipboardList,
+  User,
+  CreditCard,
+  DollarSign,
 } from "lucide-react";
 
 interface CartItem {
@@ -23,7 +27,7 @@ interface CartItem {
   comments?: string[];
 }
 
-export default function OrderPage() {
+function OrderForm() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -468,3 +472,10 @@ export default function OrderPage() {
   );
 }
 
+export default function OrderPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-bg flex items-center justify-center">กำลังโหลด...</div>}>
+      <OrderForm />
+    </Suspense>
+  );
+}

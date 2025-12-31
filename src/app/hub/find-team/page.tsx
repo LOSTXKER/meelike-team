@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Input } from "@/components/ui";
 import { PageHeader, PlatformIcon } from "@/components/shared";
+import type { Platform } from "@/types";
 import {
   Search,
   User,
@@ -318,7 +319,7 @@ export default function FindTeamPage() {
                       key={platform}
                       className="px-2 py-1 bg-brand-primary/10 rounded text-xs text-brand-primary flex items-center gap-1"
                     >
-                      <PlatformIcon platform={platform} className="w-4 h-4" />
+                      <PlatformIcon platform={platform as Platform} className="w-4 h-4" />
                       <span>{platform}</span>
                     </span>
                   ))}
