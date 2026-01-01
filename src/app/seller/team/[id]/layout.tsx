@@ -6,7 +6,7 @@ import { useState, useMemo } from "react";
 import { useSellerTeams } from "@/lib/api/hooks";
 import { getTeamNav, isNavGroup } from "@/lib/constants/navigation";
 import { cn } from "@/lib/utils";
-import { Button, Avatar, Badge, Skeleton } from "@/components/ui";
+import { Button, Badge, Skeleton } from "@/components/ui";
 import {
   ArrowLeft,
   ChevronDown,
@@ -28,7 +28,6 @@ export default function TeamLayout({
   const teamId = params.id as string;
 
   const [showTeamSwitcher, setShowTeamSwitcher] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const { data: teams, isLoading } = useSellerTeams();
@@ -61,16 +60,14 @@ export default function TeamLayout({
           <Skeleton className="h-10 w-10 rounded-xl" />
           <Skeleton className="h-6 w-48" />
         </div>
-        <div className="flex">
-          <div className="w-64 bg-white border-r border-brand-border/50 p-4 space-y-2">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-10 w-full rounded-lg" />
-            ))}
-          </div>
-          <main className="flex-1 p-6">
-            <Skeleton className="h-64 w-full rounded-xl" />
-          </main>
+        <div className="h-14 bg-white border-b border-brand-border/50 px-6 flex items-center gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-8 w-24 rounded-lg" />
+          ))}
         </div>
+        <main className="p-6">
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </main>
       </div>
     );
   }
@@ -193,32 +190,106 @@ export default function TeamLayout({
             )}
           </div>
         </div>
+
+        {/* Horizontal Tabs Navigation */}
+        <div className="border-t border-brand-border/30 bg-white">
+          {/* Desktop Tabs */}
+          <nav className="hidden lg:flex items-center gap-1 px-6 overflow-x-auto no-scrollbar">
+            {teamNav.map((item) => {
+              if (isNavGroup(item)) return null;
+
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-3.5 font-medium text-sm transition-all relative whitespace-nowrap",
+                    isActive
+                      ? "text-brand-primary"
+                      : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <Badge variant="error" size="sm" className="ml-1">
+                      {item.badge}
+                    </Badge>
+                  )}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Mobile Horizontal Scroll Tabs */}
+          <nav className="lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
+            {teamNav.map((item) => {
+              if (isNavGroup(item)) return null;
+
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative whitespace-nowrap shrink-0",
+                    isActive
+                      ? "text-brand-primary"
+                      : "text-brand-text-light hover:text-brand-text-dark"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <Badge variant="error" size="sm" className="ml-1">
+                      {item.badge}
+                    </Badge>
+                  )}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </header>
 
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        <aside
-          className={cn(
-            "hidden lg:block bg-white border-r border-brand-border/50 transition-all duration-300 shrink-0",
-            sidebarOpen ? "w-64" : "w-20"
-          )}
-        >
-          <div className="sticky top-16 p-4">
-            {/* Toggle Button */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="absolute -right-3 top-6 w-6 h-6 bg-white border border-brand-border/50 rounded-full flex items-center justify-center text-brand-text-light hover:text-brand-primary shadow-sm z-10"
-            >
-              <ChevronDown
-                className={cn(
-                  "w-4 h-4 transition-transform",
-                  sidebarOpen ? "-rotate-90" : "rotate-90"
-                )}
-              />
-            </button>
+      {/* Mobile Menu Overlay */}
+      {mobileSidebarOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white z-50 lg:hidden shadow-xl animate-slide-in-left">
+            <div className="h-16 px-4 flex items-center justify-between border-b border-brand-border/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary-dark rounded-xl flex items-center justify-center text-white font-bold">
+                  {currentTeam?.name?.charAt(0) || "T"}
+                </div>
+                <div>
+                  <p className="font-bold text-brand-text-dark">{currentTeam?.name}</p>
+                  <p className="text-xs text-brand-text-light">{currentTeam?.memberCount} สมาชิก</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="p-2 hover:bg-brand-bg rounded-lg"
+              >
+                <X className="w-5 h-5 text-brand-text-light" />
+              </button>
+            </div>
 
-            {/* Navigation */}
-            <nav className="space-y-1 mt-4">
+            <nav className="p-4 space-y-1">
               {teamNav.map((item) => {
                 if (isNavGroup(item)) return null;
 
@@ -229,30 +300,21 @@ export default function TeamLayout({
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => setMobileSidebarOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
                       isActive
-                        ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
-                        : "text-brand-text-light hover:bg-brand-bg hover:text-brand-text-dark"
+                        ? "bg-brand-primary text-white shadow-md"
+                        : "text-brand-text-light hover:bg-brand-bg"
                     )}
                   >
-                    <Icon
-                      className={cn(
-                        "w-5 h-5 shrink-0",
-                        isActive ? "text-white" : "text-brand-text-light group-hover:text-brand-primary"
-                      )}
-                    />
-                    {sidebarOpen && (
-                      <span className="font-medium truncate">{item.label}</span>
-                    )}
-                    {sidebarOpen && item.badge && (
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                    {item.badge && (
                       <Badge
                         variant={isActive ? "default" : "error"}
                         size="sm"
-                        className={cn(
-                          "ml-auto",
-                          isActive && "bg-white/20 text-white"
-                        )}
+                        className={cn("ml-auto", isActive && "bg-white/20 text-white")}
                       >
                         {item.badge}
                       </Badge>
@@ -261,86 +323,24 @@ export default function TeamLayout({
                 );
               })}
             </nav>
-          </div>
-        </aside>
 
-        {/* Mobile Sidebar */}
-        {mobileSidebarOpen && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={() => setMobileSidebarOpen(false)}
-            />
-            <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white z-50 lg:hidden shadow-xl animate-slide-in-left">
-              <div className="h-16 px-4 flex items-center justify-between border-b border-brand-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary-dark rounded-xl flex items-center justify-center text-white font-bold">
-                    {currentTeam?.name?.charAt(0) || "T"}
-                  </div>
-                  <div>
-                    <p className="font-bold text-brand-text-dark">{currentTeam?.name}</p>
-                    <p className="text-xs text-brand-text-light">{currentTeam?.memberCount} สมาชิก</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setMobileSidebarOpen(false)}
-                  className="p-2 hover:bg-brand-bg rounded-lg"
-                >
-                  <X className="w-5 h-5 text-brand-text-light" />
-                </button>
-              </div>
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-brand-border/50">
+              <Link href="/seller/team" onClick={() => setMobileSidebarOpen(false)}>
+                <Button variant="outline" className="w-full" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+                  กลับไป Store
+                </Button>
+              </Link>
+            </div>
+          </aside>
+        </>
+      )}
 
-              <nav className="p-4 space-y-1">
-                {teamNav.map((item) => {
-                  if (isNavGroup(item)) return null;
-
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileSidebarOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
-                        isActive
-                          ? "bg-brand-primary text-white shadow-md"
-                          : "text-brand-text-light hover:bg-brand-bg"
-                      )}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{item.label}</span>
-                      {item.badge && (
-                        <Badge
-                          variant={isActive ? "default" : "error"}
-                          size="sm"
-                          className={cn("ml-auto", isActive && "bg-white/20 text-white")}
-                        >
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
-
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-brand-border/50">
-                <Link href="/seller/team" onClick={() => setMobileSidebarOpen(false)}>
-                  <Button variant="outline" className="w-full" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                    กลับไป Store
-                  </Button>
-                </Link>
-              </div>
-            </aside>
-          </>
-        )}
-
-        {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6 min-h-[calc(100vh-4rem)]">
+      {/* Main Content - Full Width */}
+      <main className="p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
+        <div className="max-w-7xl mx-auto">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
