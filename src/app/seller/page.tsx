@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
-import { StatsCard, Card, Badge, Button, Progress, Avatar, Skeleton, SkeletonCard } from "@/components/ui";
+import { StatsCard, Card, Badge, Button, Progress, Skeleton, SkeletonCard } from "@/components/ui";
 import { ServiceTypeBadge, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { useSellerStats, useSellerOrders, useSellerTeams } from "@/lib/api/hooks";
@@ -24,6 +24,9 @@ import {
   Clock,
   ShieldCheck,
   Plus,
+  ExternalLink,
+  Layers,
+  ArrowUpRight,
 } from "lucide-react";
 
 export default function SellerDashboard() {
@@ -107,10 +110,163 @@ export default function SellerDashboard() {
         </div>
       </section>
 
+      {/* ===== TEAM PORTAL CARD ===== */}
+      <section className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-brand-accent/5 to-brand-primary/5 rounded-3xl" />
+        <div className="relative border-2 border-brand-primary/20 rounded-3xl p-6 lg:p-8 bg-white/80 backdrop-blur-sm shadow-xl shadow-brand-primary/10">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary-dark flex items-center justify-center shadow-lg shadow-brand-primary/30">
+                <Layers className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
+                  ศูนย์จัดการทีม
+                  <Badge variant="info" size="sm" className="font-normal">
+                    {teamSummary.total} ทีม
+                  </Badge>
+                </h2>
+                <p className="text-brand-text-light">
+                  จัดการสมาชิก งาน และการจ่ายเงินของทีม
+                </p>
+              </div>
+            </div>
+
+            {/* Pending Actions */}
+            {(teamSummary.pendingReviews > 0 || teamSummary.pendingPayouts > 0) && (
+              <div className="flex flex-wrap gap-2">
+                {teamSummary.pendingReviews > 0 && (
+                  <Badge variant="warning" className="gap-1.5 px-3 py-1.5 text-sm animate-pulse">
+                    <ShieldCheck className="w-4 h-4" />
+                    {teamSummary.pendingReviews} รอตรวจ
+                  </Badge>
+                )}
+                {teamSummary.pendingPayouts > 0 && (
+                  <Badge variant="success" className="gap-1.5 px-3 py-1.5 text-sm">
+                    <DollarSign className="w-4 h-4" />
+                    {formatCurrency(teamSummary.pendingPayouts)} รอจ่าย
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-3 gap-3 mb-6 p-4 bg-brand-bg/50 rounded-2xl border border-brand-border/30">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-brand-text-dark">{teamSummary.totalMembers}</p>
+              <p className="text-sm text-brand-text-light">สมาชิกทั้งหมด</p>
+            </div>
+            <div className="text-center border-x border-brand-border/30">
+              <p className="text-2xl font-bold text-brand-text-dark">{teamSummary.totalActiveJobs}</p>
+              <p className="text-sm text-brand-text-light">งานที่เปิดอยู่</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-brand-warning">{teamSummary.pendingReviews}</p>
+              <p className="text-sm text-brand-text-light">รอตรวจสอบ</p>
+            </div>
+          </div>
+
+          {/* Team Cards Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {teamsLoading ? (
+              <>
+                <Skeleton className="h-32 rounded-2xl" />
+                <Skeleton className="h-32 rounded-2xl" />
+                <Skeleton className="h-32 rounded-2xl" />
+              </>
+            ) : teams?.map((team) => (
+              <Link key={team.id} href={`/seller/team/${team.id}`}>
+                <div className="relative p-4 rounded-2xl bg-white border-2 border-brand-border/50 hover:border-brand-primary hover:shadow-lg hover:shadow-brand-primary/10 transition-all duration-300 cursor-pointer group h-full">
+                  {/* Arrow indicator */}
+                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-brand-bg group-hover:bg-brand-primary flex items-center justify-center transition-all duration-300">
+                    <ArrowUpRight className="w-4 h-4 text-brand-text-light group-hover:text-white transition-colors" />
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
+                      {team.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0 pr-8">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-brand-text-dark truncate group-hover:text-brand-primary transition-colors">
+                          {team.name}
+                        </p>
+                        {team.isPublic ? (
+                          <Eye className="w-3.5 h-3.5 text-brand-success shrink-0" />
+                        ) : (
+                          <EyeOff className="w-3.5 h-3.5 text-brand-text-light shrink-0" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-brand-text-light">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          {team.memberCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ClipboardList className="w-3.5 h-3.5" />
+                          {team.activeJobCount} งาน
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5 text-brand-warning fill-brand-warning" />
+                          {team.rating?.toFixed(1) || "0.0"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick stats bar */}
+                  <div className="mt-4 pt-3 border-t border-brand-border/30 flex items-center justify-between text-xs">
+                    <span className="text-brand-text-light">งานเสร็จ {team.totalJobsCompleted || 0}</span>
+                    <span className="font-medium text-brand-primary group-hover:underline flex items-center gap-1">
+                      เข้าจัดการ <ChevronRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+
+            {/* Add New Team Card */}
+            {!teamsLoading && (
+              <Link href="/seller/team">
+                <div className="h-full min-h-[130px] p-4 rounded-2xl border-2 border-dashed border-brand-border/50 hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-pointer group">
+                  <div className="w-10 h-10 rounded-full bg-brand-bg group-hover:bg-brand-primary/10 flex items-center justify-center transition-colors">
+                    <Plus className="w-5 h-5 text-brand-text-light group-hover:text-brand-primary" />
+                  </div>
+                  <span className="text-sm font-medium text-brand-text-light group-hover:text-brand-primary transition-colors">
+                    สร้างทีมใหม่
+                  </span>
+                </div>
+              </Link>
+            )}
+          </div>
+
+          {/* CTA Button - Portal Entry */}
+          <Link href="/seller/team">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-primary to-brand-primary-dark p-5 text-white shadow-lg shadow-brand-primary/30 hover:shadow-xl hover:shadow-brand-primary/40 transition-all duration-300 cursor-pointer group">
+              <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                    <ExternalLink className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">เข้าศูนย์จัดการทีม</p>
+                    <p className="text-white/80 text-sm">ดูทีมทั้งหมด, สร้างทีมใหม่, จัดการงานและการจ่ายเงิน</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+              </div>
+            </div>
+          </Link>
+        </div>
+      </section>
+      {/* ===== END TEAM PORTAL CARD ===== */}
+
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Sidebar Widgets */}
+        {/* Quick Actions */}
         <div className="space-y-6 lg:col-start-3 lg:row-start-1">
-          {/* Quick Actions */}
           <section className="space-y-4">
             <h2 className="text-xl font-bold text-brand-text-dark">เมนูด่วน</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -131,9 +287,9 @@ export default function SellerDashboard() {
                   icon: <CreditCard className="w-5 h-5" />,
                 },
                 {
-                  label: "จัดการทีม",
-                  href: "/seller/team",
-                  icon: <Users className="w-5 h-5" />,
+                  label: "ออเดอร์",
+                  href: "/seller/orders",
+                  icon: <ShoppingBag className="w-5 h-5" />,
                 },
               ].map((action, i) => (
                 <Link key={i} href={action.href}>
@@ -149,117 +305,6 @@ export default function SellerDashboard() {
               ))}
             </div>
           </section>
-
-          {/* Team Overview Widget */}
-          <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-brand-text-dark flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-brand-primary" />
-                ภาพรวมทีม
-              </h2>
-              <Link
-                href="/seller/team"
-                className="text-sm font-medium text-brand-primary hover:underline flex items-center gap-1"
-              >
-                ดูทั้งหมด <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Team Summary Stats */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="text-center p-2 bg-brand-bg/50 rounded-xl">
-                <p className="text-lg font-bold text-brand-text-dark">{teamSummary.totalMembers}</p>
-                <p className="text-xs text-brand-text-light">สมาชิก</p>
-              </div>
-              <div className="text-center p-2 bg-brand-bg/50 rounded-xl">
-                <p className="text-lg font-bold text-brand-text-dark">{teamSummary.totalActiveJobs}</p>
-                <p className="text-xs text-brand-text-light">งานเปิด</p>
-              </div>
-              <div className="text-center p-2 bg-brand-bg/50 rounded-xl">
-                <p className="text-lg font-bold text-brand-warning">{teamSummary.pendingReviews}</p>
-                <p className="text-xs text-brand-text-light">รอตรวจ</p>
-              </div>
-            </div>
-
-            {/* Team List */}
-            <div className="space-y-3">
-              {teamsLoading ? (
-                <>
-                  <Skeleton className="h-16 rounded-xl" />
-                  <Skeleton className="h-16 rounded-xl" />
-                </>
-              ) : teams?.slice(0, 3).map((team) => (
-                <Link key={team.id} href={`/seller/team/${team.id}`}>
-                  <div className="p-3 rounded-xl bg-brand-bg/30 border border-brand-border/50 hover:border-brand-primary/30 transition-colors group cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center text-white font-bold shadow-sm">
-                        {team.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-brand-text-dark text-sm truncate group-hover:text-brand-primary transition-colors">
-                            {team.name}
-                          </p>
-                          {team.isPublic ? (
-                            <Eye className="w-3 h-3 text-brand-success shrink-0" />
-                          ) : (
-                            <EyeOff className="w-3 h-3 text-brand-text-light shrink-0" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-brand-text-light">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {team.memberCount}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <ClipboardList className="w-3 h-3" />
-                            {team.activeJobCount} งาน
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
-                            {team.rating.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-brand-text-light group-hover:text-brand-primary transition-colors" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-
-              {/* Add Team Button */}
-              <Link href="/seller/team">
-                <div className="p-3 rounded-xl border-2 border-dashed border-brand-border/50 hover:border-brand-primary/50 transition-colors text-center cursor-pointer group">
-                  <span className="text-sm font-medium text-brand-text-light group-hover:text-brand-primary transition-colors flex items-center justify-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    สร้างทีมใหม่
-                  </span>
-                </div>
-              </Link>
-            </div>
-
-            {/* Pending Actions */}
-            {(teamSummary.pendingReviews > 0 || teamSummary.pendingPayouts > 0) && (
-              <div className="mt-4 pt-4 border-t border-brand-border/30 flex flex-wrap gap-2">
-                {teamSummary.pendingReviews > 0 && (
-                  <Link href="/seller/team/review">
-                    <Badge variant="warning" className="cursor-pointer hover:opacity-80 gap-1">
-                      <ShieldCheck className="w-3 h-3" />
-                      {teamSummary.pendingReviews} รอตรวจ
-                    </Badge>
-                  </Link>
-                )}
-                {teamSummary.pendingPayouts > 0 && (
-                  <Link href="/seller/team/payouts">
-                    <Badge variant="info" className="cursor-pointer hover:opacity-80 gap-1">
-                      <DollarSign className="w-3 h-3" />
-                      {formatCurrency(teamSummary.pendingPayouts)} รอจ่าย
-                    </Badge>
-                  </Link>
-                )}
-              </div>
-            )}
-          </Card>
         </div>
 
         {/* Recent Orders */}
