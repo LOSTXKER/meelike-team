@@ -60,11 +60,6 @@ export const SELLER_NAV: NavConfig = [
     ],
   },
   {
-    label: "ทีม",
-    href: "/seller/team",
-    icon: Users,
-  },
-  {
     label: "การเงิน",
     items: [
       { label: "ยอดเงิน", href: "/seller/finance", icon: Wallet },
