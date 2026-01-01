@@ -133,9 +133,7 @@ export function getJobTypeLabel(type: string): string {
     share: "Share",
   };
   return labels[type] || type;
-}
-
-// Helper function for level badge colors
+}// Helper function for level badge colors
 export function getLevelColor(level: string): string {
   const colors: Record<string, string> = {
     Platinum: "bg-purple-100 text-purple-700",

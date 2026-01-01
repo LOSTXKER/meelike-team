@@ -115,6 +115,7 @@ CREATE TABLE jobs (
   platform        VARCHAR(20) NOT NULL CHECK (platform IN ('facebook', 'instagram', 'tiktok', 'twitter')),
   action_type     VARCHAR(20) NOT NULL CHECK (action_type IN ('like', 'follow', 'comment', 'share', 'view')),
   target_url      VARCHAR(1000) NOT NULL,
+  target_url_hash VARCHAR(64), -- SHA256 hash for deduplication
   target_id       VARCHAR(255), -- Post ID, Profile ID, etc.
   
   -- Quantities
@@ -129,6 +130,12 @@ CREATE TABLE jobs (
   
   -- Comment specific
   comment_text    TEXT, -- Required comment text (if action_type = 'comment')
+  
+  -- ⭐ Privacy Settings (URL ถูกซ่อนเสมอ)
+  -- URL จะไม่ถูกส่งไปยัง:
+  -- - Public (ไม่ login)
+  -- - Worker ที่ยังไม่รับงาน
+  -- - Worker ที่รับงานแล้ว (เห็นเฉพาะผ่าน Extension)
   
   -- Status
   status          VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'paused', 'completed', 'cancelled')),
@@ -148,6 +155,7 @@ CREATE INDEX idx_jobs_platform ON jobs(platform);
 CREATE INDEX idx_jobs_status ON jobs(status);
 CREATE INDEX idx_jobs_created ON jobs(created_at DESC);
 CREATE INDEX idx_jobs_active ON jobs(status, platform) WHERE status = 'active';
+CREATE INDEX idx_jobs_url_hash ON jobs(target_url_hash);
 ```
 
 ### 3. Job Claims Table
@@ -528,7 +536,8 @@ export interface Job {
   
   platform: Platform;
   actionType: ActionType;
-  targetUrl: string;
+  targetUrl: string;        // ⭐ PRIVATE - ไม่ส่งไป client ยกเว้น employer เจ้าของ
+  targetUrlHash?: string;   // For deduplication
   targetId?: string;
   
   totalQuantity: number;
@@ -734,6 +743,46 @@ export interface HoldPayment {
 
 // ============ API RESPONSES ============
 
+// ⭐ Public Job (ไม่มี URL - สำหรับ Public Marketplace)
+export interface PublicJob {
+  id: string;
+  platform: Platform;
+  actionType: ActionType;
+  // targetUrl ถูกซ่อน!
+  
+  totalQuantity: number;
+  completedQuantity: number;
+  remainingQuantity: number;
+  
+  pricePerAction: number;
+  
+  status: JobStatus;
+  createdAt: Date;
+}
+
+// ⭐ Worker Job (ไม่มี URL - สำหรับ Worker ที่ยังไม่รับงาน)
+export interface WorkerBrowseJob extends PublicJob {
+  // ยังไม่มี URL
+  // เห็นข้อมูลเพิ่มเติม
+  expiresAt?: Date;
+  commentText?: string; // ถ้าเป็นงาน comment
+}
+
+// ⭐ Claimed Job (มี URL - สำหรับ Worker ที่รับงานแล้ว, ส่งไป Extension เท่านั้น)
+export interface ClaimedJob extends WorkerBrowseJob {
+  targetUrl: string;    // ⭐ เห็น URL เฉพาะตอนรับงานแล้ว
+  targetId?: string;
+  claimId: string;
+  claimedAt: Date;
+  claimExpiresAt: Date;
+}
+
+// ⭐ Employer Job (เห็นทุกอย่าง - สำหรับ Employer เจ้าของงาน)
+export interface EmployerJob extends Job {
+  remainingQuantity: number;
+  progressPercent: number;
+}
+
 export interface JobWithStats extends Job {
   employer: Pick<User, 'id' | 'name' | 'avatarUrl'>;
   remainingQuantity: number;
@@ -752,9 +801,28 @@ export interface WorkerDashboard {
 export interface EmployerDashboard {
   user: User;
   wallet: Wallet;
-  activeJobs: JobWithStats[];
+  activeJobs: EmployerJob[];
   completedJobs: number;
   totalSpent: number;
+}
+
+// ============ PRIVACY HELPERS ============
+
+/**
+ * ฟังก์ชันสำหรับซ่อน URL ตาม access level
+ * 
+ * Usage:
+ * - Public: ใช้ toPublicJob(job)
+ * - Worker (browse): ใช้ toWorkerBrowseJob(job)
+ * - Worker (claimed): ใช้ toClaimedJob(job, claim) - ส่งไป Extension เท่านั้น
+ * - Employer (owner): ใช้ toEmployerJob(job)
+ */
+
+export type JobAccessLevel = 'public' | 'worker_browse' | 'worker_claimed' | 'employer';
+
+export function getJobByAccessLevel(job: Job, accessLevel: JobAccessLevel, claim?: JobClaim): PublicJob | WorkerBrowseJob | ClaimedJob | EmployerJob {
+  // Implementation in backend
+  throw new Error('Implementation in backend');
 }
 ```
 

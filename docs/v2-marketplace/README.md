@@ -19,7 +19,9 @@
 │  ├── No Team/Team Leader system                                            │
 │  ├── Browser Extension for auto job verification                           │
 │  ├── Desktop-first (No mobile support)                                     │
-│  └── Revenue from % per Transaction                                        │
+│  ├── Revenue from % per Transaction                                        │
+│  ├── Public Marketplace (ดูได้ไม่ต้อง login)                               │
+│  └── Privacy-first (ซ่อนลิงค์ที่ปั้ม)                                      │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -66,26 +68,53 @@
 
 ---
 
-## 👤 User Roles (2 Roles เท่านั้น!)
+## User Roles & Access Levels
 
-### 1. 👔 Employer (ผู้ว่าจ้าง)
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Access Levels:                                                             │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  [globe] PUBLIC (ไม่ต้อง Login)                                     │    │
+│  │  ────────────────────────────────────────────────────────────────── │    │
+│  │  - ดู Marketplace (รายการงานทั้งหมด)                                │    │
+│  │  - ดูราคา, Platform, ประเภทงาน                                      │    │
+│  │  - สมัครสมาชิก                                                      │    │
+│  │                                                                      │    │
+│  │  [x] ไม่เห็น: URL ที่ต้องปั้ม, ข้อมูล Employer                      │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Feature | รายละเอียด |
-|---------|-----------|
-| เติมเงิน | เติม Wallet ผ่าน PromptPay/Bank |
-| โพสต์งาน | สร้าง Job (Like/Follow/Comment) |
-| ดู Progress | ดูว่างานเสร็จกี่ % แล้ว |
-| Auto Pay | เงินหักอัตโนมัติเมื่องานสำเร็จ |
+### 1. [briefcase] Employer (ผู้ว่าจ้าง)
 
-### 2. 👤 Worker (คนรับงาน)
+| Feature | รายละเอียด | ต้อง Login |
+|---------|-----------|:----------:|
+| ดู Marketplace | ดูงานทั้งหมดใน Platform | [x] |
+| เติมเงิน | เติม Wallet ผ่าน PromptPay/Bank | [check] |
+| โพสต์งาน | สร้าง Job (Like/Follow/Comment) | [check] |
+| ดู Progress | ดูว่างานเสร็จกี่ % แล้ว | [check] |
+| Auto Pay | เงินหักอัตโนมัติเมื่องานสำเร็จ | [check] |
 
-| Feature | รายละเอียด |
-|---------|-----------|
-| ติดตั้ง Extension | **บังคับ** ต้องใช้ Extension |
-| รับงาน | เลือกงานจาก Marketplace |
-| ทำงาน | Extension track อัตโนมัติ |
-| รับเงิน | เงินเข้า Balance ทันที |
-| ถอนเงิน | ถอนเข้าบัญชีธนาคาร |
+**Privacy Features:**
+- URL ที่โพสต์จะถูกซ่อน (Worker เห็นเฉพาะตอนทำงานผ่าน Extension)
+- ไม่มีการแสดงข้อมูล Employer ให้ Public
+
+### 2. [user] Worker (คนรับงาน)
+
+| Feature | รายละเอียด | ต้อง Login |
+|---------|-----------|:----------:|
+| ดู Marketplace | ดูงานทั้งหมด + รายละเอียด | [check] |
+| ติดตั้ง Extension | **บังคับ** ต้องใช้ Extension | [check] |
+| รับงาน | เลือกงานจาก Marketplace | [check] |
+| ทำงาน | Extension track อัตโนมัติ | [check] |
+| รับเงิน | เงินเข้า Balance ทันที | [check] |
+| ถอนเงิน | ถอนเข้าบัญชีธนาคาร | [check] |
+
+**Privacy:**
+- เห็น URL เฉพาะงานที่รับแล้ว + ทำผ่าน Extension เท่านั้น
 
 ---
 
@@ -138,22 +167,44 @@
 
 ---
 
-## 🗂️ URL Structure
+## URL Structure
 
-### Public
+### Public (ไม่ต้อง Login)
 
 ```
 /                           → Landing Page
+/marketplace                → [star] ดูงานทั้งหมด (Public)
 /login                      → เข้าสู่ระบบ
 /register                   → สมัครสมาชิก (เลือก Employer/Worker)
 /extension                  → Download Extension
 ```
 
-### Employer Dashboard
+**Marketplace แสดงอะไร?**
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [globe] Public View (/marketplace):                                        │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  [thumbs-up] Facebook Like                              0.25/like   │    │
+│  │  Platform: Facebook                                                  │    │
+│  │  เหลือ: 77 slots                                                     │    │
+│  │  [lock] Login เพื่อรับงาน                                           │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  [x] ไม่แสดง:                                                               │
+│  - URL ของโพสต์/โปรไฟล์                                                     │
+│  - ข้อมูล Employer                                                          │
+│  - รายละเอียดอื่นๆ                                                          │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Employer Dashboard (ต้อง Login)
 
 ```
 /employer                   → Dashboard
-├── /jobs                   → งานทั้งหมด
+├── /jobs                   → งานของฉัน
 │   ├── /new                → โพสต์งานใหม่
 │   └── /[id]               → รายละเอียดงาน
 ├── /wallet                 → การเงิน
@@ -162,13 +213,13 @@
 └── /settings               → ตั้งค่า
 ```
 
-### Worker Dashboard
+### Worker Dashboard (ต้อง Login + Extension)
 
 ```
 /worker                     → Dashboard
-├── /jobs                   → Marketplace งาน
+├── /jobs                   → Marketplace งาน (เห็นมากกว่า Public)
 │   └── /[id]               → รายละเอียดงาน
-├── /my-jobs                → งานที่รับ
+├── /my-jobs                → งานที่รับ (เห็น URL ตรงนี้)
 ├── /earnings               → รายได้
 │   ├── /withdraw           → ถอนเงิน
 │   └── /history            → ประวัติ
