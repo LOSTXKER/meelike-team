@@ -180,7 +180,7 @@ export default function TeamPickerPage() {
                       )}
                     </div>
                     <p className="text-sm text-brand-text-light line-clamp-2 mt-1">{team.description}</p>
-                  </div>
+                </div>
                 </div>
 
                 {/* Stats Grid */}
@@ -188,24 +188,24 @@ export default function TeamPickerPage() {
                   <div className="text-center p-3 bg-brand-bg/50 rounded-xl">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Users className="w-4 h-4 text-brand-primary" />
-                    </div>
+              </div>
                     <p className="text-lg font-bold text-brand-text-dark">{team.memberCount}</p>
                     <p className="text-xs text-brand-text-light">สมาชิก</p>
-                  </div>
+            </div>
                   <div className="text-center p-3 bg-brand-bg/50 rounded-xl">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <ClipboardList className="w-4 h-4 text-brand-info" />
-                    </div>
+                </div>
                     <p className="text-lg font-bold text-brand-text-dark">{team.activeJobCount}</p>
                     <p className="text-xs text-brand-text-light">งานเปิด</p>
-                  </div>
+                </div>
                   <div className="text-center p-3 bg-brand-bg/50 rounded-xl">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Star className="w-4 h-4 text-brand-warning fill-brand-warning" />
-                    </div>
+              </div>
                     <p className="text-lg font-bold text-brand-text-dark">{team.rating.toFixed(1)}</p>
                     <p className="text-xs text-brand-text-light">Rating</p>
-                  </div>
+            </div>
                 </div>
 
                 {/* Pending Actions */}
@@ -237,24 +237,24 @@ export default function TeamPickerPage() {
                   <div className="flex items-center gap-1 text-sm font-medium text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
                     จัดการทีม <ArrowRight className="w-4 h-4" />
                   </div>
-                </div>
-              </Card>
-            </Link>
+            </div>
+          </Card>
+        </Link>
           );
         })}
 
         {/* Add New Team Card */}
-        <button
+              <button
           onClick={() => setIsCreateTeamModalOpen(true)}
           className="h-full min-h-[280px] border-2 border-dashed border-brand-border/50 rounded-2xl flex flex-col items-center justify-center gap-4 text-brand-text-light hover:text-brand-primary hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all group"
-        >
+              >
           <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center group-hover:bg-brand-primary/10 transition-colors">
             <Plus className="w-8 h-8" />
           </div>
           <div className="text-center">
             <p className="font-bold text-lg">สร้างทีมใหม่</p>
             <p className="text-sm opacity-70">แยกจัดการงานแต่ละประเภท</p>
-          </div>
+        </div>
         </button>
       </div>
 
@@ -263,15 +263,15 @@ export default function TeamPickerPage() {
         <div className="flex items-start gap-4">
           <div className="p-3 bg-brand-info/10 rounded-xl text-brand-info shrink-0">
             <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
+        </div>
+                        <div>
             <h3 className="font-bold text-brand-text-dark mb-2">💡 เคล็ดลับการจัดการหลายทีม</h3>
             <ul className="text-sm text-brand-text-light space-y-1">
               <li>• <strong>แยกทีมตามแพลตฟอร์ม</strong> - Facebook, TikTok, Instagram ช่วยให้จัดการง่ายขึ้น</li>
               <li>• <strong>แยกทีมตามระดับ</strong> - VIP, Premium, ปกติ สำหรับงานที่ต้องการคุณภาพต่างกัน</li>
               <li>• <strong>ใช้ผู้ช่วย</strong> - แต่งตั้ง Assistant ช่วยตรวจงานและจัดการสมาชิก</li>
             </ul>
-          </div>
+                      </div>
         </div>
       </Card>
 
@@ -287,7 +287,7 @@ export default function TeamPickerPage() {
             <label className="block text-sm font-bold text-brand-text-dark mb-2">
               ชื่อทีม <span className="text-brand-error">*</span>
             </label>
-            <Input
+              <Input
               placeholder="เช่น MyBoost TikTok Team"
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}

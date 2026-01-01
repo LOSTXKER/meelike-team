@@ -328,9 +328,9 @@ export default function NewOrderPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-brand-text-dark">
-                            {index + 1}. {item.serviceName}
-                          </p>
+                        <p className="font-bold text-brand-text-dark">
+                          {index + 1}. {item.serviceName}
+                        </p>
                           <ServiceTypeBadge type={item.serviceType} />
                         </div>
                         <p className="text-sm text-brand-text-light truncate max-w-xs font-mono bg-white/50 px-1.5 rounded mt-1 inline-block">

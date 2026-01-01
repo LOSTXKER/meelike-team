@@ -128,7 +128,7 @@ export default function TeamPayoutsPage() {
             icon={DollarSign}
           />
         </div>
-        
+
         {/* Team Filter */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-border/50 shadow-sm">

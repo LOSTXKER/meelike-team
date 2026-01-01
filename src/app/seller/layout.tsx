@@ -29,6 +29,22 @@ export default function SellerLayout({
     router.push("/login");
   };
 
+  // Check if we're inside Team Level (has team ID in path)
+  // Pattern: /seller/team/[id] or /seller/team/[id]/*
+  const isInTeamLevel = /^\/seller\/team\/[^/]+/.test(pathname);
+
+  // If inside Team Level, just render children (Team Layout will handle its own header)
+  if (isInTeamLevel) {
+    if (!isReady) {
+      return (
+        <div className="min-h-screen bg-brand-bg">
+          <Skeleton className="h-64 w-full rounded-xl m-6" />
+        </div>
+      );
+    }
+    return <>{children}</>;
+  }
+
   if (!isReady) {
     return (
       <div className="min-h-screen bg-brand-bg">

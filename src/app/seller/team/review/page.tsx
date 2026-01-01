@@ -233,7 +233,7 @@ export default function TeamReviewPage() {
                        </div>
                        <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-lg text-brand-text-dark">{job.serviceName}</h3>
+                          <h3 className="font-bold text-lg text-brand-text-dark">{job.serviceName}</h3>
                             {selectedTeamId === "all" && (
                               <Badge variant="secondary" size="sm" className="gap-1">
                                 <Building2 className="w-3 h-3" />
