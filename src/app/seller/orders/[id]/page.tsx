@@ -350,19 +350,19 @@ export default function OrderDetailPage() {
                                 ส่ง Bot API
                               </Button>
                             ) : (
-                              <Button
+                          <Button
                                 variant="primary"
-                                size="sm"
+                            size="sm"
                                 className="flex-1 h-11 rounded-xl font-medium shadow-md shadow-brand-primary/20 bg-gradient-to-r from-brand-primary to-brand-primary/80"
-                                onClick={() => {
-                                  setSelectedItem(index);
+                            onClick={() => {
+                              setSelectedItem(index);
                                   setJobQuantity((item.quantity - item.completedQuantity).toString());
-                                  setShowCreateJobModal(true);
-                                }}
-                              >
-                                <Users className="w-4 h-4 mr-2" />
+                              setShowCreateJobModal(true);
+                            }}
+                          >
+                            <Users className="w-4 h-4 mr-2" />
                                 มอบหมายงานให้ทีม
-                              </Button>
+                          </Button>
                             )}
                           </div>
                         )}
@@ -378,8 +378,8 @@ export default function OrderDetailPage() {
                             รอยืนยันชำระเงินก่อนส่งคำสั่งซื้อ
                           </span>
                         </div>
-                      </div>
-                    )}
+                        </div>
+                      )}
                   </div>
                 );
               })}
@@ -739,20 +739,20 @@ export default function OrderDetailPage() {
                   </div>
                   <div>
                     <p className="font-bold text-brand-text-dark">
-                      {getServiceInfo(order.items[selectedItem].serviceId)?.name}
-                    </p>
+                  {getServiceInfo(order.items[selectedItem].serviceId)?.name}
+                </p>
                     <p className="text-xs text-brand-text-light">Real Human Service</p>
                   </div>
                 </div>
                 <div className="p-2 bg-white rounded-lg text-sm">
                   <p className="text-brand-text-light text-xs">จำนวนที่ต้องทำ</p>
                   <p className="font-bold text-brand-text-dark">
-                    {(
-                      order.items[selectedItem].quantity -
-                      order.items[selectedItem].completedQuantity
-                    ).toLocaleString()}{" "}
-                    หน่วย
-                  </p>
+                  {(
+                    order.items[selectedItem].quantity -
+                    order.items[selectedItem].completedQuantity
+                  ).toLocaleString()}{" "}
+                  หน่วย
+                </p>
                 </div>
               </div>
 
@@ -773,7 +773,7 @@ export default function OrderDetailPage() {
                         {option.label}
                       </option>
                     ))}
-                  </select>
+                </select>
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light pointer-events-none" />
                 </div>

@@ -68,7 +68,7 @@ export default function SellerLayout({
     <div className="min-h-screen bg-brand-bg">
       {/* Top Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-brand-border/50 shadow-sm">
-        <div className="h-16 px-4 lg:px-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto h-16 px-4 lg:px-6 flex items-center justify-between">
           {/* Left: Logo + Mobile Menu */}
           <div className="flex items-center gap-4">
             {/* Mobile Menu Button */}
@@ -145,7 +145,7 @@ export default function SellerLayout({
                           </p>
                           <Badge variant="info" size="sm" className="mt-1">
                             <Award className="w-3 h-3 mr-1" />
-                            {seller?.plan.charAt(0).toUpperCase() + seller?.plan.slice(1)}
+                            {seller?.plan ? seller.plan.charAt(0).toUpperCase() + seller.plan.slice(1) : "Free"}
                           </Badge>
                         </div>
                       </div>
@@ -169,40 +169,42 @@ export default function SellerLayout({
         {/* Horizontal Navigation */}
         <div className="border-t border-brand-border/30 bg-white">
           {/* Desktop Tabs */}
-          <nav className="hidden lg:flex items-center gap-1 px-6 overflow-x-auto no-scrollbar">
+          <nav className="max-w-7xl mx-auto hidden lg:flex items-center gap-1 px-6">
             {SELLER_NAV.map((item) => {
               if (isNavGroup(item)) {
                 // Group with dropdown
                 return (
-                  <div key={item.label} className="relative group">
-                    <button className="flex items-center gap-2 px-4 py-3.5 font-medium text-sm text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50 transition-all whitespace-nowrap">
+                  <div key={item.label} className="relative group/nav">
+                    <button className="flex items-center gap-2 px-4 py-3.5 font-medium text-sm text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50 transition-all whitespace-nowrap group-hover/nav:text-brand-text-dark">
                       <span>{item.label}</span>
-                      <ChevronDown className="w-3 h-3" />
+                      <ChevronDown className="w-3 h-3 transition-transform group-hover/nav:rotate-180" />
                     </button>
                     {/* Dropdown */}
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-brand-border/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                      {item.items.map((subItem) => {
-                        const SubIcon = subItem.icon;
-                        const isActive = pathname === subItem.href;
-                        return (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            className={cn(
-                              "flex items-center gap-3 px-4 py-2.5 hover:bg-brand-bg transition-colors first:rounded-t-xl last:rounded-b-xl",
-                              isActive && "bg-brand-primary/5 text-brand-primary"
-                            )}
-                          >
-                            <SubIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">{subItem.label}</span>
-                            {subItem.badge && (
-                              <Badge variant="error" size="sm" className="ml-auto">
-                                {subItem.badge}
-                              </Badge>
-                            )}
-                          </Link>
-                        );
-                      })}
+                    <div className="absolute top-full left-0 pt-1 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-150 z-[100]">
+                      <div className="w-48 bg-white rounded-xl shadow-xl border border-brand-border/50 py-1">
+                        {item.items.map((subItem) => {
+                          const SubIcon = subItem.icon;
+                          const isActive = pathname === subItem.href;
+                          return (
+                            <Link
+                              key={subItem.href}
+                              href={subItem.href}
+                              className={cn(
+                                "flex items-center gap-3 px-4 py-2.5 hover:bg-brand-bg transition-colors",
+                                isActive && "bg-brand-primary/5 text-brand-primary"
+                              )}
+                            >
+                              <SubIcon className="w-4 h-4" />
+                              <span className="text-sm font-medium">{subItem.label}</span>
+                              {subItem.badge && (
+                                <Badge variant="error" size="sm" className="ml-auto">
+                                  {subItem.badge}
+                                </Badge>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 );
@@ -239,7 +241,7 @@ export default function SellerLayout({
           </nav>
 
           {/* Mobile Horizontal Scroll Tabs */}
-          <nav className="lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
+          <nav className="max-w-7xl mx-auto lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
             {SELLER_NAV.map((item) => {
               if (isNavGroup(item)) {
                 return item.items.map((subItem) => {
@@ -405,8 +407,8 @@ export default function SellerLayout({
         </>
       )}
 
-      {/* Main Content - Full Width */}
-      <main className="p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
+      {/* Main Content - Centered */}
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
         {children}
       </main>
     </div>

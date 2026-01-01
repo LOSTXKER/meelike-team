@@ -4,8 +4,9 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Card, Badge, Button, Input, Progress, Select } from "@/components/ui";
-import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
+import { PageHeader, PlatformIcon, EmptyState, FilterTabs, type JobFilterStatus } from "@/components/shared";
 import { useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
+import { getJobStatusLabel, getJobStatusVariant, type TeamJobStatus } from "@/lib/constants/statuses";
 import type { Platform } from "@/types";
 import {
   ClipboardList,
@@ -25,27 +26,12 @@ import {
   Building2,
 } from "lucide-react";
 
-type JobStatus = "pending" | "in_progress" | "pending_review" | "completed" | "cancelled";
-
-const statusConfig: Record<
-  JobStatus,
-  { label: string; color: "warning" | "info" | "success" | "error" | "default" }
-> = {
-  pending: { label: "รอจอง", color: "warning" },
-  in_progress: { label: "กำลังทำ", color: "info" },
-  pending_review: { label: "รอตรวจสอบ", color: "warning" },
-  completed: { label: "เสร็จสิ้น", color: "success" },
-  cancelled: { label: "ยกเลิก", color: "error" },
-};
-
-type FilterStatus = "all" | JobStatus;
-
 export default function TeamJobsPage() {
   const searchParams = useSearchParams();
   const teamIdParam = searchParams.get("team");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterStatus, setFilterStatus] = useState<JobFilterStatus>("all");
   const [selectedTeamId, setSelectedTeamId] = useState(teamIdParam || "");
 
   // Use API hooks
@@ -193,30 +179,18 @@ export default function TeamJobsPage() {
 
       {/* Filter & Search */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
-        <div className="w-full lg:w-auto overflow-x-auto no-scrollbar">
-          <div className="flex gap-1 p-1.5 bg-brand-bg/50 rounded-xl border border-brand-border/30 min-w-max">
-            {[
-              { key: "all", label: "ทั้งหมด", icon: LayoutGrid },
-              { key: "pending", label: "รอจอง", icon: Clock },
-              { key: "in_progress", label: "กำลังทำ", icon: Loader2 },
-              { key: "pending_review", label: "รอตรวจ", icon: CheckCircle2 },
-              { key: "completed", label: "เสร็จ", icon: CheckCircle },
-            ].map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilterStatus(f.key as FilterStatus)}
-                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  filterStatus === f.key
-                    ? "bg-white text-brand-text-dark shadow-sm ring-1 ring-black/5"
-                    : "text-brand-text-light hover:text-brand-text-dark opacity-70 hover:opacity-100"
-                }`}
-              >
-                <f.icon className={`w-4 h-4 ${filterStatus === f.key ? "text-brand-primary" : ""}`} />
-                <span>{f.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <FilterTabs
+          tabs={[
+            { value: "all" as const, label: "ทั้งหมด" },
+            { value: "pending" as const, label: "รอจอง" },
+            { value: "in_progress" as const, label: "กำลังทำ" },
+            { value: "pending_review" as const, label: "รอตรวจ" },
+            { value: "completed" as const, label: "เสร็จ" },
+          ]}
+          value={filterStatus}
+          onChange={setFilterStatus}
+          showCount={false}
+        />
         <div className="w-full lg:w-auto lg:min-w-[280px]">
           <Input
             placeholder="ค้นหางาน, เลขออเดอร์..."
@@ -253,11 +227,11 @@ export default function TeamJobsPage() {
                             {job.serviceName}
                           </p>
                           <Badge
-                            variant={statusConfig[job.status as JobStatus].color}
+                            variant={getJobStatusVariant(job.status as TeamJobStatus)}
                             size="sm"
                             className="shadow-none border-none"
                           >
-                            {statusConfig[job.status as JobStatus].label}
+                            {getJobStatusLabel(job.status as TeamJobStatus)}
                           </Badge>
                         </div>
                         

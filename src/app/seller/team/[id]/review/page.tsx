@@ -8,7 +8,6 @@ import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
 import { usePendingReviews, useWorkers, useSellerJobs, useSellerTeams } from "@/lib/api/hooks";
 import type { Platform } from "@/types";
 import {
-  ArrowLeft,
   CheckCircle2,
   XCircle,
   Clock,
@@ -122,18 +121,11 @@ export default function TeamReviewPage() {
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href={`/seller/team/${teamId}`}>
-            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <PageHeader
-            title="รอตรวจสอบ"
-            description={`ตรวจสอบงานของทีม ${currentTeam?.name || ""}`}
-            icon={CheckCircle2}
-          />
-        </div>
+        <PageHeader
+          title="รอตรวจสอบ"
+          description={`ตรวจสอบงานของทีม ${currentTeam?.name || ""}`}
+          icon={CheckCircle2}
+        />
         
         {pendingReviewJobs.length > 0 && (
           <div className="flex items-center gap-4 bg-white p-2 pl-4 rounded-xl shadow-sm border border-brand-border/50">

@@ -13,8 +13,9 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "./index";
+import type { TeamMember, Worker } from "@/types";
 
 // Generic hook for data fetching
 function useApiCall<T>(
@@ -102,6 +103,40 @@ export function useWorkerBalances() {
 
 export function useSeller() {
   return useApiCall(() => api.seller.getSeller(), []);
+}
+
+// ===== COMBINED HOOKS (Data with joins) =====
+
+/** Type for member with worker data joined */
+export type MemberWithWorker = TeamMember & { worker: Worker };
+
+/**
+ * Hook that returns team members with worker data already joined.
+ * This eliminates the need to manually join members with workers in components.
+ * 
+ * @param teamId - Optional team ID to filter members
+ * @returns Members with worker data, loading state, and error
+ */
+export function useTeamMembersWithWorkers(teamId?: string) {
+  const { data: rawMembers, isLoading: isLoadingMembers, error: membersError, refetch: refetchMembers } = useSellerTeamMembers(teamId);
+  const { data: workers, isLoading: isLoadingWorkers, error: workersError } = useWorkers();
+
+  const isLoading = isLoadingMembers || isLoadingWorkers;
+  const error = membersError || workersError;
+
+  const data = useMemo((): MemberWithWorker[] | null => {
+    if (!rawMembers || !workers) return null;
+    
+    return rawMembers
+      .map((member) => {
+        const worker = workers.find((w) => w.id === member.workerId);
+        if (!worker) return null;
+        return { ...member, worker };
+      })
+      .filter((m): m is MemberWithWorker => m !== null);
+  }, [rawMembers, workers]);
+
+  return { data, isLoading, error, refetch: refetchMembers };
 }
 
 // ===== WORKER HOOKS =====

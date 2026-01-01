@@ -340,8 +340,8 @@ export default function TeamPayoutsPage() {
                              <div>
                                 <div className="flex items-center gap-2">
                                    <p className="font-bold text-brand-text-dark text-lg">@{payout.worker.displayName}</p>
-                                   {selectedTeamId === "all" && (
-                                     <Badge variant="secondary" size="sm" className="gap-1">
+                                    {selectedTeamId === "all" && (
+                                      <Badge variant="default" size="sm" className="gap-1">
                                         <Building2 className="w-3 h-3" />
                                         {payout.teamName}
                                      </Badge>

@@ -8,11 +8,11 @@ export interface SelectProps
   extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
-  options: { value: string; label: string }[];
+  options?: { value: string; label: string }[];
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, options, id, ...props }, ref) => {
+  ({ className, label, error, options, id, children, ...props }, ref) => {
     const selectId = id || React.useId();
 
     return (
@@ -39,11 +39,13 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             {...props}
           >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {options
+              ? options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))
+              : children}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light pointer-events-none" />
         </div>

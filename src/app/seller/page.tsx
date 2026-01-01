@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
-import { StatsCard, Card, Badge, Button, Progress, Skeleton, SkeletonCard } from "@/components/ui";
-import { ServiceTypeBadge, EmptyState } from "@/components/shared";
+import { StatsCard, Card, Badge, Button, Progress, Skeleton, SkeletonCard, Modal, Input } from "@/components/ui";
+import { ServiceTypeBadge, EmptyState, StatsGrid } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { useSellerStats, useSellerOrders, useSellerTeams } from "@/lib/api/hooks";
 import {
@@ -22,16 +23,22 @@ import {
   Eye,
   EyeOff,
   Clock,
-  ShieldCheck,
   Plus,
-  ExternalLink,
-  Layers,
+  Search,
+  TrendingUp,
+  CheckCircle,
   ArrowUpRight,
 } from "lucide-react";
 
 export default function SellerDashboard() {
   const { user } = useAuthStore();
   const seller = user?.seller;
+
+  // Modal & search state
+  const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
+  const [newTeamName, setNewTeamName] = useState("");
+  const [newTeamDescription, setNewTeamDescription] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Use API hooks
   const { data: stats, isLoading: statsLoading } = useSellerStats();
@@ -40,13 +47,39 @@ export default function SellerDashboard() {
 
   const isLoading = statsLoading || ordersLoading || teamsLoading;
 
+  // Filter teams by search
+  const filteredTeams = teams?.filter(team => 
+    team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    team.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Calculate team summary
   const teamSummary = {
     total: teams?.length || 0,
     totalMembers: teams?.reduce((sum, t) => sum + t.memberCount, 0) || 0,
     totalActiveJobs: teams?.reduce((sum, t) => sum + t.activeJobCount, 0) || 0,
-    pendingReviews: 7, // Mock - would come from API
-    pendingPayouts: 4250, // Mock - would come from API
+    totalCompleted: teams?.reduce((sum, t) => sum + t.totalJobsCompleted, 0) || 0,
+  };
+
+  // Mock pending data per team (would come from API)
+  const getTeamPendingData = (teamId: string) => {
+    const mockData: Record<string, { pendingReviews: number; pendingPayouts: number }> = {
+      "team-1": { pendingReviews: 5, pendingPayouts: 2450 },
+      "team-2": { pendingReviews: 7, pendingPayouts: 1800 },
+      "team-3": { pendingReviews: 0, pendingPayouts: 0 },
+    };
+    return mockData[teamId] || { pendingReviews: 0, pendingPayouts: 0 };
+  };
+
+  const handleCreateTeam = () => {
+    if (!newTeamName.trim()) {
+      alert("กรุณาใส่ชื่อทีม");
+      return;
+    }
+    alert(`สร้างทีม "${newTeamName}" สำเร็จ!`);
+    setIsCreateTeamModalOpen(false);
+    setNewTeamName("");
+    setNewTeamDescription("");
   };
 
   return (
@@ -110,159 +143,211 @@ export default function SellerDashboard() {
         </div>
       </section>
 
-      {/* ===== TEAM PORTAL CARD ===== */}
-      <section className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-brand-accent/5 to-brand-primary/5 rounded-3xl" />
-        <div className="relative border-2 border-brand-primary/20 rounded-3xl p-6 lg:p-8 bg-white/80 backdrop-blur-sm shadow-xl shadow-brand-primary/10">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary-dark flex items-center justify-center shadow-lg shadow-brand-primary/30">
-                <Layers className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-                  ศูนย์จัดการทีม
-                  <Badge variant="info" size="sm" className="font-normal">
-                    {teamSummary.total} ทีม
-                  </Badge>
-                </h2>
-                <p className="text-brand-text-light">
-                  จัดการสมาชิก งาน และการจ่ายเงินของทีม
-                </p>
-              </div>
+      {/* ===== TEAM MANAGEMENT SECTION ===== */}
+      <section className="space-y-6">
+        {/* Header with Create Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center shadow-md">
+              <Building2 className="w-6 h-6 text-white" />
             </div>
-
-            {/* Pending Actions */}
-            {(teamSummary.pendingReviews > 0 || teamSummary.pendingPayouts > 0) && (
-              <div className="flex flex-wrap gap-2">
-                {teamSummary.pendingReviews > 0 && (
-                  <Badge variant="warning" className="gap-1.5 px-3 py-1.5 text-sm animate-pulse">
-                    <ShieldCheck className="w-4 h-4" />
-                    {teamSummary.pendingReviews} รอตรวจ
-                  </Badge>
-                )}
-                {teamSummary.pendingPayouts > 0 && (
-                  <Badge variant="success" className="gap-1.5 px-3 py-1.5 text-sm">
-                    <DollarSign className="w-4 h-4" />
-                    {formatCurrency(teamSummary.pendingPayouts)} รอจ่าย
-                  </Badge>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Summary Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-6 p-4 bg-brand-bg/50 rounded-2xl border border-brand-border/30">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-brand-text-dark">{teamSummary.totalMembers}</p>
-              <p className="text-sm text-brand-text-light">สมาชิกทั้งหมด</p>
-            </div>
-            <div className="text-center border-x border-brand-border/30">
-              <p className="text-2xl font-bold text-brand-text-dark">{teamSummary.totalActiveJobs}</p>
-              <p className="text-sm text-brand-text-light">งานที่เปิดอยู่</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-brand-warning">{teamSummary.pendingReviews}</p>
-              <p className="text-sm text-brand-text-light">รอตรวจสอบ</p>
+            <div>
+              <h2 className="text-2xl font-bold text-brand-text-dark">จัดการทีม</h2>
+              <p className="text-brand-text-light text-sm">เลือกทีมเพื่อจัดการสมาชิก งาน และการจ่ายเงิน</p>
             </div>
           </div>
+          <Button 
+            onClick={() => setIsCreateTeamModalOpen(true)} 
+            leftIcon={<Plus className="w-4 h-4" />}
+            className="rounded-full shadow-lg shadow-brand-primary/20"
+          >
+            สร้างทีมใหม่
+          </Button>
+        </div>
 
-          {/* Team Cards Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {teamsLoading ? (
-              <>
-                <Skeleton className="h-32 rounded-2xl" />
-                <Skeleton className="h-32 rounded-2xl" />
-                <Skeleton className="h-32 rounded-2xl" />
-              </>
-            ) : teams?.map((team) => (
+        {/* Stats Summary */}
+        <StatsGrid
+          stats={[
+            {
+              label: "ทีมทั้งหมด",
+              value: teamSummary.total,
+              icon: Building2,
+              iconColor: "text-brand-primary",
+              iconBgColor: "bg-brand-primary/10",
+            },
+            {
+              label: "สมาชิกรวม",
+              value: teamSummary.totalMembers,
+              icon: Users,
+              iconColor: "text-brand-primary",
+              iconBgColor: "bg-brand-secondary",
+            },
+            {
+              label: "งานกำลังทำ",
+              value: teamSummary.totalActiveJobs,
+              icon: ClipboardList,
+              iconColor: "text-brand-info",
+              iconBgColor: "bg-brand-info/10",
+            },
+            {
+              label: "งานสำเร็จรวม",
+              value: teamSummary.totalCompleted.toLocaleString(),
+              icon: CheckCircle,
+              iconColor: "text-brand-success",
+              iconBgColor: "bg-brand-success/10",
+            },
+          ]}
+          columns={4}
+        />
+
+        {/* Search */}
+        {teams && teams.length > 2 && (
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-light" />
+            <Input
+              placeholder="ค้นหาทีม..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12"
+            />
+          </div>
+        )}
+
+        {/* Teams Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {teamsLoading ? (
+            <>
+              <Skeleton className="h-64 rounded-2xl" />
+              <Skeleton className="h-64 rounded-2xl" />
+              <Skeleton className="h-64 rounded-2xl" />
+            </>
+          ) : filteredTeams?.map((team) => {
+            const pendingData = getTeamPendingData(team.id);
+            
+            return (
               <Link key={team.id} href={`/seller/team/${team.id}`}>
-                <div className="relative p-4 rounded-2xl bg-white border-2 border-brand-border/50 hover:border-brand-primary hover:shadow-lg hover:shadow-brand-primary/10 transition-all duration-300 cursor-pointer group h-full">
-                  {/* Arrow indicator */}
-                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-brand-bg group-hover:bg-brand-primary flex items-center justify-center transition-all duration-300">
-                    <ArrowUpRight className="w-4 h-4 text-brand-text-light group-hover:text-white transition-colors" />
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
+                <Card 
+                  variant="elevated" 
+                  className="h-full border-none shadow-md hover:shadow-xl transition-all cursor-pointer group overflow-hidden relative"
+                >
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                  
+                  {/* Team Header */}
+                  <div className="flex items-start gap-4 mb-4 relative z-10">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-brand-primary/30 group-hover:scale-105 transition-transform">
                       {team.name.charAt(0)}
                     </div>
-                    <div className="flex-1 min-w-0 pr-8">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-brand-text-dark truncate group-hover:text-brand-primary transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-brand-text-dark text-lg group-hover:text-brand-primary transition-colors truncate">
                           {team.name}
-                        </p>
+                        </h3>
                         {team.isPublic ? (
-                          <Eye className="w-3.5 h-3.5 text-brand-success shrink-0" />
+                          <Eye className="w-4 h-4 text-brand-success shrink-0" />
                         ) : (
-                          <EyeOff className="w-3.5 h-3.5 text-brand-text-light shrink-0" />
+                          <EyeOff className="w-4 h-4 text-brand-text-light shrink-0" />
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-brand-text-light">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5" />
-                          {team.memberCount}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <ClipboardList className="w-3.5 h-3.5" />
-                          {team.activeJobCount} งาน
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-brand-warning fill-brand-warning" />
-                          {team.rating?.toFixed(1) || "0.0"}
-                        </span>
-                      </div>
+                      <p className="text-sm text-brand-text-light line-clamp-2 mt-1">{team.description}</p>
                     </div>
                   </div>
 
-                  {/* Quick stats bar */}
-                  <div className="mt-4 pt-3 border-t border-brand-border/30 flex items-center justify-between text-xs">
-                    <span className="text-brand-text-light">งานเสร็จ {team.totalJobsCompleted || 0}</span>
-                    <span className="font-medium text-brand-primary group-hover:underline flex items-center gap-1">
-                      เข้าจัดการ <ChevronRight className="w-3 h-3" />
-                    </span>
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="text-center p-3 bg-brand-bg/50 rounded-xl">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <Users className="w-4 h-4 text-brand-primary" />
+                      </div>
+                      <p className="text-lg font-bold text-brand-text-dark">{team.memberCount}</p>
+                      <p className="text-xs text-brand-text-light">สมาชิก</p>
+                    </div>
+                    <div className="text-center p-3 bg-brand-bg/50 rounded-xl">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <ClipboardList className="w-4 h-4 text-brand-info" />
+                      </div>
+                      <p className="text-lg font-bold text-brand-text-dark">{team.activeJobCount}</p>
+                      <p className="text-xs text-brand-text-light">งานเปิด</p>
+                    </div>
+                    <div className="text-center p-3 bg-brand-bg/50 rounded-xl">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <Star className="w-4 h-4 text-brand-warning fill-brand-warning" />
+                      </div>
+                      <p className="text-lg font-bold text-brand-text-dark">{team.rating.toFixed(1)}</p>
+                      <p className="text-xs text-brand-text-light">Rating</p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
 
-            {/* Add New Team Card */}
-            {!teamsLoading && (
-              <Link href="/seller/team">
-                <div className="h-full min-h-[130px] p-4 rounded-2xl border-2 border-dashed border-brand-border/50 hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-pointer group">
-                  <div className="w-10 h-10 rounded-full bg-brand-bg group-hover:bg-brand-primary/10 flex items-center justify-center transition-colors">
-                    <Plus className="w-5 h-5 text-brand-text-light group-hover:text-brand-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-brand-text-light group-hover:text-brand-primary transition-colors">
-                    สร้างทีมใหม่
-                  </span>
-                </div>
-              </Link>
-            )}
-          </div>
+                  {/* Pending Actions */}
+                  {(pendingData.pendingReviews > 0 || pendingData.pendingPayouts > 0) && (
+                    <div className="flex flex-wrap gap-2 pt-3 border-t border-brand-border/30">
+                      {pendingData.pendingReviews > 0 && (
+                        <Badge variant="warning" size="sm" className="gap-1">
+                          <Clock className="w-3 h-3" />
+                          {pendingData.pendingReviews} รอตรวจ
+                        </Badge>
+                      )}
+                      {pendingData.pendingPayouts > 0 && (
+                        <Badge variant="info" size="sm" className="gap-1">
+                          <DollarSign className="w-3 h-3" />
+                          {formatCurrency(pendingData.pendingPayouts)} รอจ่าย
+                        </Badge>
+                      )}
+                    </div>
+                  )}
 
-          {/* CTA Button - Portal Entry */}
-          <Link href="/seller/team">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-primary to-brand-primary-dark p-5 text-white shadow-lg shadow-brand-primary/30 hover:shadow-xl hover:shadow-brand-primary/40 transition-all duration-300 cursor-pointer group">
-              <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                    <ExternalLink className="w-6 h-6" />
+                  {/* Status & Arrow */}
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-brand-border/30">
+                    <Badge 
+                      variant={team.isActive ? "success" : "default"} 
+                      size="sm"
+                    >
+                      {team.isActive ? "🟢 Active" : "⚪ Inactive"}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-sm font-medium text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      จัดการทีม <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-lg">เข้าศูนย์จัดการทีม</p>
-                    <p className="text-white/80 text-sm">ดูทีมทั้งหมด, สร้างทีมใหม่, จัดการงานและการจ่ายเงิน</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                </Card>
+              </Link>
+            );
+          })}
+
+          {/* Add New Team Card */}
+          {!teamsLoading && (
+            <button
+              onClick={() => setIsCreateTeamModalOpen(true)}
+              className="h-full min-h-[280px] border-2 border-dashed border-brand-border/50 rounded-2xl flex flex-col items-center justify-center gap-4 text-brand-text-light hover:text-brand-primary hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all group"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center group-hover:bg-brand-primary/10 transition-colors">
+                <Plus className="w-8 h-8" />
               </div>
-            </div>
-          </Link>
+              <div className="text-center">
+                <p className="font-bold text-lg">สร้างทีมใหม่</p>
+                <p className="text-sm opacity-70">แยกจัดการงานแต่ละประเภท</p>
+              </div>
+            </button>
+          )}
         </div>
+
+        {/* Tips */}
+        <Card variant="bordered" className="bg-gradient-to-r from-brand-info/5 to-brand-primary/5 border-brand-info/20">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-brand-info/10 rounded-xl text-brand-info shrink-0">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-brand-text-dark mb-2">💡 เคล็ดลับการจัดการหลายทีม</h3>
+              <ul className="text-sm text-brand-text-light space-y-1">
+                <li>• <strong>แยกทีมตามแพลตฟอร์ม</strong> - Facebook, TikTok, Instagram ช่วยให้จัดการง่ายขึ้น</li>
+                <li>• <strong>แยกทีมตามระดับ</strong> - VIP, Premium, ปกติ สำหรับงานที่ต้องการคุณภาพต่างกัน</li>
+                <li>• <strong>ใช้ผู้ช่วย</strong> - แต่งตั้ง Assistant ช่วยตรวจงานและจัดการสมาชิก</li>
+              </ul>
+            </div>
+          </div>
+        </Card>
       </section>
-      {/* ===== END TEAM PORTAL CARD ===== */}
+      {/* ===== END TEAM MANAGEMENT SECTION ===== */}
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
@@ -420,6 +505,71 @@ export default function SellerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Create Team Modal */}
+      <Modal
+        isOpen={isCreateTeamModalOpen}
+        onClose={() => setIsCreateTeamModalOpen(false)}
+        title="🏢 สร้างทีมใหม่"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-brand-text-dark mb-2">
+              ชื่อทีม <span className="text-brand-error">*</span>
+            </label>
+            <Input
+              placeholder="เช่น MyBoost TikTok Team"
+              value={newTeamName}
+              onChange={(e) => setNewTeamName(e.target.value)}
+            />
+            <p className="text-xs text-brand-text-light mt-1">
+              ตั้งชื่อที่จดจำง่าย แยกตามแพลตฟอร์มหรือประเภทงาน
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-brand-text-dark mb-2">
+              คำอธิบายทีม
+            </label>
+            <textarea
+              className="w-full p-3 rounded-xl border border-brand-border/50 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none resize-none"
+              rows={3}
+              placeholder="เช่น ทีมเฉพาะทาง TikTok งานเยอะ จ่ายไว"
+              value={newTeamDescription}
+              onChange={(e) => setNewTeamDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="p-4 rounded-xl bg-brand-info/10 border border-brand-info/20">
+            <p className="text-sm text-brand-info">
+              💡 คุณสามารถสร้างหลายทีมเพื่อแยกจัดการงานประเภทต่างๆ เช่น:
+            </p>
+            <ul className="mt-2 ml-4 text-xs text-brand-text-light list-disc space-y-1">
+              <li>แยกตามแพลตฟอร์ม (Facebook, TikTok, Instagram)</li>
+              <li>แยกตามประเภทงาน (ไลค์, เม้น, Follow)</li>
+              <li>แยกตามระดับ (ทีม VIP, ทีมปกติ)</li>
+            </ul>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateTeamModalOpen(false)}
+              className="flex-1"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleCreateTeam}
+              className="flex-1 shadow-md shadow-brand-primary/20"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              สร้างทีม
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { Card, Button, Input, Textarea, Select, Modal, Skeleton } from "@/compon
 import { PageHeader } from "@/components/shared";
 import { useSellerTeams } from "@/lib/api/hooks";
 import {
-  ArrowLeft,
   Settings,
   Save,
   Globe,
@@ -75,18 +74,11 @@ export default function TeamSettingsPage() {
     <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href={`/seller/team/${teamId}`}>
-            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <PageHeader
-            title="ตั้งค่าทีม"
-            description={`จัดการการตั้งค่าของทีม ${currentTeam?.name || ""}`}
-            icon={Settings}
-          />
-        </div>
+        <PageHeader
+          title="ตั้งค่าทีม"
+          description={`จัดการการตั้งค่าของทีม ${currentTeam?.name || ""}`}
+          icon={Settings}
+        />
         
         <Button
           onClick={handleSave}

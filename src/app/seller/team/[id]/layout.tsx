@@ -56,16 +56,20 @@ export default function TeamLayout({
   if (isLoading) {
     return (
       <div className="min-h-screen bg-brand-bg">
-        <div className="h-16 bg-white border-b border-brand-border/50 px-6 flex items-center gap-4">
-          <Skeleton className="h-10 w-10 rounded-xl" />
-          <Skeleton className="h-6 w-48" />
+        <div className="bg-white border-b border-brand-border/50">
+          <div className="max-w-7xl mx-auto h-16 px-6 flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-6 w-48" />
+          </div>
         </div>
-        <div className="h-14 bg-white border-b border-brand-border/50 px-6 flex items-center gap-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-8 w-24 rounded-lg" />
-          ))}
+        <div className="bg-white border-b border-brand-border/50">
+          <div className="max-w-7xl mx-auto h-14 px-6 flex items-center gap-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-8 w-24 rounded-lg" />
+            ))}
+          </div>
         </div>
-        <main className="p-6">
+        <main className="max-w-7xl mx-auto p-6">
           <Skeleton className="h-64 w-full rounded-xl" />
         </main>
       </div>
@@ -76,7 +80,7 @@ export default function TeamLayout({
     <div className="min-h-screen bg-brand-bg">
       {/* Team Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-brand-border/50 shadow-sm">
-        <div className="h-16 px-4 lg:px-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto h-16 px-4 lg:px-6 flex items-center justify-between">
           {/* Left: Back + Team Info */}
           <div className="flex items-center gap-3">
             {/* Mobile Menu Button */}
@@ -88,7 +92,7 @@ export default function TeamLayout({
             </button>
 
             {/* Back to Store */}
-            <Link href="/seller/team">
+            <Link href="/seller">
               <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors text-brand-text-light hover:text-brand-primary group">
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
               </button>
@@ -179,7 +183,7 @@ export default function TeamLayout({
                     ))}
                   </div>
                   <div className="p-2 border-t border-brand-border/30 bg-brand-bg/30">
-                    <Link href="/seller/team">
+                    <Link href="/seller">
                       <Button variant="ghost" size="sm" className="w-full justify-center">
                         ดูทีมทั้งหมด
                       </Button>
@@ -194,7 +198,7 @@ export default function TeamLayout({
         {/* Horizontal Tabs Navigation */}
         <div className="border-t border-brand-border/30 bg-white">
           {/* Desktop Tabs */}
-          <nav className="hidden lg:flex items-center gap-1 px-6 overflow-x-auto no-scrollbar">
+          <nav className="max-w-7xl mx-auto hidden lg:flex items-center gap-1 px-6 overflow-x-auto no-scrollbar">
             {teamNav.map((item) => {
               if (isNavGroup(item)) return null;
 
@@ -228,7 +232,7 @@ export default function TeamLayout({
           </nav>
 
           {/* Mobile Horizontal Scroll Tabs */}
-          <nav className="lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
+          <nav className="max-w-7xl mx-auto lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
             {teamNav.map((item) => {
               if (isNavGroup(item)) return null;
 
@@ -335,11 +339,9 @@ export default function TeamLayout({
         </>
       )}
 
-      {/* Main Content - Full Width */}
-      <main className="p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
-        <div className="max-w-7xl mx-auto">
-          {children}
-        </div>
+      {/* Main Content - Centered */}
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
+        {children}
       </main>
     </div>
   );

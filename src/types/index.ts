@@ -298,6 +298,8 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   confirmedAt?: string;
+  cancelReason?: string;
+  cancelledAt?: string;
   completedAt?: string;
 }
 

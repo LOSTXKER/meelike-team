@@ -1,29 +1,23 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Card, Badge, Button, Input, Modal, Skeleton } from "@/components/ui";
-import { PageHeader, EmptyState } from "@/components/shared";
+import { PageHeader, EmptyState, StatsGrid, FilterTabs, getPayoutStats, type PayoutFilterStatus } from "@/components/shared";
 import { useTeamPayouts, useWorkerBalances, useWorkers, useSellerTeams } from "@/lib/api/hooks";
 import type { TeamPayout } from "@/types";
 import {
-  ArrowLeft,
   DollarSign,
   Search,
   Clock,
   CheckCircle2,
-  User,
   Wallet,
   Send,
   AlertCircle,
   CreditCard,
   LayoutGrid,
-  CheckCircle,
   History,
 } from "lucide-react";
-
-type FilterStatus = "all" | "pending" | "completed";
 
 export default function TeamPayoutsPage() {
   const params = useParams();
@@ -37,7 +31,7 @@ export default function TeamPayoutsPage() {
 
   const [payouts, setPayouts] = useState<TeamPayout[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterStatus, setFilterStatus] = useState<PayoutFilterStatus>("all");
   const [selectedPayout, setSelectedPayout] = useState<TeamPayout | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -105,64 +99,23 @@ export default function TeamPayoutsPage() {
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href={`/seller/team/${teamId}`}>
-            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <PageHeader
-            title="จ่ายเงินลูกทีม"
-            description={`จัดการการจ่ายเงินของทีม ${currentTeam?.name || ""}`}
-            icon={DollarSign}
-          />
-        </div>
+        <PageHeader
+          title="จ่ายเงินลูกทีม"
+          description={`จัดการการจ่ายเงินของทีม ${currentTeam?.name || ""}`}
+          icon={DollarSign}
+        />
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
-           <div className="flex flex-col items-center justify-center p-2 text-center">
-             <div className="w-10 h-10 rounded-xl bg-brand-warning/10 flex items-center justify-center text-brand-warning mb-2">
-               <Clock className="w-5 h-5" />
-             </div>
-             <p className="text-2xl font-bold text-brand-warning">{pendingPayouts.length}</p>
-             <p className="text-sm text-brand-text-light">รายการรอจ่าย</p>
-           </div>
-        </Card>
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
-           <div className="flex flex-col items-center justify-center p-2 text-center">
-             <div className="w-10 h-10 rounded-xl bg-brand-error/10 flex items-center justify-center text-brand-error mb-2">
-               <Wallet className="w-5 h-5" />
-             </div>
-             <p className="text-2xl font-bold text-brand-error">฿{totalPending.toLocaleString()}</p>
-             <p className="text-sm text-brand-text-light">ยอดเงินค้างจ่าย</p>
-           </div>
-        </Card>
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
-           <div className="flex flex-col items-center justify-center p-2 text-center">
-             <div className="w-10 h-10 rounded-xl bg-brand-success/10 flex items-center justify-center text-brand-success mb-2">
-               <CheckCircle2 className="w-5 h-5" />
-             </div>
-             <p className="text-2xl font-bold text-brand-success">
-                ฿{payouts
-                  .filter((p) => p.status === "completed")
-                  .reduce((sum, p) => sum + p.amount, 0)
-                  .toLocaleString()}
-             </p>
-             <p className="text-sm text-brand-text-light">จ่ายแล้ว (รวม)</p>
-           </div>
-        </Card>
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
-           <div className="flex flex-col items-center justify-center p-2 text-center">
-             <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary mb-2">
-               <User className="w-5 h-5" />
-             </div>
-             <p className="text-2xl font-bold text-brand-primary">{workers.length}</p>
-             <p className="text-sm text-brand-text-light">Worker ทั้งหมด</p>
-           </div>
-        </Card>
-      </div>
+      <StatsGrid
+        stats={getPayoutStats({
+          pendingCount: pendingPayouts.length,
+          pendingAmount: totalPending,
+          completedAmount: payouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0),
+          totalWorkers: workers.length,
+        })}
+        columns={4}
+      />
 
       {/* Pending Alert */}
       {pendingPayouts.length > 0 && (
@@ -243,28 +196,16 @@ export default function TeamPayoutsPage() {
         <div className="lg:col-span-2 space-y-4">
            {/* Filter & Search */}
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
-             <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto no-scrollbar">
-                <div className="flex gap-1 p-1.5 bg-brand-bg/50 rounded-xl border border-brand-border/30 min-w-max">
-                  {[
-                    { key: "all", label: "ทั้งหมด", icon: LayoutGrid },
-                    { key: "pending", label: "รอจ่าย", icon: Clock },
-                    { key: "completed", label: "จ่ายแล้ว", icon: CheckCircle },
-                  ].map((f) => (
-                    <button
-                      key={f.key}
-                      onClick={() => setFilterStatus(f.key as FilterStatus)}
-                      className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                        filterStatus === f.key
-                          ? "bg-white text-brand-text-dark shadow-sm ring-1 ring-black/5"
-                          : "text-brand-text-light hover:text-brand-text-dark opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <f.icon className={`w-4 h-4 ${filterStatus === f.key ? "text-brand-primary" : ""}`} />
-                      <span>{f.label}</span>
-                    </button>
-                  ))}
-                </div>
-             </div>
+             <FilterTabs
+               tabs={[
+                 { value: "all" as const, label: "ทั้งหมด" },
+                 { value: "pending" as const, label: "รอจ่าย" },
+                 { value: "completed" as const, label: "จ่ายแล้ว" },
+               ]}
+               value={filterStatus}
+               onChange={setFilterStatus}
+               showCount={false}
+             />
              <div className="w-full sm:w-auto sm:min-w-[240px]">
                 <Input
                   placeholder="ค้นหา..."

@@ -114,14 +114,17 @@ export const sellerApi = {
     return mockJobs;
   },
 
+  // Note: mockJobClaims uses a different structure for V2 marketplace
+  // Using 'unknown' cast as temporary workaround until mock data is unified
   async getJobClaims(): Promise<JobClaim[]> {
     await delay();
-    return mockJobClaims;
+    return mockJobClaims as unknown as JobClaim[];
   },
 
   async getPendingReviews(): Promise<JobClaim[]> {
     await delay();
-    return mockJobClaims.filter((claim) => claim.status === "submitted");
+    // V2 marketplace uses 'claimed' status for pending reviews
+    return (mockJobClaims.filter((claim) => claim.status === "claimed") as unknown) as JobClaim[];
   },
 
   async getTeamJobs(): Promise<TeamJob[]> {
