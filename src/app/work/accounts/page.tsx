@@ -173,7 +173,7 @@ export default function WorkerAccountsPage() {
             บัญชี Social Media
           </h1>
           <p className="text-brand-text-light mt-2 text-lg">
-            จัดการบัญชีที่ใช้รับงาน • {accounts.length} บัญชี ({verifiedCount} ยืนยันแล้ว)
+            จัดการบัญชีที่ใช้จองงาน • {accounts.length} บัญชี ({verifiedCount} ยืนยันแล้ว)
           </p>
         </div>
         <Button 
@@ -252,7 +252,7 @@ export default function WorkerAccountsPage() {
                 <Smartphone className="w-10 h-10 text-brand-text-light" />
               </div>
               <p className="text-xl font-bold text-brand-text-dark mb-2">ยังไม่มีบัญชี Social Media</p>
-              <p className="text-brand-text-light mb-6 max-w-sm mx-auto">เพิ่มบัญชีเพื่อเริ่มรับงานและสร้างรายได้</p>
+              <p className="text-brand-text-light mb-6 max-w-sm mx-auto">เพิ่มบัญชีเพื่อเริ่มจองงานและสร้างรายได้</p>
               <Button
                 size="lg"
                 className="shadow-lg shadow-brand-primary/20"
@@ -345,7 +345,7 @@ export default function WorkerAccountsPage() {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-brand-info" /> 
-                บัญชีที่ผ่านการยืนยันจะได้รับงานมากกว่า
+                บัญชีที่ผ่านการยืนยันจะจองงานได้มากกว่า
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-brand-info" /> 
@@ -407,7 +407,7 @@ export default function WorkerAccountsPage() {
           <div className="p-4 bg-brand-info/5 border border-brand-info/20 rounded-xl">
             <p className="text-sm text-brand-text-dark font-medium flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-brand-info shrink-0 mt-0.5" />
-              <span>หลังจากเพิ่มบัญชี ระบบจะตรวจสอบภายใน 24 ชั่วโมง เมื่อผ่านการยืนยันแล้วจึงจะรับงานได้</span>
+              <span>หลังจากเพิ่มบัญชี ระบบจะตรวจสอบภายใน 24 ชั่วโมง เมื่อผ่านการยืนยันแล้วจึงจะจองงานได้</span>
             </p>
           </div>
 

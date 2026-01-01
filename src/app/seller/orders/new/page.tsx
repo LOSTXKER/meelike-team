@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Input, Select, Textarea } from "@/components/ui";
 import { PageHeader, PlatformIcon, ServiceTypeBadge } from "@/components/shared";
-import { mockServices } from "@/lib/mock-data";
+import { useSellerServices } from "@/lib/api/hooks";
 import type { Platform, ServiceMode } from "@/types";
 import {
   ArrowLeft,
@@ -25,10 +25,12 @@ interface OrderItem {
   id: string;
   serviceId: string;
   serviceName: string;
+  serviceType: ServiceMode;
   platform: string;
   targetUrl: string;
   quantity: number;
   unitPrice: number;
+  costPrice: number;
   subtotal: number;
   commentTemplates?: string;
 }
@@ -42,6 +44,7 @@ const contactTypes = [
 
 export default function NewOrderPage() {
   const router = useRouter();
+  const { data: mockServices, isLoading } = useSellerServices();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Customer info
@@ -60,7 +63,7 @@ export default function NewOrderPage() {
   const [commentTemplates, setCommentTemplates] = useState("");
 
   const handleAddItem = () => {
-    if (!selectedService || !targetUrl || !quantity) {
+    if (!selectedService || !targetUrl || !quantity || !mockServices) {
       alert("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
@@ -78,10 +81,12 @@ export default function NewOrderPage() {
       id: `item-${Date.now()}`,
       serviceId: service.id,
       serviceName: service.name,
+      serviceType: service.serviceType,
       platform: service.category,
       targetUrl,
       quantity: qty,
       unitPrice: service.sellPrice,
+      costPrice: service.costPrice,
       subtotal: qty * service.sellPrice,
       commentTemplates: service.type === "comment" ? commentTemplates : undefined,
     };
@@ -120,12 +125,16 @@ export default function NewOrderPage() {
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
     
     setTimeout(() => {
-      alert(`สร้างออเดอร์ ${orderNumber} เรียบร้อย!\nยอดรวม: ฿${calculateTotal().toLocaleString()}`);
+      alert(`สร้างออเดอร์ ${orderNumber} เรียบร้อย!\nยอดรวม: ฿${calculateTotal().toLocaleString()}\n\n⚠️ อย่าลืมไปส่งคำสั่งซื้อในหน้า Order Detail`);
       router.push("/seller/orders");
     }, 1000);
   };
 
-  const selectedServiceData = mockServices.find((s) => s.id === selectedService);
+  const selectedServiceData = mockServices?.find((s) => s.id === selectedService);
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-brand-text-light">กำลังโหลด...</div>;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-12">
@@ -206,17 +215,17 @@ export default function NewOrderPage() {
             </h2>
 
             <div className="space-y-5">
-              <Select
-                label="เลือกบริการ *"
-                value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
-                options={[
-                  { value: "", label: "-- เลือกบริการ --" },
-                  ...mockServices.map((s) => ({
-                    value: s.id,
-                    label: `${s.name} (฿${s.sellPrice}/หน่วย)`,
-                  })),
-                ]}
+                <Select
+                  label="เลือกบริการ *"
+                  value={selectedService}
+                  onChange={(e) => setSelectedService(e.target.value)}
+                  options={[
+                    { value: "", label: "-- เลือกบริการ --" },
+                    ...(mockServices || []).map((s) => ({
+                      value: s.id,
+                      label: `${s.name} (฿${s.sellPrice}/หน่วย)`,
+                    })),
+                  ]}
                 className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
 
@@ -318,9 +327,12 @@ export default function NewOrderPage() {
                          <PlatformIcon platform={item.platform as Platform} size="lg" />
                       </div>
                       <div>
-                        <p className="font-bold text-brand-text-dark">
-                          {index + 1}. {item.serviceName}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-brand-text-dark">
+                            {index + 1}. {item.serviceName}
+                          </p>
+                          <ServiceTypeBadge type={item.serviceType} />
+                        </div>
                         <p className="text-sm text-brand-text-light truncate max-w-xs font-mono bg-white/50 px-1.5 rounded mt-1 inline-block">
                           {item.targetUrl}
                         </p>
@@ -433,17 +445,17 @@ export default function NewOrderPage() {
             </Card>
 
             {/* Tips */}
-            <Card variant="bordered" padding="md" className="bg-[#E8F0FE] border border-[#D2E3FC]">
+            <Card variant="bordered" padding="md" className="bg-[#FEF7E0] border border-[#FEEFC3]">
               <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-[#1967D2] shrink-0 mt-0.5" />
-                <div className="text-sm text-[#1967D2]">
-                  <p className="font-bold mb-1">
-                    เคล็ดลับ
+                <AlertCircle className="w-5 h-5 text-[#B06000] shrink-0 mt-0.5" />
+                <div className="text-sm text-[#5F4B32]">
+                  <p className="font-bold mb-1 text-[#B06000]">
+                    ⚠️ ขั้นตอนถัดไป
                   </p>
-                  <ul className="space-y-1.5 opacity-90">
-                    <li>• สามารถเพิ่มหลายบริการในออเดอร์เดียวได้</li>
-                    <li>• ตรวจสอบ URL ให้ถูกต้องก่อนสร้างออเดอร์</li>
-                    <li>• ลูกค้าจะได้รับลิงก์ติดตามสถานะอัตโนมัติ</li>
+                  <ul className="space-y-1.5">
+                    <li>• หลังสร้างออเดอร์แล้ว ต้องไปกดส่งคำสั่งซื้อในหน้า Order Detail</li>
+                    <li>• <b>Bot:</b> กดส่ง API เพื่อเริ่มทำงานอัตโนมัติ</li>
+                    <li>• <b>คนจริง:</b> กดมอบหมายงานให้ทีม Worker</li>
                   </ul>
                 </div>
               </div>

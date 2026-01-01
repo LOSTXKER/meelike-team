@@ -2,32 +2,49 @@
 
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
-import { StatsCard, Card, Badge, Button, Progress, Avatar } from "@/components/ui";
+import { StatsCard, Card, Badge, Button, Progress, Avatar, Skeleton, SkeletonCard } from "@/components/ui";
 import { ServiceTypeBadge, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import { mockOrders, mockJobClaims, mockWorkers, mockSellerStats } from "@/lib/mock-data";
+import { useSellerStats, useSellerOrders, useSellerTeams } from "@/lib/api/hooks";
 import {
   DollarSign,
   ShoppingBag,
   Users,
   Star,
   ArrowRight,
-  CheckCircle,
-  XCircle,
   Package,
-  Bell,
   ClipboardList,
   Store,
   CreditCard,
+  Wallet,
+  Building2,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Clock,
+  ShieldCheck,
+  Plus,
 } from "lucide-react";
 
 export default function SellerDashboard() {
   const { user } = useAuthStore();
   const seller = user?.seller;
 
-  const pendingReviews = mockJobClaims.filter(
-    (claim) => claim.status === "submitted"
-  );
+  // Use API hooks
+  const { data: stats, isLoading: statsLoading } = useSellerStats();
+  const { data: orders, isLoading: ordersLoading } = useSellerOrders();
+  const { data: teams, isLoading: teamsLoading } = useSellerTeams();
+
+  const isLoading = statsLoading || ordersLoading || teamsLoading;
+
+  // Calculate team summary
+  const teamSummary = {
+    total: teams?.length || 0,
+    totalMembers: teams?.reduce((sum, t) => sum + t.memberCount, 0) || 0,
+    totalActiveJobs: teams?.reduce((sum, t) => sum + t.activeJobCount, 0) || 0,
+    pendingReviews: 7, // Mock - would come from API
+    pendingPayouts: 4250, // Mock - would come from API
+  };
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
@@ -50,73 +67,77 @@ export default function SellerDashboard() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <StatsCard
-            title="รายได้เดือนนี้"
-            value={formatCurrency(mockSellerStats.monthRevenue)}
-            icon={<DollarSign className="w-6 h-6" />}
-            change={12.5}
-            changeLabel="จากเดือนก่อน"
-            className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
-          />
-          <StatsCard
-            title="ออเดอร์"
-            value={mockSellerStats.monthOrders}
-            icon={<ShoppingBag className="w-6 h-6" />}
-            change={8.2}
-            className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
-          />
-          <StatsCard
-            title="ทีมงาน Active"
-            value={`${mockSellerStats.activeTeamMembers} คน`}
-            icon={<Users className="w-6 h-6" />}
-            className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
-          />
-          <StatsCard
-            title="Rating ร้าน"
-            value={`${seller?.rating}`}
-            icon={<Star className="w-6 h-6" />}
-            className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
-          />
+          {statsLoading ? (
+            <>
+              <SkeletonCard className="h-[120px]" />
+              <SkeletonCard className="h-[120px]" />
+              <SkeletonCard className="h-[120px]" />
+              <SkeletonCard className="h-[120px]" />
+            </>
+          ) : (
+            <>
+              <StatsCard
+                title="รายได้เดือนนี้"
+                value={formatCurrency(stats?.monthRevenue || 0)}
+                icon={<DollarSign className="w-6 h-6" />}
+                change={12.5}
+                changeLabel="จากเดือนก่อน"
+                className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
+              />
+              <StatsCard
+                title="ออเดอร์รอดำเนินการ"
+                value={orders?.filter(o => o.status === 'pending' || o.status === 'processing').length || 0}
+                icon={<ShoppingBag className="w-6 h-6" />}
+                className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
+              />
+              <StatsCard
+                title="Wallet"
+                value={formatCurrency(seller?.balance || 0)}
+                icon={<Wallet className="w-6 h-6" />}
+                className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
+              />
+              <StatsCard
+                title="ทีมทั้งหมด"
+                value={`${teamSummary.total} ทีม`}
+                icon={<Building2 className="w-6 h-6" />}
+                className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform duration-300"
+              />
+            </>
+          )}
         </div>
       </section>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Sidebar Widgets (Mobile: First, Desktop: Second) */}
-        <div className="space-y-8 lg:col-start-3 lg:row-start-1">
+        {/* Sidebar Widgets */}
+        <div className="space-y-6 lg:col-start-3 lg:row-start-1">
           {/* Quick Actions */}
           <section className="space-y-4">
             <h2 className="text-xl font-bold text-brand-text-dark">เมนูด่วน</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
                 {
-                  label: "สร้างงาน",
-                  href: "/seller/team/jobs/new",
-                  icon: <ClipboardList className="w-5 h-5" />,
-                  color: "bg-brand-surface border border-brand-border text-brand-text-dark hover:border-brand-primary/50 hover:shadow-md",
-                },
-                {
                   label: "บริการ",
                   href: "/seller/services",
                   icon: <Package className="w-5 h-5" />,
-                  color: "bg-brand-surface border border-brand-border text-brand-text-dark hover:border-brand-primary/50 hover:shadow-md",
                 },
                 {
                   label: "หน้าร้าน",
                   href: `/s/${seller?.storeSlug}`,
                   icon: <Store className="w-5 h-5" />,
-                  color: "bg-brand-surface border border-brand-border text-brand-text-dark hover:border-brand-primary/50 hover:shadow-md",
                 },
                 {
                   label: "เติมเงิน",
-                  href: "/seller/wallet/topup",
+                  href: "/seller/finance/topup",
                   icon: <CreditCard className="w-5 h-5" />,
-                  color: "bg-brand-surface border border-brand-border text-brand-text-dark hover:border-brand-primary/50 hover:shadow-md",
+                },
+                {
+                  label: "จัดการทีม",
+                  href: "/seller/team",
+                  icon: <Users className="w-5 h-5" />,
                 },
               ].map((action, i) => (
                 <Link key={i} href={action.href}>
-                  <div
-                    className={`${action.color} p-4 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-2 h-24 text-center cursor-pointer group`}
-                  >
+                  <div className="bg-brand-surface border border-brand-border text-brand-text-dark hover:border-brand-primary/50 hover:shadow-md p-4 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-2 h-24 text-center cursor-pointer group">
                     <div className="p-2 rounded-full bg-brand-bg group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors">
                       {action.icon}
                     </div>
@@ -129,79 +150,119 @@ export default function SellerDashboard() {
             </div>
           </section>
 
-          {/* Pending Reviews */}
-          <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hidden lg:block">
-            <div className="flex items-center justify-between mb-6">
+          {/* Team Overview Widget */}
+          <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-brand-text-dark flex items-center gap-2">
-                <Bell className="w-5 h-5 text-brand-warning" />
-                รอตรวจสอบ ({pendingReviews.length})
+                <Building2 className="w-5 h-5 text-brand-primary" />
+                ภาพรวมทีม
               </h2>
               <Link
-                href="/seller/team/review"
-                className="text-sm font-medium text-brand-primary hover:underline"
+                href="/seller/team"
+                className="text-sm font-medium text-brand-primary hover:underline flex items-center gap-1"
               >
-                ดูทั้งหมด
+                ดูทั้งหมด <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            {/* ... Review Items ... */}
-            <div className="space-y-4">
-              {pendingReviews.map((claim) => {
-                const worker = mockWorkers.find(
-                  (w) => w.id === claim.workerId
-                );
-                return (
-                  <div
-                    key={claim.id}
-                    className="p-4 rounded-xl bg-brand-bg/30 border border-brand-border/50 hover:border-brand-primary/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <Avatar
-                        src={worker?.avatar}
-                        fallback={worker?.displayName}
-                        size="sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-brand-text-dark truncate text-sm">
-                          @{worker?.displayName}
-                        </p>
-                        <p className="text-xs font-medium text-brand-text-light">
-                          ส่งงาน {claim.quantity} รายการ
-                        </p>
-                      </div>
-                      <span className="font-bold text-brand-success text-sm">
-                        {formatCurrency(claim.earnAmount)}
-                      </span>
-                    </div>
 
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 h-8 text-xs font-bold" leftIcon={<CheckCircle className="w-3 h-3" />}>
-                        อนุมัติ
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 h-8 text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                        leftIcon={<XCircle className="w-3 h-3" />}
-                      >
-                        ปฏิเสธ
-                      </Button>
+            {/* Team Summary Stats */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="text-center p-2 bg-brand-bg/50 rounded-xl">
+                <p className="text-lg font-bold text-brand-text-dark">{teamSummary.totalMembers}</p>
+                <p className="text-xs text-brand-text-light">สมาชิก</p>
+              </div>
+              <div className="text-center p-2 bg-brand-bg/50 rounded-xl">
+                <p className="text-lg font-bold text-brand-text-dark">{teamSummary.totalActiveJobs}</p>
+                <p className="text-xs text-brand-text-light">งานเปิด</p>
+              </div>
+              <div className="text-center p-2 bg-brand-bg/50 rounded-xl">
+                <p className="text-lg font-bold text-brand-warning">{teamSummary.pendingReviews}</p>
+                <p className="text-xs text-brand-text-light">รอตรวจ</p>
+              </div>
+            </div>
+
+            {/* Team List */}
+            <div className="space-y-3">
+              {teamsLoading ? (
+                <>
+                  <Skeleton className="h-16 rounded-xl" />
+                  <Skeleton className="h-16 rounded-xl" />
+                </>
+              ) : teams?.slice(0, 3).map((team) => (
+                <Link key={team.id} href={`/seller/team/${team.id}`}>
+                  <div className="p-3 rounded-xl bg-brand-bg/30 border border-brand-border/50 hover:border-brand-primary/30 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center text-white font-bold shadow-sm">
+                        {team.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-brand-text-dark text-sm truncate group-hover:text-brand-primary transition-colors">
+                            {team.name}
+                          </p>
+                          {team.isPublic ? (
+                            <Eye className="w-3 h-3 text-brand-success shrink-0" />
+                          ) : (
+                            <EyeOff className="w-3 h-3 text-brand-text-light shrink-0" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-brand-text-light">
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {team.memberCount}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <ClipboardList className="w-3 h-3" />
+                            {team.activeJobCount} งาน
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
+                            {team.rating.toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-brand-text-light group-hover:text-brand-primary transition-colors" />
                     </div>
                   </div>
-                );
-              })}
+                </Link>
+              ))}
 
-              {pendingReviews.length === 0 && (
-                <EmptyState
-                  icon={CheckCircle}
-                  title="ไม่มีงานรอตรวจสอบ"
-                  className="py-8 opacity-60"
-                />
-              )}
+              {/* Add Team Button */}
+              <Link href="/seller/team">
+                <div className="p-3 rounded-xl border-2 border-dashed border-brand-border/50 hover:border-brand-primary/50 transition-colors text-center cursor-pointer group">
+                  <span className="text-sm font-medium text-brand-text-light group-hover:text-brand-primary transition-colors flex items-center justify-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    สร้างทีมใหม่
+                  </span>
+                </div>
+              </Link>
             </div>
+
+            {/* Pending Actions */}
+            {(teamSummary.pendingReviews > 0 || teamSummary.pendingPayouts > 0) && (
+              <div className="mt-4 pt-4 border-t border-brand-border/30 flex flex-wrap gap-2">
+                {teamSummary.pendingReviews > 0 && (
+                  <Link href="/seller/team/review">
+                    <Badge variant="warning" className="cursor-pointer hover:opacity-80 gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      {teamSummary.pendingReviews} รอตรวจ
+                    </Badge>
+                  </Link>
+                )}
+                {teamSummary.pendingPayouts > 0 && (
+                  <Link href="/seller/team/payouts">
+                    <Badge variant="info" className="cursor-pointer hover:opacity-80 gap-1">
+                      <DollarSign className="w-3 h-3" />
+                      {formatCurrency(teamSummary.pendingPayouts)} รอจ่าย
+                    </Badge>
+                  </Link>
+                )}
+              </div>
+            )}
           </Card>
         </div>
 
-        {/* Recent Orders (Mobile: Second, Desktop: First) */}
+        {/* Recent Orders */}
         <div className="lg:col-span-2 space-y-6 lg:col-start-1 lg:row-start-1">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-brand-text-dark flex items-center gap-2">
@@ -217,8 +278,13 @@ export default function SellerDashboard() {
           </div>
 
           <div className="space-y-4">
-            {mockOrders.length > 0 ? (
-              mockOrders.slice(0, 3).map((order) => (
+            {ordersLoading ? (
+              <>
+                <SkeletonCard className="h-[200px]" />
+                <SkeletonCard className="h-[200px]" />
+              </>
+            ) : orders && orders.length > 0 ? (
+              orders.slice(0, 3).map((order) => (
               <Card 
                 key={order.id} 
                 variant="elevated" 
@@ -244,6 +310,8 @@ export default function SellerDashboard() {
                         ? "success"
                         : order.status === "processing"
                         ? "info"
+                        : order.status === "cancelled"
+                        ? "error"
                         : "warning"
                     }
                     className="self-start sm:self-center px-4 py-1.5 text-xs font-bold uppercase tracking-wide rounded-full shadow-sm"
@@ -252,6 +320,8 @@ export default function SellerDashboard() {
                       ? "✓ เสร็จแล้ว"
                       : order.status === "processing"
                       ? "⚡ กำลังทำ"
+                      : order.status === "cancelled"
+                      ? "✕ ยกเลิก"
                       : "⏳ รอดำเนินการ"}
                   </Badge>
                 </div>
@@ -308,4 +378,3 @@ export default function SellerDashboard() {
     </div>
   );
 }
-

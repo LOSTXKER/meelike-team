@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Progress, Modal, Input, Textarea } from "@/components/ui";
-import { mockOrders, mockServices } from "@/lib/mock-data";
+import { Card, Badge, Button, Progress, Modal, Input, Textarea, Select } from "@/components/ui";
+import { useSellerOrder, useSellerServices, useSellerTeams } from "@/lib/api/hooks";
 import {
   ArrowLeft,
   Package,
@@ -27,6 +27,11 @@ import {
   Music2,
   Youtube,
   CreditCard,
+  Zap,
+  Play,
+  Loader2,
+  ChevronDown,
+  Building2,
 } from "lucide-react";
 
 type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
@@ -47,19 +52,47 @@ export default function OrderDetailPage() {
 
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [showConfirmPayment, setShowConfirmPayment] = useState(false);
+  const [showSendBotModal, setShowSendBotModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
+  
+  // Track which items have been dispatched
+  const [sentItems, setSentItems] = useState<Record<number, { sent: boolean; loading: boolean }>>({});
+  
+  // Job creation form
+  const [jobQuantity, setJobQuantity] = useState("");
+  const [jobPayRate, setJobPayRate] = useState("");
 
-  // Mock find order
-  const order = mockOrders.find((o) => o.id === orderId) || mockOrders[0];
+  // Use API hooks
+  const { data: orderData, isLoading: isLoadingOrder } = useSellerOrder(orderId);
+  const { data: mockServices, isLoading: isLoadingServices } = useSellerServices();
+  const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
+  
+  const order = orderData;
+  
+  // Team selection for job assignment
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
-  // Helper for customer data
+  const getServiceInfo = (serviceId: string) => {
+    return mockServices?.find((s) => s.id === serviceId);
+  };
+
+  // Team options for select
+  const teamOptions = useMemo(() => {
+    if (!teams) return [];
+    return teams.map((team) => ({
+      value: team.id,
+      label: `${team.name} (${team.memberCount} คน)`,
+    }));
+  }, [teams]);
+
+  if (isLoadingOrder || isLoadingServices || isLoadingTeams || !order) {
+    return <div className="p-8 text-center text-brand-text-light">กำลังโหลด...</div>;
+  }
+
+  // Helper for customer data (must be after loading check)
   const customerName = order.customer?.name || "ลูกค้า";
   const customerContact = order.customer?.contactValue || "";
   const paymentProof = order.paymentProof;
-
-  const getServiceInfo = (serviceId: string) => {
-    return mockServices.find((s) => s.id === serviceId);
-  };
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -70,10 +103,56 @@ export default function OrderDetailPage() {
     setShowConfirmPayment(false);
   };
 
-  const handleCreateJob = () => {
-    alert("สร้างงานให้ทีมเรียบร้อย");
-    setShowCreateJobModal(false);
+  const handleSendBot = async () => {
+    if (selectedItem === null) return;
+    
+    setSentItems((prev) => ({
+      ...prev,
+      [selectedItem]: { sent: false, loading: true },
+    }));
+    setShowSendBotModal(false);
+    
+    // Mock API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    setSentItems((prev) => ({
+      ...prev,
+      [selectedItem]: { sent: true, loading: false },
+    }));
+    
     setSelectedItem(null);
+  };
+
+  const handleCreateJob = async () => {
+    if (selectedItem === null) return;
+    
+    if (!jobQuantity || !jobPayRate || !selectedTeamId) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+    
+    const selectedTeam = teams?.find((t) => t.id === selectedTeamId);
+    
+    setSentItems((prev) => ({
+      ...prev,
+      [selectedItem]: { sent: false, loading: true },
+    }));
+    setShowCreateJobModal(false);
+    
+    // Mock API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    setSentItems((prev) => ({
+      ...prev,
+      [selectedItem]: { sent: true, loading: false },
+    }));
+    
+    alert(`มอบหมายงานให้ทีม "${selectedTeam?.name}" เรียบร้อย!`);
+    
+    setJobQuantity("");
+    setJobPayRate("");
+    setSelectedItem(null);
+    setSelectedTeamId("");
   };
 
   return (
@@ -235,24 +314,72 @@ export default function OrderDetailPage() {
                       <Progress value={progress} className="h-2.5" />
                     </div>
 
-                    {/* Actions for human services */}
-                    {service?.serviceType === "human" &&
-                      order.status === "processing" && (
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-white hover:bg-brand-bg border-brand-border/50 h-10 rounded-xl font-medium"
-                            onClick={() => {
-                              setSelectedItem(index);
-                              setShowCreateJobModal(true);
-                            }}
-                          >
-                            <Users className="w-4 h-4 mr-2" />
-                            สร้างงานให้ทีม
-                          </Button>
+                    {/* Actions - Manual dispatch */}
+                    {order.status === "processing" && (
+                      <div className="pt-3 border-t border-brand-border/30">
+                        {sentItems[index]?.sent ? (
+                          // Already sent
+                          <div className="flex items-center gap-2 p-3 bg-brand-success/10 border border-brand-success/30 rounded-xl">
+                            <CheckCircle2 className="w-5 h-5 text-brand-success" />
+                            <span className="text-sm font-medium text-brand-success">
+                              {service?.serviceType === "bot" ? "ส่ง API แล้ว" : "มอบหมายงานแล้ว"}
+                            </span>
+                          </div>
+                        ) : sentItems[index]?.loading ? (
+                          // Loading
+                          <div className="flex items-center gap-2 p-3 bg-brand-info/10 border border-brand-info/30 rounded-xl">
+                            <Loader2 className="w-5 h-5 text-brand-info animate-spin" />
+                            <span className="text-sm font-medium text-brand-info">
+                              กำลังส่ง...
+                            </span>
+                          </div>
+                        ) : (
+                          // Not sent yet - show action button
+                          <div className="flex gap-2">
+                            {service?.serviceType === "bot" ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="flex-1 h-11 rounded-xl font-medium shadow-md shadow-brand-primary/20"
+                                onClick={() => {
+                                  setSelectedItem(index);
+                                  setShowSendBotModal(true);
+                                }}
+                              >
+                                <Zap className="w-4 h-4 mr-2" />
+                                ส่ง Bot API
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="flex-1 h-11 rounded-xl font-medium shadow-md shadow-brand-primary/20 bg-gradient-to-r from-brand-primary to-brand-primary/80"
+                                onClick={() => {
+                                  setSelectedItem(index);
+                                  setJobQuantity((item.quantity - item.completedQuantity).toString());
+                                  setShowCreateJobModal(true);
+                                }}
+                              >
+                                <Users className="w-4 h-4 mr-2" />
+                                มอบหมายงานให้ทีม
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Pending payment notice */}
+                    {order.status === "pending" && (
+                      <div className="pt-3 border-t border-brand-border/30">
+                        <div className="flex items-center gap-2 p-3 bg-brand-warning/10 border border-brand-warning/30 rounded-xl">
+                          <AlertCircle className="w-5 h-5 text-brand-warning" />
+                          <span className="text-sm font-medium text-brand-warning">
+                            รอยืนยันชำระเงินก่อนส่งคำสั่งซื้อ
+                          </span>
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -521,50 +648,176 @@ export default function OrderDetailPage() {
         </div>
       </Modal>
 
+      {/* Send Bot API Modal */}
+      <Modal
+        isOpen={showSendBotModal}
+        onClose={() => {
+          setShowSendBotModal(false);
+          setSelectedItem(null);
+        }}
+        title="ส่งคำสั่งซื้อไป Bot API"
+      >
+        <div className="space-y-4">
+          {selectedItem !== null && (
+            <>
+              <div className="p-4 bg-brand-bg rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-brand-primary" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text-dark">
+                      {getServiceInfo(order.items[selectedItem].serviceId)?.name}
+                    </p>
+                    <p className="text-xs text-brand-text-light">Bot Service</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="p-2 bg-white rounded-lg">
+                    <p className="text-brand-text-light text-xs">จำนวน</p>
+                    <p className="font-bold text-brand-text-dark">
+                      {order.items[selectedItem].quantity.toLocaleString()} หน่วย
+                    </p>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg">
+                    <p className="text-brand-text-light text-xs">ต้นทุน</p>
+                    <p className="font-bold text-brand-primary">
+                      ฿{((order.items[selectedItem].quantity * (getServiceInfo(order.items[selectedItem].serviceId)?.costPrice || 0))).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-brand-warning/10 rounded-xl border border-brand-warning/30 flex gap-3">
+                <AlertCircle className="w-5 h-5 text-brand-warning shrink-0" />
+                <div className="text-sm text-brand-text-dark">
+                  <p className="font-medium text-brand-warning mb-1">ยืนยันการส่ง?</p>
+                  <p className="text-brand-text-light">
+                    เมื่อส่งแล้วจะหักเครดิตจาก MeeLike API ทันที และไม่สามารถยกเลิกได้
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSendBotModal(false);
+                setSelectedItem(null);
+              }}
+            >
+              ยกเลิก
+            </Button>
+            <Button onClick={handleSendBot} className="shadow-md shadow-brand-primary/20">
+              <Zap className="w-4 h-4 mr-2" />
+              ยืนยัน ส่ง Bot API
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Create Job Modal */}
       <Modal
         isOpen={showCreateJobModal}
         onClose={() => {
           setShowCreateJobModal(false);
           setSelectedItem(null);
+          setJobQuantity("");
+          setJobPayRate("");
         }}
-        title="สร้างงานให้ทีม"
+        title="มอบหมายงานให้ทีม"
       >
         <div className="space-y-4">
           {selectedItem !== null && (
             <>
-              <div className="p-4 bg-brand-bg rounded-lg">
-                <p className="font-medium text-brand-text-dark">
-                  {getServiceInfo(order.items[selectedItem].serviceId)?.name}
-                </p>
-                <p className="text-sm text-brand-text-light mt-1">
-                  จำนวนที่เหลือ:{" "}
-                  {(
-                    order.items[selectedItem].quantity -
-                    order.items[selectedItem].completedQuantity
-                  ).toLocaleString()}{" "}
-                  หน่วย
-                </p>
+              <div className="p-4 bg-brand-bg rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text-dark">
+                      {getServiceInfo(order.items[selectedItem].serviceId)?.name}
+                    </p>
+                    <p className="text-xs text-brand-text-light">Real Human Service</p>
+                  </div>
+                </div>
+                <div className="p-2 bg-white rounded-lg text-sm">
+                  <p className="text-brand-text-light text-xs">จำนวนที่ต้องทำ</p>
+                  <p className="font-bold text-brand-text-dark">
+                    {(
+                      order.items[selectedItem].quantity -
+                      order.items[selectedItem].completedQuantity
+                    ).toLocaleString()}{" "}
+                    หน่วย
+                  </p>
+                </div>
               </div>
 
-              <Input
-                label="จำนวนที่ต้องการมอบหมาย"
-                type="number"
-                placeholder="100"
-              />
-
+              {/* Team Selection */}
               <div>
-                <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
-                  เลือกทีม
+                <label className="block text-sm font-bold text-brand-text-dark mb-2">
+                  เลือกทีมที่จะมอบหมาย *
                 </label>
-                <select className="w-full bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-brand-text-dark focus:outline-none focus:border-brand-primary">
-                  <option>ทีม JohnBoost Main</option>
-                  <option>ทีม Facebook Expert</option>
-                  <option>ทีม Pro Workers</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedTeamId}
+                    onChange={(e) => setSelectedTeamId(e.target.value)}
+                    className="w-full p-3 pl-10 rounded-xl border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer font-medium"
+                  >
+                    <option value="">-- เลือกทีม --</option>
+                    {teamOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light pointer-events-none" />
+                </div>
+                {teams && teams.length > 1 && (
+                  <p className="text-xs text-brand-text-light mt-1.5">
+                    💡 คุณมี {teams.length} ทีม เลือกทีมที่เหมาะกับงานนี้
+                  </p>
+                )}
               </div>
 
-              <Textarea label="หมายเหตุ (ถ้ามี)" placeholder="รายละเอียดเพิ่มเติม..." />
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="จำนวนที่มอบหมาย *"
+                  type="number"
+                  placeholder="100"
+                  value={jobQuantity}
+                  onChange={(e) => setJobQuantity(e.target.value)}
+                />
+                <Input
+                  label="ค่าจ้างต่อหน่วย (฿) *"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.15"
+                  value={jobPayRate}
+                  onChange={(e) => setJobPayRate(e.target.value)}
+                />
+              </div>
+
+              {jobQuantity && jobPayRate && (
+                <div className="p-3 bg-brand-success/10 border border-brand-success/30 rounded-xl">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-text-light">ค่าจ้างรวม</span>
+                    <span className="font-bold text-brand-success">
+                      ฿{(parseFloat(jobQuantity || "0") * parseFloat(jobPayRate || "0")).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <Textarea 
+                label="เงื่อนไข/ข้อกำหนด (ถ้ามี)" 
+                placeholder="เช่น ต้องเป็นแอคจริงหน้าคน, แคปหลักฐานทุกงาน..." 
+                rows={2}
+              />
             </>
           )}
 
@@ -574,13 +827,20 @@ export default function OrderDetailPage() {
               onClick={() => {
                 setShowCreateJobModal(false);
                 setSelectedItem(null);
+                setJobQuantity("");
+                setJobPayRate("");
+                setSelectedTeamId("");
               }}
             >
               ยกเลิก
             </Button>
-            <Button onClick={handleCreateJob}>
+            <Button 
+              onClick={handleCreateJob}
+              disabled={!jobQuantity || !jobPayRate || !selectedTeamId}
+              className="shadow-md shadow-brand-primary/20"
+            >
               <Users className="w-4 h-4 mr-2" />
-              สร้างงาน
+              มอบหมายงาน
             </Button>
           </div>
         </div>

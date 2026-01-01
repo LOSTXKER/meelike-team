@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
-import { Card, Button, Badge, Progress, StatsCard } from "@/components/ui";
-import { PageHeader } from "@/components/shared";
+import { Card, Button, Badge, Progress, Skeleton } from "@/components/ui";
 import { formatCurrency, formatDate, getLevelInfo } from "@/lib/utils";
-import { mockWorkerStats } from "@/lib/mock-data";
+import { useWorkerStats } from "@/lib/api/hooks";
 import {
   Wallet,
   TrendingUp,
   CreditCard,
-  Clock,
   CheckCircle,
   ArrowUpRight,
   ArrowDownRight,
@@ -28,6 +26,9 @@ export default function WorkerEarningsPage() {
   const { user } = useAuthStore();
   const worker = user?.worker;
   const levelInfo = getLevelInfo(worker?.level || "bronze");
+
+  // Use API hook
+  const { data: workerStats, isLoading } = useWorkerStats();
 
   // Mock transactions
   const transactions = [
@@ -79,6 +80,34 @@ export default function WorkerEarningsPage() {
       (currentThreshold.max - currentThreshold.min)) *
     100;
 
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <Skeleton className="h-10 w-48 mb-2" />
+            <Skeleton className="h-5 w-64" />
+          </div>
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1 space-y-6">
+            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-48 rounded-2xl" />
+          </div>
+          <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))}
+            </div>
+            <Skeleton className="h-96 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
@@ -118,7 +147,7 @@ export default function WorkerEarningsPage() {
                   ยอดเงินที่ถอนได้
                 </p>
                 <p className="text-4xl font-bold tracking-tight text-white drop-shadow-sm">
-                  {formatCurrency(mockWorkerStats.availableBalance)}
+                  {formatCurrency(workerStats?.availableBalance || 0)}
                 </p>
               </div>
 
@@ -126,13 +155,13 @@ export default function WorkerEarningsPage() {
                 <div className="text-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10">
                   <p className="text-white/80 text-xs font-medium">รอตรวจสอบ</p>
                   <p className="text-lg font-bold mt-1">
-                    {formatCurrency(mockWorkerStats.pendingBalance)}
+                    {formatCurrency(workerStats?.pendingBalance || 0)}
                   </p>
                 </div>
                 <div className="text-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10">
                   <p className="text-white/80 text-xs font-medium">ถอนไปแล้ว</p>
                   <p className="text-lg font-bold mt-1">
-                    {formatCurrency(mockWorkerStats.totalEarned)}
+                    {formatCurrency(workerStats?.totalEarned || 0)}
                   </p>
                 </div>
               </div>
@@ -194,7 +223,7 @@ export default function WorkerEarningsPage() {
                 </div>
                 <div>
                   <p className="text-xl font-bold text-brand-text-dark leading-none">
-                    {formatCurrency(mockWorkerStats.todayEarned)}
+                    {formatCurrency(workerStats?.todayEarned || 0)}
                   </p>
                   <p className="text-xs text-brand-text-light mt-1">วันนี้</p>
                 </div>
@@ -315,4 +344,3 @@ export default function WorkerEarningsPage() {
     </div>
   );
 }
-

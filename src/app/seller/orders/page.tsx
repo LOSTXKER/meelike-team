@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Card, Button, Badge, Input } from "@/components/ui";
-import { PageHeader, StatusBadge, EmptyState } from "@/components/shared";
+import { Card, Button, Badge, Input, Skeleton } from "@/components/ui";
+import { PageHeader, StatusBadge, EmptyState, FilterBar, StatsGrid } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import { mockOrders } from "@/lib/mock-data";
+import { useSellerOrders } from "@/lib/api/hooks";
 import type { Order } from "@/types";
 import {
   Plus,
@@ -25,7 +25,9 @@ import {
 type OrderStatus = "all" | "pending" | "processing" | "completed" | "cancelled";
 
 export default function OrdersPage() {
-  const [orders] = useState<Order[]>(mockOrders);
+  // Use API hook instead of direct mock data import
+  const { data: orders, isLoading } = useSellerOrders();
+  
   const [filter, setFilter] = useState<OrderStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof Order | "profit"; direction: "asc" | "desc" }>({
@@ -33,31 +35,35 @@ export default function OrdersPage() {
     direction: "desc",
   });
 
-  const filteredOrders = orders
-    .filter((order) => {
-      if (filter !== "all" && order.status !== filter) return false;
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          order.orderNumber.toLowerCase().includes(query) ||
-          order.customer.name.toLowerCase().includes(query)
-        );
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      let aValue: any = a[sortConfig.key as keyof Order];
-      let bValue: any = b[sortConfig.key as keyof Order];
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    
+    return orders
+      .filter((order) => {
+        if (filter !== "all" && order.status !== filter) return false;
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          return (
+            order.orderNumber.toLowerCase().includes(query) ||
+            order.customer.name.toLowerCase().includes(query)
+          );
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        let aValue: string | number = a[sortConfig.key as keyof Order] as string | number;
+        let bValue: string | number = b[sortConfig.key as keyof Order] as string | number;
 
-      if (sortConfig.key === "profit") {
-        aValue = a.totalProfit;
-        bValue = b.totalProfit;
-      }
+        if (sortConfig.key === "profit") {
+          aValue = a.totalProfit;
+          bValue = b.totalProfit;
+        }
 
-      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+  }, [orders, filter, searchQuery, sortConfig]);
 
   const handleSort = (key: keyof Order | "profit") => {
     setSortConfig((current) => ({
@@ -75,13 +81,13 @@ export default function OrdersPage() {
     );
   };
 
-  const orderCounts = {
-    all: orders.length,
-    pending: orders.filter((o) => o.status === "pending").length,
-    processing: orders.filter((o) => o.status === "processing").length,
-    completed: orders.filter((o) => o.status === "completed").length,
-    cancelled: orders.filter((o) => o.status === "cancelled").length,
-  };
+  const orderCounts = useMemo(() => ({
+    all: orders?.length || 0,
+    pending: orders?.filter((o) => o.status === "pending").length || 0,
+    processing: orders?.filter((o) => o.status === "processing").length || 0,
+    completed: orders?.filter((o) => o.status === "completed").length || 0,
+    cancelled: orders?.filter((o) => o.status === "cancelled").length || 0,
+  }), [orders]);
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
@@ -100,78 +106,65 @@ export default function OrdersPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform cursor-pointer" onClick={() => setFilter("pending")}>
-          <div className="flex items-center gap-4 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#FEF7E0] flex items-center justify-center text-[#B06000]">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-brand-text-light">รอดำเนินการ</p>
-              <p className="text-2xl font-bold text-brand-text-dark">{orderCounts.pending}</p>
-            </div>
-          </div>
-        </Card>
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform cursor-pointer" onClick={() => setFilter("processing")}>
-          <div className="flex items-center gap-4 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#E8F0FE] flex items-center justify-center text-[#1967D2]">
-              <Loader2 className="w-6 h-6 animate-spin-slow" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-brand-text-light">กำลังดำเนินการ</p>
-              <p className="text-2xl font-bold text-brand-text-dark">{orderCounts.processing}</p>
-            </div>
-          </div>
-        </Card>
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform cursor-pointer" onClick={() => setFilter("completed")}>
-          <div className="flex items-center gap-4 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F4EA] flex items-center justify-center text-[#1E8E3E]">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-brand-text-light">เสร็จสิ้น</p>
-              <p className="text-2xl font-bold text-brand-text-dark">{orderCounts.completed}</p>
-            </div>
-          </div>
-        </Card>
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform cursor-pointer" onClick={() => setFilter("cancelled")}>
-          <div className="flex items-center gap-4 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#FCE8E6] flex items-center justify-center text-[#C5221F]">
-              <XCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-brand-text-light">ยกเลิก</p>
-              <p className="text-2xl font-bold text-brand-text-dark">{orderCounts.cancelled}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-[100px] rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <StatsGrid
+          stats={[
+            {
+              label: "รอดำเนินการ",
+              value: orderCounts.pending,
+              icon: Clock,
+              iconColor: "text-[#B06000]",
+              iconBgColor: "bg-[#FEF7E0]",
+              onClick: () => setFilter("pending"),
+            },
+            {
+              label: "กำลังดำเนินการ",
+              value: orderCounts.processing,
+              icon: Loader2,
+              iconColor: "text-[#1967D2]",
+              iconBgColor: "bg-[#E8F0FE]",
+              onClick: () => setFilter("processing"),
+            },
+            {
+              label: "เสร็จสิ้น",
+              value: orderCounts.completed,
+              icon: CheckCircle2,
+              iconColor: "text-[#1E8E3E]",
+              iconBgColor: "bg-[#E6F4EA]",
+              onClick: () => setFilter("completed"),
+            },
+            {
+              label: "ยกเลิก",
+              value: orderCounts.cancelled,
+              icon: XCircle,
+              iconColor: "text-[#C5221F]",
+              iconBgColor: "bg-[#FCE8E6]",
+              onClick: () => setFilter("cancelled"),
+            },
+          ]}
+          columns={4}
+        />
+      )}
 
       {/* Filters */}
-      <div className="flex items-center gap-2">
-        {[
-          { value: "all", label: "ทั้งหมด", count: orderCounts.all },
-          { value: "pending", label: "รอทำ", count: orderCounts.pending, color: "text-amber-600" },
-          { value: "processing", label: "กำลังทำ", count: orderCounts.processing, color: "text-blue-600" },
-          { value: "completed", label: "เสร็จ", count: orderCounts.completed, color: "text-green-600" },
-          { value: "cancelled", label: "ยกเลิก", count: orderCounts.cancelled, color: "text-red-500" },
-        ].map((item) => (
-          <button
-            key={item.value}
-            onClick={() => setFilter(item.value as OrderStatus)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
-              filter === item.value
-                ? "bg-brand-primary text-white border-brand-primary shadow-md shadow-brand-primary/20"
-                : "bg-white text-brand-text-light border-brand-border/50 hover:border-brand-primary/50 hover:text-brand-text-dark"
-            }`}
-          >
-            {item.label}
-            <span className={`ml-1.5 ${filter === item.value ? "text-white/80" : item.color || "text-brand-text-light"}`}>
-              {item.count}
-            </span>
-          </button>
-        ))}
-      </div>
+      <FilterBar<OrderStatus>
+        filters={[
+          { key: "all", label: "ทั้งหมด", count: orderCounts.all },
+          { key: "pending", label: "รอทำ", count: orderCounts.pending, color: "warning" },
+          { key: "processing", label: "กำลังทำ", count: orderCounts.processing, color: "info" },
+          { key: "completed", label: "เสร็จ", count: orderCounts.completed, color: "success" },
+          { key: "cancelled", label: "ยกเลิก", count: orderCounts.cancelled, color: "error" },
+        ]}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+        showSearch={false}
+      />
 
       {/* Orders Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
@@ -194,134 +187,142 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-brand-bg/50 border-b border-brand-border/50 text-xs text-brand-text-light uppercase tracking-wider">
-                <th 
-                  className="p-4 pl-6 font-medium cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                  onClick={() => handleSort("orderNumber")}
-                >
-                  <div className="flex items-center gap-2">
-                    ออเดอร์
-                    <SortIcon column="orderNumber" />
-                  </div>
-                </th>
-                <th className="p-4 font-medium">ลูกค้า</th>
-                <th className="p-4 font-medium">บริการ</th>
-                <th 
-                  className="p-4 font-medium text-right cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                  onClick={() => handleSort("total")}
-                >
-                  <div className="flex items-center justify-end gap-2">
-                    ยอดรวม
-                    <SortIcon column="total" />
-                  </div>
-                </th>
-                <th 
-                  className="p-4 font-medium text-right cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                  onClick={() => handleSort("profit")}
-                >
-                  <div className="flex items-center justify-end gap-2">
-                    กำไร
-                    <SortIcon column="profit" />
-                  </div>
-                </th>
-                <th 
-                  className="p-4 font-medium cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                  onClick={() => handleSort("status")}
-                >
-                  <div className="flex items-center gap-2">
-                    สถานะ
-                    <SortIcon column="status" />
-                  </div>
-                </th>
-                <th className="p-4 font-medium text-center">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-brand-border/30">
-              {filteredOrders.map((order) => (
-                <tr 
-                  key={order.id} 
-                  className="group hover:bg-brand-primary/5 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = `/seller/orders/${order.id}`}
-                >
-                  <td className="p-4 pl-6">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-brand-text-dark text-sm group-hover:text-brand-primary transition-colors">
-                        {order.orderNumber}
-                      </span>
-                      <span className="text-xs text-brand-text-light mt-0.5 flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatDateTime(order.createdAt)}
-                      </span>
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-20 rounded-lg" />
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-brand-bg/50 border-b border-brand-border/50 text-xs text-brand-text-light uppercase tracking-wider">
+                  <th 
+                    className="p-4 pl-6 font-medium cursor-pointer group hover:bg-brand-border/30 transition-colors"
+                    onClick={() => handleSort("orderNumber")}
+                  >
+                    <div className="flex items-center gap-2">
+                      ออเดอร์
+                      <SortIcon column="orderNumber" />
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary border border-brand-border">
-                        {order.customer.name.charAt(0)}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-brand-text-dark">{order.customer.name}</span>
-                        <span className="text-xs text-brand-text-light truncate max-w-[120px]">
-                          {order.customer.contactType}: {order.customer.contactValue}
-                        </span>
-                      </div>
+                  </th>
+                  <th className="p-4 font-medium">ลูกค้า</th>
+                  <th className="p-4 font-medium">บริการ</th>
+                  <th 
+                    className="p-4 font-medium text-right cursor-pointer group hover:bg-brand-border/30 transition-colors"
+                    onClick={() => handleSort("total")}
+                  >
+                    <div className="flex items-center justify-end gap-2">
+                      ยอดรวม
+                      <SortIcon column="total" />
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-col gap-1">
-                      {order.items.slice(0, 2).map((item, idx) => (
-                        <div key={idx} className="text-xs text-brand-text-dark truncate max-w-[200px] flex items-center gap-1.5">
-                           <span className="w-1.5 h-1.5 rounded-full bg-brand-primary/50"></span>
-                           {item.serviceName} <span className="text-brand-text-light">x{item.quantity}</span>
-                        </div>
-                      ))}
-                      {order.items.length > 2 && (
-                        <span className="text-xs text-brand-text-light pl-3">
-                          +{order.items.length - 2} รายการอื่นๆ
-                        </span>
-                      )}
+                  </th>
+                  <th 
+                    className="p-4 font-medium text-right cursor-pointer group hover:bg-brand-border/30 transition-colors"
+                    onClick={() => handleSort("profit")}
+                  >
+                    <div className="flex items-center justify-end gap-2">
+                      กำไร
+                      <SortIcon column="profit" />
                     </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <span className="font-bold text-brand-primary text-sm">
-                      {formatCurrency(order.total)}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex flex-col items-end">
-                      <span className="font-medium text-brand-success text-sm">
-                        +{formatCurrency(order.totalProfit)}
-                      </span>
-                      <span className="text-[10px] text-brand-success/80 bg-brand-success/10 px-1.5 py-0.5 rounded">
-                        {Math.round((order.totalProfit / order.total) * 100)}%
-                      </span>
+                  </th>
+                  <th 
+                    className="p-4 font-medium cursor-pointer group hover:bg-brand-border/30 transition-colors"
+                    onClick={() => handleSort("status")}
+                  >
+                    <div className="flex items-center gap-2">
+                      สถานะ
+                      <SortIcon column="status" />
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-col gap-1.5">
-                       <StatusBadge status={order.status} type="order" size="sm" />
-                       <div className="flex items-center gap-1 text-[10px] text-brand-text-light">
-                          <StatusBadge status={order.paymentStatus} type="payment" size="sm" />
-                       </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                    <Link href={`/seller/orders/${order.id}`}>
-                      <Button variant="ghost" size="sm" className="text-brand-text-light hover:text-brand-primary">
-                        <ChevronRight className="w-5 h-5" />
-                      </Button>
-                    </Link>
-                  </td>
+                  </th>
+                  <th className="p-4 font-medium text-center">จัดการ</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-brand-border/30">
+                {filteredOrders.map((order) => (
+                  <tr 
+                    key={order.id} 
+                    className="group hover:bg-brand-primary/5 transition-colors cursor-pointer"
+                    onClick={() => window.location.href = `/seller/orders/${order.id}`}
+                  >
+                    <td className="p-4 pl-6">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-brand-text-dark text-sm group-hover:text-brand-primary transition-colors">
+                          {order.orderNumber}
+                        </span>
+                        <span className="text-xs text-brand-text-light mt-0.5 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateTime(order.createdAt)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary border border-brand-border">
+                          {order.customer.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-brand-text-dark">{order.customer.name}</span>
+                          <span className="text-xs text-brand-text-light truncate max-w-[120px]">
+                            {order.customer.contactType}: {order.customer.contactValue}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        {order.items.slice(0, 2).map((item, idx) => (
+                          <div key={idx} className="text-xs text-brand-text-dark truncate max-w-[200px] flex items-center gap-1.5">
+                             <span className="w-1.5 h-1.5 rounded-full bg-brand-primary/50"></span>
+                             {item.serviceName} <span className="text-brand-text-light">x{item.quantity}</span>
+                          </div>
+                        ))}
+                        {order.items.length > 2 && (
+                          <span className="text-xs text-brand-text-light pl-3">
+                            +{order.items.length - 2} รายการอื่นๆ
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <span className="font-bold text-brand-primary text-sm">
+                        {formatCurrency(order.total)}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="font-medium text-brand-success text-sm">
+                          +{formatCurrency(order.totalProfit)}
+                        </span>
+                        <span className="text-[10px] text-brand-success/80 bg-brand-success/10 px-1.5 py-0.5 rounded">
+                          {Math.round((order.totalProfit / order.total) * 100)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1.5">
+                         <StatusBadge status={order.status} type="order" size="sm" />
+                         <div className="flex items-center gap-1 text-[10px] text-brand-text-light">
+                            <StatusBadge status={order.paymentStatus} type="payment" size="sm" />
+                         </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                      <Link href={`/seller/orders/${order.id}`}>
+                        <Button variant="ghost" size="sm" className="text-brand-text-light hover:text-brand-primary">
+                          <ChevronRight className="w-5 h-5" />
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        {filteredOrders.length === 0 && (
+        {!isLoading && filteredOrders.length === 0 && (
           <div className="p-12">
             <EmptyState
               icon={Package}

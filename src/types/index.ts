@@ -1,3 +1,61 @@
+// ===== STORE (NEW) =====
+export interface Store {
+  id: string;
+  ownerId: string;
+  name: string;
+  slug: string;
+  avatar?: string;
+  description?: string;
+  theme: StoreTheme;
+  customTheme?: StoreThemeConfig;
+  contactInfo: StoreContactInfo;
+  walletBalance: number;
+  subscription: SubscriptionPlan;
+  status: 'active' | 'suspended' | 'deleted';
+  rating: number;
+  ratingCount: number;
+  totalOrders: number;
+  totalRevenue: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StoreContactInfo {
+  line?: string;
+  facebook?: string;
+  instagram?: string;
+  phone?: string;
+  email?: string;
+}
+
+export type SubscriptionPlan = 'free' | 'starter' | 'pro' | 'business';
+
+// ===== STORE ROLES =====
+export type StoreRole = 'owner' | 'admin';
+
+export type StorePermission =
+  | 'store:manage'
+  | 'services:manage'
+  | 'orders:manage'
+  | 'finance:view'
+  | 'finance:manage'
+  | 'team:view'
+  | 'team:create'
+  | 'team:delete'
+  | 'settings:manage'
+  | 'subscription:manage'
+  | 'api:manage'
+  | 'admin:manage';
+
+export interface StoreUser {
+  id: string;
+  storeId: string;
+  userId: string;
+  role: StoreRole;
+  permissions: StorePermission[];
+  createdAt: string;
+}
+
 // ===== SELLER =====
 export interface Seller {
   id: string;
@@ -10,7 +68,7 @@ export interface Seller {
   lineId?: string;
   phone?: string;
   email?: string;
-  plan: "free" | "starter" | "pro" | "business";
+  plan: SubscriptionPlan;
   planExpiresAt?: string;
   balance: number;
   totalOrders: number;
@@ -23,6 +81,8 @@ export interface Seller {
   isVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  // Reference to store
+  storeId?: string;
 }
 
 // ===== WORKER =====
@@ -56,14 +116,40 @@ export interface Worker {
 
 export type WorkerLevel = "bronze" | "silver" | "gold" | "platinum" | "vip";
 
+// ===== TEAM ROLES =====
+export type TeamRole = 'lead' | 'assistant' | 'worker';
+
+export type TeamPermission =
+  | 'dashboard:view'
+  | 'members:view'
+  | 'members:invite'
+  | 'members:remove'
+  | 'members:promote'
+  | 'jobs:view'
+  | 'jobs:create'
+  | 'jobs:edit'
+  | 'jobs:delete'
+  | 'jobs:review'
+  | 'payouts:view'
+  | 'payouts:approve'
+  | 'settings:manage';
+
+export interface AssistantConfig {
+  canApprovePayout: boolean;
+  canDeleteJob: boolean;
+  canRemoveMember: boolean;
+}
+
 // ===== TEAM =====
 export interface Team {
   id: string;
   sellerId: string;
+  storeId?: string;
   name: string;
   description?: string;
   avatar?: string;
   rules?: string[];
+  platforms?: Platform[];
   inviteCode: string;
   inviteLinkExpiry?: string;
   requireApproval: boolean;
@@ -73,10 +159,39 @@ export interface Team {
   memberCount: number;
   activeJobCount: number;
   totalJobsCompleted: number;
+  rating: number;
+  ratingCount: number;
+  assistantConfig?: AssistantConfig;
+  status: 'active' | 'inactive';
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+// ===== TEAM REVIEW (Worker รีวิว Team) =====
+export interface TeamReview {
+  id: string;
+  teamId: string;
+  workerId: string;
+  worker?: Worker;
+  jobClaimId?: string;
+  rating: number; // 1-5
+  review?: string;
+  tags?: TeamReviewTag[];
+  isAnonymous: boolean;
+  createdAt: string;
+}
+
+export type TeamReviewTag =
+  | "pays_fast"        // จ่ายไว
+  | "pays_fair"        // จ่ายราคาดี
+  | "good_communication" // ติดต่อง่าย
+  | "clear_instructions" // อธิบายงานชัดเจน
+  | "consistent_work"  // มีงานสม่ำเสมอ
+  | "friendly"         // เป็นมิตร
+  | "slow_payment"     // จ่ายช้า
+  | "unclear_instructions" // อธิบายไม่ชัด
+  | "rude";            // ไม่สุภาพ
 
 // ===== TEAM MEMBER =====
 export interface TeamMember {
@@ -85,7 +200,8 @@ export interface TeamMember {
   workerId: string;
   worker?: Worker;
   status: "pending" | "active" | "inactive" | "banned";
-  role: "member" | "admin";
+  role: TeamRole;
+  permissions?: TeamPermission[];
   jobsCompleted: number;
   totalEarned: number;
   rating: number;
@@ -276,8 +392,13 @@ export interface JobClaim {
   reviewedAt?: string;
   reviewedBy?: string;
   reviewNote?: string;
+  // Seller รีวิว Worker
   sellerRating?: number;
   sellerReview?: string;
+  // Worker รีวิว Team
+  workerTeamRating?: number;
+  workerTeamReview?: string;
+  workerTeamReviewTags?: TeamReviewTag[];
   createdAt: string;
   updatedAt: string;
 }
@@ -315,6 +436,43 @@ export interface WorkerAccount {
   jobsCompleted: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// ===== TEAM JOB =====
+export interface TeamJob {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  serviceName: string;
+  platform: Platform;
+  quantity: number;
+  completedQuantity: number;
+  pricePerUnit: number;
+  totalPayout: number;
+  targetUrl: string;
+  status: "pending" | "in_progress" | "pending_review" | "completed" | "cancelled";
+  assignedWorker?: Worker;
+  deadline?: string;
+  submittedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+// ===== TEAM PAYOUT =====
+export interface TeamPayout {
+  id: string;
+  workerId: string;
+  worker: Worker;
+  amount: number;
+  jobCount: number;
+  status: "pending" | "completed" | "rejected";
+  requestedAt: string;
+  completedAt?: string;
+  paymentMethod: "promptpay" | "bank";
+  paymentAccount: string;
+  bankName?: string;
+  accountName?: string;
+  transactionRef?: string;
 }
 
 // ===== PAYOUT =====
@@ -369,6 +527,114 @@ export interface AuthUser {
   role: UserRole;
   seller?: Seller;
   worker?: Worker;
+}
+
+// ===== HUB =====
+export interface HubPost {
+  id: string;
+  type: "recruit" | "find-team" | "outsource";
+  title: string;
+  author: {
+    name: string;
+    avatar: string;
+    rating: number;
+    verified: boolean;
+    type: "seller" | "worker";
+    memberCount?: number;
+    totalPaid?: number;
+  };
+  description: string;
+  platforms: string[];
+  // Recruit specific
+  payRate?: string | { min: number; max: number; unit: string };
+  requirements?: string[];
+  benefits?: string[];
+  memberCount?: number;
+  openSlots?: number;
+  applicants?: number;
+  // Find-team specific
+  experience?: string;
+  completedJobs?: number;
+  expectedPay?: string;
+  availability?: string;
+  // Outsource specific
+  jobType?: string;
+  quantity?: number;
+  budget?: string;
+  deadline?: string;
+  // Common
+  views: number;
+  interested: number;
+  createdAt: string;
+  isHot?: boolean;
+  isUrgent?: boolean;
+}
+
+export interface FindTeamPost {
+  id: string;
+  title: string;
+  author: {
+    name: string;
+    avatar: string;
+    rating: number;
+    level: "Platinum" | "Gold" | "Silver" | "Bronze" | "New";
+  };
+  description: string;
+  platforms: string[];
+  experience: string;
+  completedJobs: number;
+  completionRate: number;
+  expectedPay: string;
+  availability: string;
+  skills: string[];
+  portfolio: string;
+  views: number;
+  interested: number;
+  createdAt: string;
+  isTopWorker?: boolean;
+}
+
+export interface OutsourceJob {
+  id: string;
+  title: string;
+  author: {
+    name: string;
+    avatar: string;
+    rating: number;
+    verified: boolean;
+    totalOutsourced: number;
+  };
+  description: string;
+  platform: string;
+  jobType: "like" | "comment" | "follow" | "view" | "share";
+  quantity: number;
+  budget: number;
+  pricePerUnit: number;
+  deadline: string;
+  targetUrl: string;
+  requirements: string[];
+  views: number;
+  bids: number;
+  createdAt: string;
+  isUrgent?: boolean;
+}
+
+// ===== WORKER JOB (for worker dashboard) =====
+export interface WorkerJob {
+  id: string;
+  teamName: string;
+  serviceName: string;
+  platform: string;
+  type: string;
+  targetUrl: string;
+  quantity: number;
+  completedQuantity: number;
+  pricePerUnit: number;
+  status: "in_progress" | "pending_review" | "completed";
+  deadline?: string;
+  submittedAt?: string;
+  completedAt?: string;
+  earnings?: number;
 }
 
 

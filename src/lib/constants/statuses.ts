@@ -28,7 +28,7 @@ export const JOB_STATUSES: Record<string, StatusConfig> = {
 };
 
 export const CLAIM_STATUSES: Record<string, StatusConfig> = {
-  claimed: { label: "Claimed", labelTh: "รับงานแล้ว", variant: "info" },
+  claimed: { label: "Claimed", labelTh: "จองแล้ว", variant: "info" },
   submitted: { label: "Submitted", labelTh: "รอตรวจสอบ", variant: "warning" },
   approved: { label: "Approved", labelTh: "อนุมัติแล้ว", variant: "success" },
   rejected: { label: "Rejected", labelTh: "ปฏิเสธ", variant: "error" },

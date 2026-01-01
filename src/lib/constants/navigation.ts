@@ -17,6 +17,8 @@ import {
   Smartphone,
   User,
   Sparkles,
+  Trophy,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 
@@ -108,6 +110,13 @@ export const WORKER_NAV: NavConfig = [
       { label: "ยอดสะสม", href: "/work/earnings", icon: Wallet },
       { label: "ถอนเงิน", href: "/work/earnings/withdraw", icon: CreditCard },
       { label: "ประวัติ", href: "/work/earnings/history", icon: History },
+    ],
+  },
+  {
+    label: "กิจกรรม",
+    items: [
+      { label: "Top Workers", href: "/work/leaderboard", icon: Trophy },
+      { label: "ชวนเพื่อน", href: "/work/referral", icon: UserPlus },
     ],
   },
   {

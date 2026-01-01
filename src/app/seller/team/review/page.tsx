@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Card, Badge, Button, Progress, Modal, Textarea } from "@/components/ui";
+import { useSearchParams } from "next/navigation";
+import { Card, Badge, Button, Modal, Textarea, Skeleton } from "@/components/ui";
 import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
-import { mockWorkers } from "@/lib/mock-data";
+import { usePendingReviews, useWorkers, useSellerJobs, useSellerTeams } from "@/lib/api/hooks";
 import type { Platform } from "@/types";
 import {
   ArrowLeft,
@@ -13,148 +14,158 @@ import {
   Clock,
   ExternalLink,
   Image as ImageIcon,
-  MessageSquare,
   ThumbsUp,
   AlertCircle,
   Target,
-  User,
   Star,
   Package,
-  Paperclip,
   CheckCircle,
-  Info
+  Building2,
 } from "lucide-react";
 
-// Mock pending review jobs
-const pendingReviewJobs = [
-  {
-    id: "job-3",
-    orderId: "order-3",
-    orderNumber: "ORD-2024-003",
-    serviceName: "ไลค์ Facebook (คนไทยจริง)",
-    platform: "facebook",
-    quantity: 100,
-    completedQuantity: 100,
-    pricePerUnit: 0.2,
-    workerPayout: 20,
-    targetUrl: "https://facebook.com/post/yyy",
-    worker: mockWorkers[1],
-    submittedAt: new Date(Date.now() - 3600000).toISOString(),
-    proofImages: ["/proofs/job3-1.jpg", "/proofs/job3-2.jpg"],
-    workerNote: "ทำครบ 100 ไลค์แล้วค่ะ แคปหลักฐานให้ด้วย",
-  },
-  {
-    id: "job-5",
-    orderId: "order-5",
-    orderNumber: "ORD-2024-005",
-    serviceName: "ไลค์ Facebook (คนไทยจริง)",
-    platform: "facebook",
-    quantity: 50,
-    completedQuantity: 50,
-    pricePerUnit: 0.2,
-    workerPayout: 10,
-    targetUrl: "https://facebook.com/post/zzz",
-    worker: mockWorkers[2],
-    submittedAt: new Date(Date.now() - 7200000).toISOString(),
-    proofImages: ["/proofs/job5-1.jpg"],
-    workerNote: "เสร็จแล้วครับ",
-  },
-  {
-    id: "job-6",
-    orderId: "order-6",
-    orderNumber: "ORD-2024-006",
-    serviceName: "เม้น Facebook (คนไทยจริง)",
-    platform: "facebook",
-    quantity: 30,
-    completedQuantity: 30,
-    pricePerUnit: 1.5,
-    workerPayout: 45,
-    targetUrl: "https://facebook.com/post/aaa",
-    worker: mockWorkers[0],
-    submittedAt: new Date(Date.now() - 10800000).toISOString(),
-    proofImages: [],
-    workerNote: "เม้นครบ 30 เม้นแล้วค่ะ ตามที่กำหนด",
-  },
-  {
-    id: "job-7",
-    orderId: "order-7",
-    orderNumber: "ORD-2024-007",
-    serviceName: "Follow Instagram (คนไทยจริง)",
-    platform: "instagram",
-    quantity: 80,
-    completedQuantity: 80,
-    pricePerUnit: 0.3,
-    workerPayout: 24,
-    targetUrl: "https://instagram.com/shop_abc",
-    worker: mockWorkers[0],
-    submittedAt: new Date(Date.now() - 14400000).toISOString(),
-    proofImages: ["/proofs/job7-1.jpg", "/proofs/job7-2.jpg", "/proofs/job7-3.jpg"],
-    workerNote: "Follow ครบ 80 คนแล้วค่ะ",
-  },
-  {
-    id: "job-8",
-    orderId: "order-8",
-    orderNumber: "ORD-2024-008",
-    serviceName: "View TikTok (คนไทยจริง)",
-    platform: "tiktok",
-    quantity: 200,
-    completedQuantity: 200,
-    pricePerUnit: 0.08,
-    workerPayout: 16,
-    targetUrl: "https://tiktok.com/@user/video/xxx",
-    worker: mockWorkers[1],
-    submittedAt: new Date(Date.now() - 18000000).toISOString(),
-    proofImages: [],
-    workerNote: "ดูครบแล้วครับ",
-  },
-];
-
 export default function TeamReviewPage() {
-  const [jobs, setJobs] = useState(pendingReviewJobs);
-  const [selectedJob, setSelectedJob] = useState<typeof pendingReviewJobs[0] | null>(null);
+  const searchParams = useSearchParams();
+  const teamIdParam = searchParams.get("team");
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [locallyRemovedIds, setLocallyRemovedIds] = useState<Set<string>>(new Set());
+  const [selectedTeamId, setSelectedTeamId] = useState(teamIdParam || "all"); // "all" = ทุกทีม
+
+  // Use API hooks
+  const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
+  const { data: pendingReviewsData, isLoading: isLoadingReviews } = usePendingReviews();
+  const { data: workers, isLoading: isLoadingWorkers } = useWorkers();
+  const { data: jobs, isLoading: isLoadingJobs } = useSellerJobs();
+
+  const isLoading = isLoadingTeams || isLoadingReviews || isLoadingWorkers || isLoadingJobs;
+  
+  // Current team or "all"
+  const currentTeam = useMemo(() => {
+    if (selectedTeamId === "all") return null;
+    return teams?.find((t) => t.id === selectedTeamId);
+  }, [teams, selectedTeamId]);
+
+  // Build pending review jobs from claims
+  const pendingReviewJobs = useMemo(() => {
+    if (!pendingReviewsData || !workers || !jobs) return [];
+    
+    return pendingReviewsData
+      .filter(claim => !locallyRemovedIds.has(claim.id))
+      .map(claim => {
+        const worker = workers.find(w => w.id === claim.workerId);
+        const job = jobs.find(j => j.id === claim.jobId);
+        
+        // Mock team assignment - in real app would come from job.teamId
+        const teamId = job?.id ? (job.id.includes("1") ? "team-1" : "team-2") : "team-1";
+        const team = teams?.find(t => t.id === teamId);
+        
+        return {
+          id: claim.id,
+          orderId: job?.id || "",
+          orderNumber: `ORD-${claim.jobId?.slice(-4) || "0000"}`,
+          serviceName: job?.title || "Unknown Service",
+          platform: job?.platform || "facebook",
+          quantity: claim.quantity,
+          completedQuantity: claim.actualQuantity || claim.quantity,
+          pricePerUnit: claim.earnAmount / claim.quantity,
+          workerPayout: claim.earnAmount,
+          targetUrl: job?.targetUrl || "#",
+          worker: worker || {
+            id: claim.workerId,
+            displayName: "Unknown",
+            level: "bronze",
+            rating: 0,
+            totalJobsCompleted: 0,
+          },
+          submittedAt: claim.submittedAt,
+          proofImages: [] as string[],
+          workerNote: claim.workerNote || "",
+          teamId,
+          teamName: team?.name || "Unknown Team",
+        };
+      })
+      // Filter by selected team
+      .filter(job => selectedTeamId === "all" || job.teamId === selectedTeamId);
+  }, [pendingReviewsData, workers, jobs, locallyRemovedIds, teams, selectedTeamId]);
+
+  const selectedJob = selectedJobId 
+    ? pendingReviewJobs.find(j => j.id === selectedJobId) 
+    : null;
 
   const handleApprove = () => {
     if (selectedJob) {
-      setJobs(jobs.filter((j) => j.id !== selectedJob.id));
+      setLocallyRemovedIds(prev => new Set(prev).add(selectedJob.id));
       setShowApproveModal(false);
-      setSelectedJob(null);
+      setSelectedJobId(null);
       alert(`อนุมัติงาน ${selectedJob.serviceName} เรียบร้อย! จ่ายเงิน ฿${selectedJob.workerPayout} ให้ @${selectedJob.worker.displayName}`);
     }
   };
 
   const handleReject = () => {
     if (selectedJob) {
-      setJobs(jobs.filter((j) => j.id !== selectedJob.id));
+      setLocallyRemovedIds(prev => new Set(prev).add(selectedJob.id));
       setShowRejectModal(false);
-      setSelectedJob(null);
+      setSelectedJobId(null);
       setRejectReason("");
       alert(`ปฏิเสธงาน ${selectedJob.serviceName} - ส่งกลับให้ Worker แก้ไข`);
     }
   };
 
-  const totalPayout = jobs.reduce((sum, j) => sum + j.workerPayout, 0);
+  const totalPayout = pendingReviewJobs.reduce((sum, j) => sum + j.workerPayout, 0);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-64 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/seller/team/jobs">
+          <Link href="/seller/team">
             <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
               <ArrowLeft className="w-5 h-5" />
             </button>
           </Link>
           <PageHeader
-            title="รอตรวจสอบ"
-            description="ตรวจสอบและอนุมัติงานจาก Worker"
+            title="ตรวจงานรวม"
+            description={selectedTeamId === "all" ? "ดูงานรอตรวจจากทุกทีม" : `ตรวจสอบงานของทีม ${currentTeam?.name || ""}`}
             icon={CheckCircle2}
           />
         </div>
         
-        {jobs.length > 0 && (
+        {/* Team Filter */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-border/50 shadow-sm">
+            <Building2 className="w-4 h-4 text-brand-primary" />
+            <select
+              value={selectedTeamId}
+              onChange={(e) => setSelectedTeamId(e.target.value)}
+              className="bg-transparent text-sm font-medium text-brand-text-dark focus:outline-none cursor-pointer min-w-[140px]"
+            >
+              <option value="all">📋 ทุกทีม</option>
+              {teams?.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        {pendingReviewJobs.length > 0 && (
           <div className="flex items-center gap-4 bg-white p-2 pl-4 rounded-xl shadow-sm border border-brand-border/50">
              <div className="text-right">
                 <p className="text-xs text-brand-text-light font-medium">ยอดจ่ายรวม</p>
@@ -163,29 +174,29 @@ export default function TeamReviewPage() {
              <Button
                 size="sm"
                 onClick={() => {
-                  if (confirm(`อนุมัติทั้งหมด ${jobs.length} งาน?`)) {
-                    setJobs([]);
+                  if (confirm(`อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน?`)) {
+                    setLocallyRemovedIds(new Set(pendingReviewJobs.map(j => j.id)));
                     alert("อนุมัติงานทั้งหมดเรียบร้อย!");
                   }
                 }}
                 className="rounded-lg shadow-md shadow-brand-primary/20"
               >
                 <ThumbsUp className="w-4 h-4 mr-2" />
-                อนุมัติทั้งหมด ({jobs.length})
+                อนุมัติทั้งหมด ({pendingReviewJobs.length})
               </Button>
           </div>
         )}
       </div>
 
       {/* Quick Stats - Only if jobs exist */}
-      {jobs.length > 0 && (
+      {pendingReviewJobs.length > 0 && (
         <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 bg-brand-info/5">
           <div className="flex items-start gap-4 p-2">
             <div className="p-3 bg-white rounded-xl shadow-sm text-brand-info border border-brand-info/20">
                <AlertCircle className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-brand-text-dark">มี {jobs.length} งานที่รอการตรวจสอบ</h3>
+              <h3 className="text-lg font-bold text-brand-text-dark">มี {pendingReviewJobs.length} งานที่รอการตรวจสอบ</h3>
               <p className="text-brand-text-light text-sm mt-1">
                 กรุณาตรวจสอบความถูกต้องของงานก่อนอนุมัติ หากอนุมัติแล้วระบบจะโอนเงินให้ Worker ทันที
               </p>
@@ -195,7 +206,7 @@ export default function TeamReviewPage() {
       )}
 
       {/* Jobs List */}
-      {jobs.length === 0 ? (
+      {pendingReviewJobs.length === 0 ? (
         <EmptyState 
             icon={CheckCircle2} 
             title="ไม่มีงานรอตรวจสอบ" 
@@ -211,7 +222,7 @@ export default function TeamReviewPage() {
         />
       ) : (
         <div className="space-y-6">
-          {jobs.map((job) => (
+          {pendingReviewJobs.map((job) => (
             <div key={job.id} className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden hover:shadow-md transition-shadow">
                {/* Header Section */}
                <div className="p-6 border-b border-brand-border/30 bg-brand-bg/30">
@@ -221,7 +232,15 @@ export default function TeamReviewPage() {
                           <PlatformIcon platform={job.platform as Platform} size="lg" />
                        </div>
                        <div>
-                          <h3 className="font-bold text-lg text-brand-text-dark">{job.serviceName}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-lg text-brand-text-dark">{job.serviceName}</h3>
+                            {selectedTeamId === "all" && (
+                              <Badge variant="secondary" size="sm" className="gap-1">
+                                <Building2 className="w-3 h-3" />
+                                {job.teamName}
+                              </Badge>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-light">
                              <span className="bg-white px-2 py-1 rounded-lg border border-brand-border/50 shadow-sm flex items-center gap-1.5">
                                 <Package className="w-3.5 h-3.5" />
@@ -231,12 +250,12 @@ export default function TeamReviewPage() {
                                 <Target className="w-3.5 h-3.5" />
                                 <span>เป้าหมาย {job.completedQuantity}/{job.quantity}</span>
                              </span>
-                             <span className="flex items-center gap-1.5 text-brand-text-light/70">
-                                <Clock className="w-3.5 h-3.5" />
-                                {new Date(job.submittedAt).toLocaleDateString("th-TH", {
-                                  day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
-                                })}
-                             </span>
+                            <span className="flex items-center gap-1.5 text-brand-text-light/70">
+                               <Clock className="w-3.5 h-3.5" />
+                               {job.submittedAt ? new Date(job.submittedAt).toLocaleDateString("th-TH", {
+                                 day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                               }) : "N/A"}
+                            </span>
                           </div>
                        </div>
                     </div>
@@ -331,7 +350,7 @@ export default function TeamReviewPage() {
                     variant="outline"
                     className="border-brand-error/20 text-brand-error hover:bg-brand-error/5 hover:border-brand-error/50 min-w-[120px]"
                     onClick={() => {
-                      setSelectedJob(job);
+                      setSelectedJobId(job.id);
                       setShowRejectModal(true);
                     }}
                   >
@@ -341,7 +360,7 @@ export default function TeamReviewPage() {
                   <Button
                     className="min-w-[120px] shadow-lg shadow-brand-primary/20"
                     onClick={() => {
-                      setSelectedJob(job);
+                      setSelectedJobId(job.id);
                       setShowApproveModal(true);
                     }}
                   >
@@ -359,7 +378,7 @@ export default function TeamReviewPage() {
         isOpen={showApproveModal}
         onClose={() => {
           setShowApproveModal(false);
-          setSelectedJob(null);
+          setSelectedJobId(null);
         }}
         title="ยืนยันการอนุมัติ"
       >
@@ -396,7 +415,7 @@ export default function TeamReviewPage() {
                 variant="outline"
                 onClick={() => {
                   setShowApproveModal(false);
-                  setSelectedJob(null);
+                  setSelectedJobId(null);
                 }}
                 className="flex-1"
               >
@@ -416,7 +435,7 @@ export default function TeamReviewPage() {
         isOpen={showRejectModal}
         onClose={() => {
           setShowRejectModal(false);
-          setSelectedJob(null);
+          setSelectedJobId(null);
           setRejectReason("");
         }}
         title="ปฏิเสธงาน"
@@ -450,7 +469,7 @@ export default function TeamReviewPage() {
                 variant="outline"
                 onClick={() => {
                   setShowRejectModal(false);
-                  setSelectedJob(null);
+                  setSelectedJobId(null);
                   setRejectReason("");
                 }}
                 className="flex-1"
@@ -472,4 +491,3 @@ export default function TeamReviewPage() {
     </div>
   );
 }
-

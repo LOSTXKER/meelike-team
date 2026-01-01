@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Badge, Button, Progress, WorkerJobsSkeleton } from "@/components/ui";
+import { Card, Badge, Button, Progress, Skeleton } from "@/components/ui";
 import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
-import { mockJobs } from "@/lib/mock-data";
+import { useWorkerJobs } from "@/lib/api/hooks";
 import type { Platform, ServiceMode } from "@/types";
 import {
   Briefcase,
@@ -26,110 +25,13 @@ export default function WorkerJobsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("in_progress");
 
-  // Mock jobs data for worker
-  const workerJobs = {
-    in_progress: [
-      {
-        id: "job-1",
-        teamName: "JohnBoost Team",
-        serviceName: "ไลค์ Facebook",
-        platform: "facebook",
-        type: "human",
-        targetUrl: "https://facebook.com/post/123",
-        quantity: 100,
-        completedQuantity: 65,
-        pricePerUnit: 0.2,
-        deadline: new Date(Date.now() + 3600000 * 2).toISOString(),
-        status: "in_progress",
-      },
-      {
-        id: "job-2",
-        teamName: "SocialPro Team",
-        serviceName: "Follow Instagram",
-        platform: "instagram",
-        type: "human",
-        targetUrl: "https://instagram.com/user123",
-        quantity: 50,
-        completedQuantity: 20,
-        pricePerUnit: 0.3,
-        deadline: new Date(Date.now() + 3600000 * 5).toISOString(),
-        status: "in_progress",
-      },
-    ],
-    pending_review: [
-      {
-        id: "job-3",
-        teamName: "JohnBoost Team",
-        serviceName: "เม้น Facebook",
-        platform: "facebook",
-        type: "human",
-        targetUrl: "https://facebook.com/post/456",
-        quantity: 30,
-        completedQuantity: 30,
-        pricePerUnit: 1.5,
-        submittedAt: new Date(Date.now() - 3600000).toISOString(),
-        status: "pending_review",
-      },
-      {
-        id: "job-4",
-        teamName: "BoostKing Team",
-        serviceName: "ไลค์ Facebook",
-        platform: "facebook",
-        type: "human",
-        targetUrl: "https://facebook.com/post/789",
-        quantity: 50,
-        completedQuantity: 50,
-        pricePerUnit: 0.2,
-        submittedAt: new Date(Date.now() - 7200000).toISOString(),
-        status: "pending_review",
-      },
-      {
-        id: "job-5",
-        teamName: "SocialPro Team",
-        serviceName: "View TikTok",
-        platform: "tiktok",
-        type: "human",
-        targetUrl: "https://tiktok.com/@user/video/123",
-        quantity: 200,
-        completedQuantity: 200,
-        pricePerUnit: 0.08,
-        submittedAt: new Date(Date.now() - 10800000).toISOString(),
-        status: "pending_review",
-      },
-    ],
-    completed: [
-      {
-        id: "job-6",
-        teamName: "JohnBoost Team",
-        serviceName: "ไลค์ Facebook",
-        platform: "facebook",
-        type: "human",
-        targetUrl: "https://facebook.com/post/111",
-        quantity: 100,
-        completedQuantity: 100,
-        pricePerUnit: 0.2,
-        completedAt: new Date(Date.now() - 86400000).toISOString(),
-        earnings: 20,
-        status: "completed",
-      },
-      {
-        id: "job-7",
-        teamName: "SocialPro Team",
-        serviceName: "Follow Instagram",
-        platform: "instagram",
-        type: "human",
-        targetUrl: "https://instagram.com/user456",
-        quantity: 80,
-        completedQuantity: 80,
-        pricePerUnit: 0.3,
-        completedAt: new Date(Date.now() - 172800000).toISOString(),
-        earnings: 24,
-        status: "completed",
-      },
-    ],
-  };
+  // Use API hook instead of direct mock data import
+  const { data: workerJobs, isLoading } = useWorkerJobs();
 
-  const currentJobs = workerJobs[activeTab];
+  const currentJobs = useMemo(() => {
+    if (!workerJobs) return [];
+    return workerJobs[activeTab];
+  }, [workerJobs, activeTab]);
 
   const getTimeRemaining = (deadline: string) => {
     const diff = new Date(deadline).getTime() - Date.now();
@@ -139,36 +41,36 @@ export default function WorkerJobsPage() {
   };
 
   // Stats data for StatsGridCompact
-  const statsData = [
+  const statsData = useMemo(() => [
     {
       label: "กำลังทำ",
-      value: workerJobs.in_progress.length,
+      value: workerJobs?.in_progress.length || 0,
       icon: PlayCircle,
       iconColor: "text-brand-warning",
       iconBgColor: "bg-brand-warning/10",
     },
     {
       label: "รอตรวจสอบ",
-      value: workerJobs.pending_review.length,
+      value: workerJobs?.pending_review.length || 0,
       icon: Clock,
       iconColor: "text-brand-info",
       iconBgColor: "bg-brand-info/10",
     },
     {
       label: "เสร็จแล้ว",
-      value: workerJobs.completed.length,
+      value: workerJobs?.completed.length || 0,
       icon: CheckCircle2,
       iconColor: "text-brand-success",
       iconBgColor: "bg-brand-success/10",
     },
-  ];
+  ], [workerJobs]);
 
   // Tab options for SegmentedControl
-  const tabOptions: FilterOption<TabType>[] = [
-    { key: "in_progress", label: "กำลังทำ", icon: <PlayCircle className="w-4 h-4" />, count: workerJobs.in_progress.length },
-    { key: "pending_review", label: "รอตรวจสอบ", icon: <Clock className="w-4 h-4" />, count: workerJobs.pending_review.length },
-    { key: "completed", label: "เสร็จแล้ว", icon: <CheckCircle2 className="w-4 h-4" />, count: workerJobs.completed.length },
-  ];
+  const tabOptions: FilterOption<TabType>[] = useMemo(() => [
+    { key: "in_progress", label: "กำลังทำ", icon: <PlayCircle className="w-4 h-4" />, count: workerJobs?.in_progress.length || 0 },
+    { key: "pending_review", label: "รอตรวจสอบ", icon: <Clock className="w-4 h-4" />, count: workerJobs?.pending_review.length || 0 },
+    { key: "completed", label: "เสร็จแล้ว", icon: <CheckCircle2 className="w-4 h-4" />, count: workerJobs?.completed.length || 0 },
+  ], [workerJobs]);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -180,7 +82,15 @@ export default function WorkerJobsPage() {
       />
 
       {/* Stats - Using StatsGridCompact */}
-      <StatsGridCompact stats={statsData} columns={3} />
+      {isLoading ? (
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-[80px] rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <StatsGridCompact stats={statsData} columns={3} />
+      )}
 
       {/* Tabs - Using SegmentedControl */}
       <SegmentedControl
@@ -191,21 +101,24 @@ export default function WorkerJobsPage() {
 
       {/* Jobs List */}
       <div className="space-y-4">
-        {currentJobs.length === 0 ? (
-          <Card variant="elevated" padding="lg" className="text-center border-none shadow-lg shadow-brand-primary/5 py-12">
-            <div className="w-16 h-16 bg-brand-bg rounded-2xl flex items-center justify-center mx-auto mb-4 border border-brand-border">
-              <Briefcase className="w-8 h-8 text-brand-text-light" />
-            </div>
-            <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่มีงานในหมวดนี้</p>
-            <p className="text-brand-text-light text-sm">ลองเลือกสถานะอื่น หรือรับงานใหม่เพิ่ม</p>
-          </Card>
+        {isLoading ? (
+          <>
+            <Skeleton className="h-[200px] rounded-xl" />
+            <Skeleton className="h-[200px] rounded-xl" />
+          </>
+        ) : currentJobs.length === 0 ? (
+          <EmptyState
+            icon={Briefcase}
+            title="ไม่มีงานในหมวดนี้"
+            description="ลองเลือกสถานะอื่น หรือจองงานใหม่เพิ่ม"
+          />
         ) : (
           currentJobs.map((job) => (
             <Card 
               key={job.id} 
-              variant="elevated" 
+              variant="hoverable" 
               padding="lg" 
-              className="border-none shadow-md hover:shadow-lg transition-all duration-300 group cursor-pointer hover:-translate-y-1"
+              className="group cursor-pointer hover:-translate-y-1"
               onClick={() => router.push(`/work/jobs/${job.id}`)}
             >
               <div className="space-y-6">
@@ -239,7 +152,7 @@ export default function WorkerJobsPage() {
                 </div>
 
                 {/* Progress */}
-                {activeTab === "in_progress" && (
+                {activeTab === "in_progress" && job.deadline && (
                   <div className="bg-brand-bg/30 rounded-xl p-4 border border-brand-border/30 space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-brand-text-dark font-medium flex items-center gap-2">
@@ -269,20 +182,20 @@ export default function WorkerJobsPage() {
                       </button>
                       <span className="flex items-center gap-1.5 text-xs font-medium bg-brand-warning/10 text-brand-warning px-2 py-1 rounded-lg border border-brand-warning/20">
                         <Timer className="w-3.5 h-3.5" />
-                        เหลือ {getTimeRemaining((job as { deadline?: string }).deadline || "")}
+                        เหลือ {getTimeRemaining(job.deadline)}
                       </span>
                     </div>
                   </div>
                 )}
 
                 {/* Pending Review Info */}
-                {activeTab === "pending_review" && (
+                {activeTab === "pending_review" && job.submittedAt && (
                   <div className="flex items-center justify-between text-sm bg-brand-warning/5 border border-brand-warning/20 rounded-xl p-4">
                     <span className="text-brand-text-dark flex items-center gap-2">
                       <div className="p-1 rounded bg-brand-warning/10">
                         <Clock className="w-3.5 h-3.5 text-brand-warning" />
                       </div>
-                      ส่งงานเมื่อ <span className="font-medium">{new Date((job as { submittedAt?: string }).submittedAt || "").toLocaleDateString("th-TH", {
+                      ส่งงานเมื่อ <span className="font-medium">{new Date(job.submittedAt).toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         hour: "2-digit",
@@ -294,19 +207,19 @@ export default function WorkerJobsPage() {
                 )}
 
                 {/* Completed Info */}
-                {activeTab === "completed" && (
+                {activeTab === "completed" && job.completedAt && (
                   <div className="flex items-center justify-between text-sm bg-brand-success/5 border border-brand-success/20 rounded-xl p-4">
                     <span className="text-brand-text-dark flex items-center gap-2">
                       <div className="p-1 rounded bg-brand-success/10">
                         <CheckCircle2 className="w-3.5 h-3.5 text-brand-success" />
                       </div>
-                      เสร็จเมื่อ <span className="font-medium">{new Date((job as { completedAt?: string }).completedAt || "").toLocaleDateString("th-TH", {
+                      เสร็จเมื่อ <span className="font-medium">{new Date(job.completedAt).toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
                       })}</span>
                     </span>
-                    <Badge variant="success" className="uppercase tracking-wide font-bold">+฿{(job as { earnings?: number }).earnings || 0}</Badge>
+                    <Badge variant="success" className="uppercase tracking-wide font-bold">+฿{job.earnings || 0}</Badge>
                   </div>
                 )}
 
@@ -331,4 +244,3 @@ export default function WorkerJobsPage() {
     </div>
   );
 }
-

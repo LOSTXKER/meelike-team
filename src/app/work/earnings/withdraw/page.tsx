@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, Button, Badge, Input, Modal, Progress } from "@/components/ui";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
-import { mockWorkerStats } from "@/lib/mock-data";
+import { useWorkerStats } from "@/lib/api/hooks";
 import {
   ArrowLeft,
   Wallet,
@@ -27,11 +27,14 @@ export default function WithdrawPage() {
   const worker = user?.worker;
   const levelInfo = getLevelInfo(worker?.level || "bronze");
 
+  // Use API hook
+  const { data: workerStats, isLoading } = useWorkerStats();
+
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const availableBalance = mockWorkerStats.availableBalance;
+  const availableBalance = workerStats?.availableBalance || 0;
   const minWithdraw = 100;
   const withdrawFee = levelInfo.fee / 100; // Convert percentage to decimal
 

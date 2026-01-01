@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "bordered" | "elevated";
+  variant?: "default" | "bordered" | "elevated" | "flat" | "interactive" | "hoverable";
   padding?: "none" | "sm" | "md" | "lg";
 }
 
@@ -15,6 +15,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       bordered: "bg-brand-surface border border-brand-border",
       elevated: "bg-brand-surface shadow-lg shadow-brand-primary/5 border border-brand-border/50",
       flat: "bg-brand-bg/50 hover:bg-brand-bg transition-colors",
+      // New interactive variants
+      interactive: "bg-brand-surface border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer",
+      hoverable: "bg-brand-surface shadow-md hover:shadow-lg transition-all duration-300 border border-transparent hover:border-brand-primary/20",
     };
 
     const paddings = {

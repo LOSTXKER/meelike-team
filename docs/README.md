@@ -1,4 +1,6 @@
-# 🎯 MeeLike Seller - Documentation
+# 🎯 MeeLike Platform - Documentation
+
+> เอกสารประกอบการพัฒนา MeeLike Platform
 
 ## ⚠️ Project Type: Prototype
 
@@ -27,26 +29,46 @@
 
 ## 📚 Documentation Index
 
+### 🎨 Design
+
 | ไฟล์ | เนื้อหา |
 |------|---------|
-| [📋 README.md](./README.md) | Overview + Index (คุณอยู่ที่นี่) |
-| [🎨 DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | Colors, Themes, UI Components, Sidebar |
-| [🏪 SELLER_CENTER.md](./SELLER_CENTER.md) | Seller Dashboard, Store, Team, Bot Orders |
-| [👤 WORKER_APP.md](./WORKER_APP.md) | Worker Dashboard, Jobs, Earnings |
-| [📊 DATABASE.md](./DATABASE.md) | TypeScript Interfaces, Schema |
-| [🏪 STORE.md](./STORE.md) | Public Store Pages |
-| [📅 TIMELINE.md](./TIMELINE.md) | Development Phases |
+| [DESIGN_SYSTEM.md](./design/DESIGN_SYSTEM.md) | Colors, Typography, Components |
+| [UI_WIREFRAMES.md](./design/UI_WIREFRAMES.md) | UI Mockups, Wireframes |
+
+### ⚙️ Features
+
+| ไฟล์ | เนื้อหา |
+|------|---------|
+| [SELLER_CENTER.md](./features/SELLER_CENTER.md) | Seller Dashboard, Orders, Services |
+| [WORKER_APP.md](./features/WORKER_APP.md) | Worker Dashboard, Jobs, Earnings |
+| [STORE.md](./features/STORE.md) | Public Store Pages |
+| [TEAM_MANAGEMENT.md](./features/TEAM_MANAGEMENT.md) | **Team System, Roles, Permissions** |
+
+### 🔧 Technical
+
+| ไฟล์ | เนื้อหา |
+|------|---------|
+| [DATABASE.md](./technical/DATABASE.md) | TypeScript Interfaces, Schema |
+| [TIMELINE.md](./technical/TIMELINE.md) | Development Phases, Checklist |
+
+### 💼 Business
+
+| ไฟล์ | เนื้อหา |
+|------|---------|
+| [REVENUE_MODEL.md](./business/REVENUE_MODEL.md) | Pricing, Plans, Projections |
+| [VIRAL_MARKETING.md](./business/VIRAL_MARKETING.md) | Referral, Gamification, Growth |
 
 ---
 
 ## 📋 Overview
 
-**MeeLike Seller** คือแพลตฟอร์มที่รวมทุกอย่างสำหรับธุรกิจ Social Media Engagement
+**MeeLike Platform** คือแพลตฟอร์มที่รวมทุกอย่างสำหรับธุรกิจ Social Media Engagement
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                                                              │
-│                       🎯 MeeLike Seller                                     │
+│                       🎯 MeeLike Platform                                   │
 │                    "แพลตฟอร์มครบวงจร"                                       │
 │                                                                              │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
@@ -71,214 +93,116 @@
 
 ### 1. 🏪 Seller (ผู้ขาย / แม่ทีม)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  🏪 Seller มี 2 โหมดการขาย:                                                 │
-│                                                                              │
-│  🤖 Bot (API)                      👥 คนจริง (ทีม)                          │
-│  ├── สั่งจาก MeeLike API           ├── บริหารทีม Worker                     │
-│  ├── เร็ว, ราคาถูก                 ├── คุณภาพสูง, คนไทยจริง                 │
-│  └── ไม่ต้องมีทีม                  └── ต้องมีทีม                            │
-│                                                                              │
-│  สามารถ:                                                                    │
-│  ├── 🏪 มี Store (หน้าร้าน)                                                 │
-│  ├── 🤖 ขายบริการ Bot (ดึงจาก MeeLike API)                                 │
-│  ├── 👥 ขายบริการคนจริง (ถ้ามีทีม)                                         │
-│  ├── 🏪 ขายบัญชี Social Media (Coming Soon)                                │
-│  ├── 👥 สร้างและบริหารทีม                                                   │
-│  └── 📊 ดูสถิติ รายได้                                                      │
-│                                                                              │
-│  ต้องจ่าย: Subscription รายเดือน                                           │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- มี 1 Store + หลาย Teams ได้
+- ขายบริการ Bot หรือ คนจริง
+- บริหารทีม Worker
+- จ่าย Subscription รายเดือน
 
 ### 2. 👤 Worker (ลูกทีม)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  👤 Worker                                                                  │
-│                                                                              │
-│  คือใคร: คนที่อยากหารายได้จากการกดไลค์/เม้น/ฟอล                           │
-│                                                                              │
-│  สามารถ:                                                                    │
-│  ├── 👥 เข้าร่วมทีม (อยู่ได้หลายทีมพร้อมกัน)                               │
-│  ├── 📋 ดูงานจากทีมที่ตัวเองอยู่                                           │
-│  ├── ✋ รับงาน (เลือกจำนวนที่จะทำ)                                         │
-│  ├── 📤 ส่งงาน + หลักฐาน                                                   │
-│  ├── 💰 สะสมเงิน                                                           │
-│  ├── 💸 ถอนเงิน                                                            │
-│  └── ⭐ สะสม Rating & Level                                                │
-│                                                                              │
-│  ต้องจ่าย: ไม่มี (ฟรี)                                                      │
-│  Platform เก็บ: Withdrawal fee 1-3% (ตาม Level)                            │
-│                                                                              │
-│  ⚠️ ไม่มี Pool งานกลาง - ต้องเข้าทีมก่อนถึงจะเห็นงาน                       │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- เข้าร่วมได้หลายทีม
+- จองงาน / ส่งงาน / รับเงิน
+- สะสม Level & Achievements
+- ใช้ฟรี (Platform เก็บ Withdrawal fee)
 
 ### 3. 🛒 Buyer (ลูกค้า)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  🛒 Buyer                                                                   │
-│                                                                              │
-│  คือใคร: คนที่อยากซื้อบริการปั้มยอด / ซื้อบัญชี                            │
-│                                                                              │
-│  สามารถ:                                                                    │
-│  ├── 🔍 เข้าหน้าร้าน Seller                                                │
-│  ├── 🛒 สั่งซื้อบริการ                                                     │
-│  ├── 📋 ดูสถานะออเดอร์                                                     │
-│  └── ⭐ รีวิวร้าน                                                          │
-│                                                                              │
-│  ต้องจ่าย: ค่าบริการตามที่สั่ง                                             │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 👥 Team Only Model
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  🎯 Team Only Model                                                         │
-│                                                                              │
-│  "Worker ต้องเข้าทีมก่อน ถึงจะเห็นงาน"                                      │
-│                                                                              │
-│  ❌ ไม่มี Pool งานกลาง                                                       │
-│  ❌ Worker ไม่สามารถหางานได้เอง (ถ้าไม่อยู่ทีมใดเลย)                        │
-│                                                                              │
-│  ✅ Worker สามารถอยู่ได้หลายทีมพร้อมกัน                                     │
-│  ✅ Seller มีอำนาจควบคุมทีมของตัวเอง                                         │
-│  ✅ รักษาวัฒนธรรม "แม่ทีม-ลูกทีม" แบบเดิม                                   │
-│  ✅ Seller ยินดีจ่าย Subscription เพราะได้ Value จริง                        │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Worker หาทีมได้ 3 วิธี
-
-| วิธี | รายละเอียด |
-|------|------------|
-| 1️⃣ **Link/รหัสเชิญ** | ได้จากแม่ทีมที่รู้จัก |
-| 2️⃣ **ค้นหาทีม** | หน้าค้นหาทีมที่เปิดรับสมาชิก |
-| 3️⃣ **ดูประกาศ** | Seller โพสต์รับสมาชิกใหม่ |
-
----
-
-## 💬 การสื่อสาร
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  💬 การสื่อสารระหว่าง Seller กับ Worker                                     │
-│                                                                              │
-│  📱 ใช้ LINE เป็นหลัก (เหมือนที่ทำอยู่)                                     │
-│                                                                              │
-│  Platform ทำ:                                                               │
-│  ├── 🔔 แจ้งเตือนไป LINE (มีงานใหม่, งานอนุมัติ, ได้เงิน)                   │
-│  ├── 📋 แสดง LINE ID ของ Seller/Worker                                      │
-│  └── 🔗 Link ไปเปิด LINE โดยตรง                                             │
-│                                                                              │
-│  Seller/Worker:                                                             │
-│  ├── 💬 คุยรายละเอียดงานใน LINE Group เดิม                                  │
-│  └── 📱 ติดต่อส่วนตัวใน LINE                                                │
-│                                                                              │
-│  ❌ ไม่มี In-app Chat (Phase นี้)                                           │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- เข้าหน้าร้าน Seller
+- สั่งซื้อบริการ
+- ติดตามสถานะ
 
 ---
 
 ## 🏗️ URL Structure
 
+### Seller Center
+
 ```
-seller.meelike.com/
-│
-├── /                             # Landing Page
-├── /login                        # Login
-├── /register                     # Register
-│
-├── /seller/                      # 🏪 Seller Center
-│   ├── /                         # Dashboard
-│   ├── /store                    # ตั้งค่าร้าน
-│   ├── /services                 # จัดการบริการ
-│   ├── /orders                   # ออเดอร์ทั้งหมด
-│   ├── /team                     # 👥 ทีมงาน
-│   │   ├── /                     # Dashboard ทีม
-│   │   ├── /members              # สมาชิกทีม
-│   │   ├── /jobs                 # งานทั้งหมด
-│   │   ├── /jobs/new             # สร้างงาน
-│   │   └── /payouts              # จ่ายเงินลูกทีม
-│   ├── /bot                      # 🤖 Bot Orders
-│   │   ├── /order                # สั่งซื้อ Bot
-│   │   └── /history              # ประวัติ Bot
-│   ├── /wallet                   # กระเป๋าเงิน
-│   ├── /analytics                # สถิติ
-│   └── /settings                 # ตั้งค่า
-│
-├── /work/                        # 👤 Worker App
-│   ├── /                         # งานจากทีมของฉัน
-│   ├── /teams                    # ทีมที่ฉันอยู่
-│   ├── /teams/join               # เข้าร่วมทีม
-│   ├── /teams/search             # ค้นหาทีม
-│   ├── /my-jobs                  # งานของฉัน
-│   ├── /earnings                 # รายได้
-│   ├── /withdraw                 # ถอนเงิน
-│   ├── /accounts                 # บัญชี Social ของฉัน
-│   └── /profile                  # โปรไฟล์
-│
-├── /market/                      # 🏪 Account Marketplace (Coming Soon)
-│
-└── /s/[slug]/                    # 🏪 Public Store (หน้าร้าน)
-    ├── /                         # หน้าร้าน
-    ├── /order                    # สั่งซื้อ
-    ├── /status                   # ดูสถานะ
-    └── /reviews                  # รีวิว
+/seller                         → Dashboard รวม
+├── /orders                     → ออเดอร์
+├── /services                   → บริการ
+├── /store                      → ตั้งค่าร้าน
+├── /finance                    → การเงิน
+├── /settings                   → ตั้งค่า
+└── /team                       → 🎯 เลือกทีม
+    └── /[id]                   → Dashboard ทีม
+        ├── /members            → สมาชิก
+        ├── /jobs               → งาน
+        ├── /review             → ตรวจงาน
+        ├── /payouts            → จ่ายเงิน
+        └── /settings           → ตั้งค่าทีม
+```
+
+### Worker App
+
+```
+/work                           → Dashboard
+├── /teams                      → ทีมของฉัน
+├── /jobs                       → งานทั้งหมด
+├── /earnings                   → รายได้
+├── /profile                    → โปรไฟล์
+├── /accounts                   → บัญชี Social
+├── /leaderboard                → กระดานผู้นำ
+└── /referral                   → ชวนเพื่อน
+```
+
+### Hub (Community)
+
+```
+/hub                            → Hub Center
+├── /recruit                    → ทีมรับสมาชิก
+├── /find-team                  → หาทีม
+├── /outsource                  → งานจ้างนอก
+├── /post/[id]                  → รายละเอียดโพสต์
+└── /team/[id]                  → โปรไฟล์ทีม
+```
+
+### Public Store
+
+```
+/s/[slug]                       → หน้าร้าน
+├── /order                      → สั่งซื้อ
+└── /status                     → เช็คสถานะ
 ```
 
 ---
 
-## 💰 Subscription Plans
+## 💰 Revenue Model
 
-| แพ็ค | ราคา | Bot Orders | ทีม | บัญชีขาย | Analytics |
-|------|------|------------|-----|----------|-----------|
-| 🆓 Free | ฿0 | 30/เดือน | ❌ | ❌ | Basic |
-| 🌟 Starter | ฿149/เดือน | 200/เดือน | 20 คน, 30 งาน | 10 รายการ | Basic |
-| 💎 Pro | ฿399/เดือน | ไม่จำกัด | 100 คน | 50 รายการ | Pro |
-| 🏢 Business | ฿799/เดือน | ไม่จำกัด | ไม่จำกัด | ไม่จำกัด | Pro + API |
+| แหล่งรายได้ | จาก | อัตรา |
+|------------|-----|-------|
+| Subscription | Seller | ฿0-799/เดือน |
+| Order Fee | Seller | 2-10% ตามแพ็กเกจ |
+| Withdrawal Fee | Worker | ฿15 + 2-5% ตาม Level |
 
 ---
 
-## 🔗 ความสัมพันธ์กับ MeeLike
+## 📁 Folder Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  🎯 MeeLike (เหมือนเดิม)              🆕 MeeLike Seller (ใหม่)              │
-│                                                                              │
-│  ┌─────────────────────────┐         ┌─────────────────────────┐            │
-│  │                         │         │                         │            │
-│  │  • สั่งซื้อ Bot         │  API    │  • Seller Center        │            │
-│  │  • เติมเงิน             │◀────────│  • Worker App           │            │
-│  │  • ดูประวัติ            │         │  • Marketplace          │            │
-│  │                         │         │                         │            │
-│  │  ───────────────────    │  Link   │                         │            │
-│  │                         │────────>│                         │            │
-│  │  🔥 Banner:             │         │                         │            │
-│  │  "อยากขายต่อ?           │         │                         │            │
-│  │   ไป MeeLikeSeller"     │         │                         │            │
-│  │                         │         │                         │            │
-│  └─────────────────────────┘         └─────────────────────────┘            │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+docs/
+├── README.md                   ← คุณอยู่ที่นี่
+├── design/
+│   ├── DESIGN_SYSTEM.md
+│   └── UI_WIREFRAMES.md
+├── features/
+│   ├── SELLER_CENTER.md
+│   ├── WORKER_APP.md
+│   ├── STORE.md
+│   └── TEAM_MANAGEMENT.md
+├── technical/
+│   ├── DATABASE.md
+│   └── TIMELINE.md
+└── business/
+    ├── REVENUE_MODEL.md
+    └── VIRAL_MARKETING.md
 ```
 
+---
 
+## 🚀 Quick Start
+
+1. **Seller** → อ่าน [SELLER_CENTER.md](./features/SELLER_CENTER.md) + [TEAM_MANAGEMENT.md](./features/TEAM_MANAGEMENT.md)
+2. **Worker** → อ่าน [WORKER_APP.md](./features/WORKER_APP.md)
+3. **Design** → อ่าน [UI_WIREFRAMES.md](./design/UI_WIREFRAMES.md)
+4. **Technical** → อ่าน [DATABASE.md](./technical/DATABASE.md) + [TIMELINE.md](./technical/TIMELINE.md)

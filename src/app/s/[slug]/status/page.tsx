@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Input, Progress } from "@/components/ui";
-import { mockOrders, mockServices } from "@/lib/mock-data";
+import { Card, Badge, Button, Input, Progress, Skeleton } from "@/components/ui";
+import { api } from "@/lib/api";
+import type { Order, StoreService } from "@/types";
 import {
   ArrowLeft,
   Search,
@@ -57,19 +58,33 @@ export default function OrderStatusPage() {
   
   const [orderId, setOrderId] = useState("");
   const [searchId, setSearchId] = useState("");
-  const [order, setOrder] = useState<typeof mockOrders[0] | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [services, setServices] = useState<StoreService[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  // Load services on mount
+  useEffect(() => {
+    const loadServices = async () => {
+      const servicesData = await api.seller.getServices();
+      setServices(servicesData);
+      setInitialLoading(false);
+    };
+    loadServices();
+  }, []);
 
   // Auto search from URL params
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderParam = urlParams.get("order");
-    if (orderParam) {
-      setOrderId(orderParam);
-      handleSearch(orderParam);
+    if (!initialLoading) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderParam = urlParams.get("order");
+      if (orderParam) {
+        setOrderId(orderParam);
+        handleSearch(orderParam);
+      }
     }
-  }, []);
+  }, [initialLoading]);
 
   const handleSearch = async (id?: string) => {
     const searchValue = id || orderId;
@@ -78,11 +93,11 @@ export default function OrderStatusPage() {
     setLoading(true);
     setNotFound(false);
     
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 800));
+    // Use API to search orders
+    const orders = await api.seller.getOrders();
 
     // Mock search - find order by ID
-    const found = mockOrders.find(
+    const found = orders.find(
       (o) => o.id.toLowerCase().includes(searchValue.toLowerCase()) ||
              o.orderNumber.toLowerCase().includes(searchValue.toLowerCase())
     );
@@ -104,8 +119,25 @@ export default function OrderStatusPage() {
   };
 
   const getServiceInfo = (serviceId: string) => {
-    return mockServices.find((s) => s.id === serviceId);
+    return services.find((s) => s.id === serviceId);
   };
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-brand-bg">
+        <header className="sticky top-0 z-50 bg-brand-surface border-b border-brand-border">
+          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+        </header>
+        <main className="max-w-2xl mx-auto p-4 space-y-6">
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-bg">
@@ -433,4 +465,3 @@ export default function OrderStatusPage() {
     </div>
   );
 }
-

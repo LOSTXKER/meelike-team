@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { Card, Button, Input, Textarea, Select, Badge } from "@/components/ui";
+import { Card, Button, Input, Textarea, Select, Badge, Skeleton } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
-import { mockSeller, mockServices } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import type { Seller, StoreService } from "@/types";
 import {
   ArrowLeft,
   Plus,
@@ -34,20 +35,11 @@ function OrderForm() {
   const slug = params.slug as string;
   const serviceId = searchParams.get("service");
 
-  const store = mockSeller;
-  const selectedService = mockServices.find((s) => s.id === serviceId);
+  const [store, setStore] = useState<Seller | null>(null);
+  const [services, setServices] = useState<StoreService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [cart, setCart] = useState<CartItem[]>(
-    selectedService
-      ? [
-          {
-            serviceId: selectedService.id,
-            targetUrl: "",
-            quantity: selectedService.minQuantity,
-          },
-        ]
-      : []
-  );
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -59,7 +51,35 @@ function OrderForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const getService = (id: string) => mockServices.find((s) => s.id === id);
+  // Fetch data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const [sellerData, servicesData] = await Promise.all([
+        api.seller.getSeller(),
+        api.seller.getServices(),
+      ]);
+      setStore(sellerData);
+      setServices(servicesData);
+      setIsLoading(false);
+
+      // Initialize cart with selected service
+      if (serviceId) {
+        const selectedService = servicesData.find((s) => s.id === serviceId);
+        if (selectedService) {
+          setCart([
+            {
+              serviceId: selectedService.id,
+              targetUrl: "",
+              quantity: selectedService.minQuantity,
+            },
+          ]);
+        }
+      }
+    };
+    fetchData();
+  }, [serviceId]);
+
+  const getService = (id: string) => services.find((s) => s.id === id);
 
   const updateCartItem = (index: number, updates: Partial<CartItem>) => {
     setCart(cart.map((item, i) => (i === index ? { ...item, ...updates } : item)));
@@ -95,6 +115,24 @@ function OrderForm() {
 
     setIsSuccess(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-brand-bg">
+        <header className="bg-brand-surface border-b border-brand-border sticky top-0 z-50">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+        </header>
+        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-56 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (

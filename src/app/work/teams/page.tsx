@@ -1,15 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { Card, Button, Badge, Avatar } from "@/components/ui";
+import { Card, Button, Badge, Avatar, Skeleton } from "@/components/ui";
 import { PageHeader } from "@/components/shared";
-import { formatCurrency } from "@/lib/utils";
-import { mockTeam, mockTeamMembers } from "@/lib/mock-data";
+import { useWorkerTeams } from "@/lib/api/hooks";
 import { Users, Star, ClipboardList, ArrowRight, Lightbulb, Search, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function WorkerTeamsPage() {
-  // Mock: Worker is in 2 teams
-  const myTeams = [mockTeam, { ...mockTeam, id: "team-2", name: "ABC Boost" }];
+  // Use API hook
+  const { data: teams, isLoading } = useWorkerTeams();
+
+  // Mock: Worker is in multiple teams
+  const myTeams = teams ? [...teams, { ...teams[0], id: "team-2", name: "ABC Boost" }] : [];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
+        <Skeleton className="h-20 w-full rounded-xl" />
+        <div className="space-y-6">
+          {[1, 2].map((i) => (
+            <Skeleton key={i} className="h-72 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-40 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -30,10 +46,10 @@ export default function WorkerTeamsPage() {
         {myTeams.map((team) => (
           <Card key={team.id} variant="elevated" className="border-none shadow-md hover:shadow-lg transition-all duration-300">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
-              <div className="flex items-start gap-4">
-                <Avatar fallback={team.name} size="xl" className="w-20 h-20 text-2xl border-4 border-white shadow-sm" />
+              <Link href={`/work/teams/${team.id}`} className="flex items-start gap-4 group">
+                <Avatar fallback={team.name} size="xl" className="w-20 h-20 text-2xl border-4 border-white shadow-sm group-hover:border-brand-primary/30 transition-colors" />
                 <div>
-                  <h3 className="font-bold text-brand-text-dark text-xl flex items-center gap-2">
+                  <h3 className="font-bold text-brand-text-dark text-xl flex items-center gap-2 group-hover:text-brand-primary transition-colors">
                     {team.name}
                     <Badge variant="default" className="bg-brand-bg text-brand-text-light font-normal text-xs border-brand-border/50">
                       ID: {team.id}
@@ -52,16 +68,18 @@ export default function WorkerTeamsPage() {
                     ทีมงานคุณภาพ จ่ายจริง จ่ายไว มีงานให้ทำตลอด 24 ชม. รับประกันรายได้
                   </p>
                 </div>
-              </div>
+              </Link>
               <div className="flex md:flex-col gap-2 shrink-0">
                 <Link href={`/work/teams/${team.id}/jobs`} className="flex-1 md:flex-none">
                   <Button size="lg" className="w-full md:w-auto shadow-md shadow-brand-primary/20">
                     ดูงานในทีม <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full md:w-auto border-brand-border/50 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors">
-                  ออกจากทีม
-                </Button>
+                <Link href={`/work/teams/${team.id}`} className="flex-1 md:flex-none">
+                  <Button variant="outline" className="w-full md:w-auto border-brand-border/50">
+                    ดูโปรไฟล์ทีม
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -133,4 +151,3 @@ export default function WorkerTeamsPage() {
     </div>
   );
 }
-

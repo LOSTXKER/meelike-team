@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Card, Badge, Button, Input, Progress } from "@/components/ui";
+import { useSearchParams } from "next/navigation";
+import { Card, Badge, Button, Input, Progress, Select } from "@/components/ui";
 import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
-import { mockJobs, mockWorkers, mockTeam } from "@/lib/mock-data";
+import { useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
 import type { Platform } from "@/types";
 import {
   ClipboardList,
   Search,
   Clock,
   CheckCircle2,
-  Users,
   ChevronRight,
   Calendar,
   Target,
@@ -20,8 +20,9 @@ import {
   ArrowLeft,
   Loader2,
   CheckCircle,
-  XCircle,
-  LayoutGrid
+  LayoutGrid,
+  Plus,
+  Building2,
 } from "lucide-react";
 
 type JobStatus = "pending" | "in_progress" | "pending_review" | "completed" | "cancelled";
@@ -30,101 +31,42 @@ const statusConfig: Record<
   JobStatus,
   { label: string; color: "warning" | "info" | "success" | "error" | "default" }
 > = {
-  pending: { label: "รอรับงาน", color: "warning" },
+  pending: { label: "รอจอง", color: "warning" },
   in_progress: { label: "กำลังทำ", color: "info" },
   pending_review: { label: "รอตรวจสอบ", color: "warning" },
   completed: { label: "เสร็จสิ้น", color: "success" },
   cancelled: { label: "ยกเลิก", color: "error" },
 };
 
-// Mock jobs data
-const allJobs = [
-  {
-    id: "job-1",
-    orderId: "order-1",
-    orderNumber: "ORD-2024-001",
-    serviceName: "เม้น Facebook (คนไทยจริง)",
-    platform: "facebook",
-    quantity: 50,
-    completedQuantity: 32,
-    pricePerUnit: 0.5,
-    totalPayout: 25,
-    targetUrl: "https://facebook.com/post/xxx",
-    status: "in_progress",
-    assignedWorker: mockWorkers[0],
-    deadline: new Date(Date.now() + 3600000 * 4).toISOString(),
-    createdAt: "2024-12-30T08:00:00Z",
-  },
-  {
-    id: "job-2",
-    orderId: "order-1",
-    orderNumber: "ORD-2024-001",
-    serviceName: "Follow Instagram (คนไทยจริง)",
-    platform: "instagram",
-    quantity: 200,
-    completedQuantity: 0,
-    pricePerUnit: 0.3,
-    totalPayout: 60,
-    targetUrl: "https://instagram.com/somchai_shop",
-    status: "pending",
-    deadline: new Date(Date.now() + 3600000 * 24).toISOString(),
-    createdAt: "2024-12-30T08:30:00Z",
-  },
-  {
-    id: "job-3",
-    orderId: "order-3",
-    orderNumber: "ORD-2024-003",
-    serviceName: "ไลค์ Facebook (คนไทยจริง)",
-    platform: "facebook",
-    quantity: 100,
-    completedQuantity: 100,
-    pricePerUnit: 0.2,
-    totalPayout: 20,
-    targetUrl: "https://facebook.com/post/yyy",
-    status: "pending_review",
-    assignedWorker: mockWorkers[1],
-    submittedAt: new Date(Date.now() - 3600000).toISOString(),
-    createdAt: "2024-12-29T10:00:00Z",
-  },
-  {
-    id: "job-4",
-    orderId: "order-4",
-    orderNumber: "ORD-2024-004",
-    serviceName: "View TikTok (คนไทยจริง)",
-    platform: "tiktok",
-    quantity: 500,
-    completedQuantity: 500,
-    pricePerUnit: 0.1,
-    totalPayout: 50,
-    targetUrl: "https://tiktok.com/@shop/video/xxx",
-    status: "completed",
-    assignedWorker: mockWorkers[0],
-    completedAt: "2024-12-28T15:00:00Z",
-    createdAt: "2024-12-28T10:00:00Z",
-  },
-  {
-    id: "job-5",
-    orderId: "order-5",
-    orderNumber: "ORD-2024-005",
-    serviceName: "ไลค์ Facebook (คนไทยจริง)",
-    platform: "facebook",
-    quantity: 50,
-    completedQuantity: 50,
-    pricePerUnit: 0.2,
-    totalPayout: 10,
-    targetUrl: "https://facebook.com/post/zzz",
-    status: "pending_review",
-    assignedWorker: mockWorkers[2],
-    submittedAt: new Date(Date.now() - 7200000).toISOString(),
-    createdAt: "2024-12-27T14:00:00Z",
-  },
-];
-
 type FilterStatus = "all" | JobStatus;
 
 export default function TeamJobsPage() {
+  const searchParams = useSearchParams();
+  const teamIdParam = searchParams.get("team");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [selectedTeamId, setSelectedTeamId] = useState(teamIdParam || "");
+
+  // Use API hooks
+  const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
+  const { data: teamJobs, isLoading: isLoadingJobs } = useTeamJobs();
+  
+  const isLoading = isLoadingTeams || isLoadingJobs;
+  
+  // Selected team (default to first team)
+  const currentTeamId = useMemo(() => {
+    if (selectedTeamId) return selectedTeamId;
+    if (teams && teams.length > 0) return teams[0].id;
+    return "";
+  }, [selectedTeamId, teams]);
+  
+  const currentTeam = useMemo(() => {
+    return teams?.find((t) => t.id === currentTeamId);
+  }, [teams, currentTeamId]);
+
+  // Filter jobs by selected team (mock: in real app, would filter by teamId)
+  const allJobs = teamJobs || [];
 
   const filteredJobs = allJobs.filter((job) => {
     const matchSearch =
@@ -142,31 +84,62 @@ export default function TeamJobsPage() {
     completed: allJobs.filter((j) => j.status === "completed").length,
   };
 
+  if (isLoading) {
+    return <div className="p-8 text-center text-brand-text-light">กำลังโหลด...</div>;
+  }
+
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/seller/team">
-          <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </Link>
-        <PageHeader
-          title="งานทั้งหมด"
-          description="จัดการงานที่มอบหมายให้ทีม Worker"
-          icon={ClipboardList}
-          action={
-            <Link href="/seller/team/review">
-              <Button 
-                variant="secondary" 
-                leftIcon={<CheckCircle2 className="w-4 h-4" />}
-                className="bg-[#FEF7E0] text-[#B06000] border-[#FEEFC3] hover:bg-[#FEEFC3]"
-              >
-                รอตรวจสอบ ({stats.pendingReview})
-              </Button>
-            </Link>
-          }
-        />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/seller/team">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <PageHeader
+            title="งานทั้งหมด"
+            description={`จัดการงานของทีม ${currentTeam?.name || ""}`}
+            icon={ClipboardList}
+          />
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Team Selector */}
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-border/50 shadow-sm">
+            <Building2 className="w-4 h-4 text-brand-primary" />
+            <select
+              value={currentTeamId}
+              onChange={(e) => setSelectedTeamId(e.target.value)}
+              className="bg-transparent text-sm font-medium text-brand-text-dark focus:outline-none cursor-pointer min-w-[140px]"
+            >
+              {teams?.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <Link href="/seller/team/review">
+            <Button 
+              variant="secondary" 
+              leftIcon={<CheckCircle2 className="w-4 h-4" />}
+              className="bg-[#FEF7E0] text-[#B06000] border-[#FEEFC3] hover:bg-[#FEEFC3]"
+            >
+              รอตรวจสอบ ({stats.pendingReview})
+            </Button>
+          </Link>
+          <Link href={`/seller/team/jobs/new?team=${currentTeamId}`}>
+            <Button 
+              leftIcon={<Plus className="w-4 h-4" />}
+              className="shadow-lg shadow-brand-primary/20"
+            >
+              สร้างงานใหม่
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -186,7 +159,7 @@ export default function TeamJobsPage() {
                <Clock className="w-5 h-5" />
              </div>
             <p className="text-2xl font-bold text-brand-warning">{stats.pending}</p>
-            <p className="text-sm text-brand-text-light">รอรับงาน</p>
+            <p className="text-sm text-brand-text-light">รอจอง</p>
           </div>
         </Card>
         <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-transform">
@@ -224,7 +197,7 @@ export default function TeamJobsPage() {
           <div className="flex gap-1 p-1.5 bg-brand-bg/50 rounded-xl border border-brand-border/30 min-w-max">
             {[
               { key: "all", label: "ทั้งหมด", icon: LayoutGrid },
-              { key: "pending", label: "รอรับงาน", icon: Clock },
+              { key: "pending", label: "รอจอง", icon: Clock },
               { key: "in_progress", label: "กำลังทำ", icon: Loader2 },
               { key: "pending_review", label: "รอตรวจ", icon: CheckCircle2 },
               { key: "completed", label: "เสร็จ", icon: CheckCircle },
@@ -357,7 +330,7 @@ export default function TeamJobsPage() {
                       {job.status === "pending" && (
                         <div className="px-3 py-1.5 rounded-lg bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3] text-xs font-medium flex items-center gap-1.5 animate-pulse">
                           <Clock className="w-3 h-3" />
-                          รอ Worker รับงาน
+                          รอ Worker จอง
                         </div>
                       )}
                     </div>
@@ -371,4 +344,3 @@ export default function TeamJobsPage() {
     </div>
   );
 }
-

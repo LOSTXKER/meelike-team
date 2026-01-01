@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, Button, Badge, Modal, Input, Select, Textarea } from "@/components/ui";
 import { PageHeader, ServiceTypeBadge } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
-import { mockServices } from "@/lib/mock-data";
+import { useSellerServices } from "@/lib/api/hooks";
 import type { StoreService } from "@/types";
 import {
   Plus,
@@ -28,7 +28,15 @@ import {
 } from "lucide-react";
 
 export default function ServicesPage() {
-  const [services, setServices] = useState(mockServices);
+  const { data: servicesData, isLoading } = useSellerServices();
+  const [services, setServices] = useState<StoreService[]>([]);
+
+  // Initialize services when data loads
+  useState(() => {
+    if (servicesData) {
+      setServices(servicesData);
+    }
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<StoreService | null>(null);
   const [filter, setFilter] = useState<"all" | "bot" | "human">("all");

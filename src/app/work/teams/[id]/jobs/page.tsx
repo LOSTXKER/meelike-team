@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Progress, Avatar } from "@/components/ui";
-import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact } from "@/components/shared";
+import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact, ClaimJobModal, ReviewTeamModal } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import type { Platform, ServiceMode } from "@/types";
 import {
@@ -19,14 +19,33 @@ import {
   DollarSign,
   Zap,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 
 type TabType = "available" | "in_progress" | "completed";
 
+interface AvailableJob {
+  id: string;
+  serviceName: string;
+  platform: string;
+  type: string;
+  quantity: number;
+  claimed: number;
+  pricePerUnit: number;
+  deadline: string;
+  urgent: boolean;
+}
+
 export default function TeamJobsPage() {
   const params = useParams();
+  const router = useRouter();
   const teamId = params.id as string;
   const [activeTab, setActiveTab] = useState<TabType>("available");
+  const [selectedJob, setSelectedJob] = useState<AvailableJob | null>(null);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isClaimLoading, setIsClaimLoading] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewJobName, setReviewJobName] = useState<string>("");
 
   // Mock Team Data
   const team = {
@@ -97,6 +116,9 @@ export default function TeamJobsPage() {
         pricePerUnit: 1.5,
         completedAt: "2024-12-29",
         myEarnings: 75,
+        isPaid: true,
+        paidAt: "2024-12-30",
+        hasReviewed: false,
       },
       {
         id: "job-6",
@@ -108,11 +130,38 @@ export default function TeamJobsPage() {
         pricePerUnit: 0.3,
         completedAt: "2024-12-28",
         myEarnings: 24,
+        isPaid: false, // ยังไม่จ่าย - ไม่สามารถรีวิวได้
+        paidAt: null,
+        hasReviewed: false,
       },
     ],
   };
 
   const currentJobs = teamJobs[activeTab];
+
+  // Handle claim job
+  const handleOpenClaimModal = (job: AvailableJob) => {
+    setSelectedJob({
+      ...job,
+      // Add team name for display in modal
+    });
+    setIsClaimModalOpen(true);
+  };
+
+  const handleClaimJob = async (quantity: number) => {
+    if (!selectedJob) return;
+    
+    setIsClaimLoading(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setIsClaimLoading(false);
+    setIsClaimModalOpen(false);
+    
+    // Redirect to jobs page after successful claim
+    router.push("/work/jobs");
+  };
 
   // Stats
   const statsData = [
@@ -176,15 +225,17 @@ export default function TeamJobsPage() {
                 </span>
                 <span className="w-1 h-1 rounded-full bg-brand-border" />
                 <span className="text-brand-primary">
-                  รับงานได้ทันที ⚡
+                  จองงานได้ทันที ⚡
                 </span>
               </div>
             </div>
           </div>
           <div className="hidden md:block">
-            <Button variant="outline" className="bg-white/50 border-brand-border/50 hover:bg-white shadow-sm">
-              ดูโปรไฟล์ทีม
-            </Button>
+            <Link href={`/hub/team/${teamId}`}>
+              <Button variant="outline" className="bg-white/50 border-brand-border/50 hover:bg-white shadow-sm">
+                ดูโปรไฟล์ทีม
+              </Button>
+            </Link>
           </div>
         </div>
       </Card>
@@ -211,7 +262,12 @@ export default function TeamJobsPage() {
           <>
             {/* Available Jobs */}
             {activeTab === "available" && teamJobs.available.map((job) => (
-              <Card key={job.id} variant="elevated" className="border-none shadow-md hover:shadow-lg transition-all group">
+              <Card 
+                key={job.id} 
+                variant="elevated" 
+                className="border-none shadow-md hover:shadow-lg transition-all group cursor-pointer"
+                onClick={() => router.push(`/work/jobs/${job.id}?from=team&teamId=${teamId}`)}
+              >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-brand-bg border border-brand-border/50 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
@@ -248,8 +304,14 @@ export default function TeamJobsPage() {
                       </p>
                       <p className="text-xs text-brand-text-light">ต่อหน่วย</p>
                     </div>
-                    <Button className="shadow-md shadow-brand-primary/20">
-                      รับงาน <ChevronRight className="w-4 h-4 ml-1" />
+                    <Button 
+                      className="shadow-md shadow-brand-primary/20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenClaimModal(job);
+                      }}
+                    >
+                      จองงาน <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
                 </div>
@@ -313,29 +375,58 @@ export default function TeamJobsPage() {
 
             {/* Completed Jobs */}
             {activeTab === "completed" && teamJobs.completed.map((job) => (
-              <Card key={job.id} variant="elevated" className="border-l-4 border-l-brand-success border-none shadow-sm">
+              <Card key={job.id} variant="elevated" className="border-l-4 border-l-brand-success border-none shadow-sm hover:shadow-md transition-all">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
+                  <Link href={`/work/jobs/${job.id}`} className="flex items-start gap-4 flex-1 group">
                     <div className="w-14 h-14 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center">
                       <CheckCircle2 className="w-7 h-7 text-brand-success" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-brand-text-dark">
+                      <h3 className="font-bold text-lg text-brand-text-dark group-hover:text-brand-primary transition-colors">
                         {job.serviceName}
                       </h3>
-                      <div className="flex items-center gap-3 text-sm text-brand-text-light mt-1">
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-brand-text-light mt-1">
                         <span>{job.completed} หน่วย</span>
                         <span>•</span>
                         <span>เสร็จเมื่อ {new Date(job.completedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</span>
+                        {job.isPaid ? (
+                          <Badge variant="success" size="sm">💰 จ่ายแล้ว</Badge>
+                        ) : (
+                          <Badge variant="warning" size="sm">⏳ รอจ่าย</Badge>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-brand-success flex items-center gap-1 justify-end">
-                      <DollarSign className="w-5 h-5" />
-                      +฿{job.myEarnings}
-                    </p>
-                    <p className="text-xs text-brand-text-light">รายได้จากงานนี้</p>
+                  </Link>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-brand-success flex items-center gap-1 justify-end">
+                        <DollarSign className="w-5 h-5" />
+                        +฿{job.myEarnings}
+                      </p>
+                      <p className="text-xs text-brand-text-light">รายได้จากงานนี้</p>
+                    </div>
+                    {/* แสดงปุ่มรีวิวเฉพาะงานที่จ่ายเงินแล้วและยังไม่ได้รีวิว */}
+                    {job.isPaid && !job.hasReviewed ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="border-brand-warning/50 text-brand-warning hover:bg-brand-warning/10"
+                        onClick={() => {
+                          setReviewJobName(job.serviceName);
+                          setIsReviewModalOpen(true);
+                        }}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-1" />
+                        รีวิว
+                      </Button>
+                    ) : job.hasReviewed ? (
+                      <Badge variant="default" size="sm" className="px-3 py-1.5">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        รีวิวแล้ว
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-brand-text-light">รอจ่ายก่อนรีวิว</span>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -343,6 +434,36 @@ export default function TeamJobsPage() {
           </>
         )}
       </div>
+
+      {/* Claim Job Modal */}
+      <ClaimJobModal
+        isOpen={isClaimModalOpen}
+        onClose={() => {
+          setIsClaimModalOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob ? { ...selectedJob, teamName: team.name } : null}
+        onConfirm={handleClaimJob}
+        isLoading={isClaimLoading}
+      />
+
+      {/* Review Team Modal */}
+      <ReviewTeamModal
+        isOpen={isReviewModalOpen}
+        onClose={() => {
+          setIsReviewModalOpen(false);
+          setReviewJobName("");
+        }}
+        teamName={team.name}
+        jobName={reviewJobName}
+        onSubmit={async (data) => {
+          // Simulate API call
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          alert(`ส่งรีวิวสำเร็จ! ให้คะแนน ${data.rating} ดาว`);
+          setIsReviewModalOpen(false);
+          setReviewJobName("");
+        }}
+      />
     </div>
   );
 }

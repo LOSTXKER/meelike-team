@@ -1,23 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Card, Button, Badge, Progress } from "@/components/ui";
-import { StatsGrid, EmptyState } from "@/components/shared";
+import { Card, Button, Badge, Progress, Skeleton, SkeletonCard } from "@/components/ui";
+import { StatsGrid, EmptyState, DailyStreak, LevelBenefitsTable } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
-import { mockWorkerStats } from "@/lib/mock-data";
+import { useWorkerStats, useWorkerActiveJobs } from "@/lib/api/hooks";
 import {
   Wallet,
   TrendingUp,
   CheckCircle2,
   Clock,
   PlayCircle,
-  ExternalLink,
   ChevronRight,
   Trophy,
   Star,
-  Zap,
-  Crown,
   Target,
   ArrowUpRight,
   Sparkles,
@@ -34,6 +31,10 @@ export default function WorkerDashboard() {
   const worker = user?.worker;
   const levelInfo = getLevelInfo(worker?.level || "gold");
 
+  // Use API hooks instead of direct mock data imports
+  const { data: workerStats, isLoading: statsLoading } = useWorkerStats();
+  const { data: activeJobs, isLoading: jobsLoading } = useWorkerActiveJobs();
+
   // Calculate level progress
   const levelThresholds = {
     bronze: { min: 0, max: 50, next: "Silver" },
@@ -42,30 +43,29 @@ export default function WorkerDashboard() {
     platinum: { min: 501, max: 1000, next: "VIP" },
     vip: { min: 1001, max: Infinity, next: "VIP" },
   };
-  const currentThreshold = levelThresholds[worker?.level || "gold"]; // Default to gold for demo
-  const jobsForNextLevel = currentThreshold.max - (worker?.totalJobsCompleted || 245);
+  const currentThreshold = levelThresholds[worker?.level || "gold"];
   const progressToNextLevel = 75; // Demo value
 
-  // Stats for the new Grid (from Profile)
+  // Stats for the new Grid
   const dashboardStats = [
     {
-      label: "งานสำเร็จ",
-      value: "245",
+      label: "งานวันนี้",
+      value: "5",
       icon: CheckCircle2,
       iconColor: "text-brand-success",
       iconBgColor: "bg-brand-success/10",
     },
     {
-      label: "รายได้รวม",
-      value: formatCurrency(12500),
+      label: "รายได้วันนี้",
+      value: formatCurrency(workerStats?.todayEarned || 0),
       icon: TrendingUp,
       iconColor: "text-brand-primary",
       iconBgColor: "bg-brand-primary/10",
     },
     {
-      label: "ต่อเนื่อง",
-      value: "7 วัน",
-      icon: Flame,
+      label: "คะแนนเฉลี่ย",
+      value: "4.9",
+      icon: Star,
       iconColor: "text-brand-warning",
       iconBgColor: "bg-brand-warning/10",
     },
@@ -83,28 +83,6 @@ export default function WorkerDashboard() {
     { icon: <Flame className="w-6 h-6" />, title: "7 Day Streak", desc: "ทำงานติดต่อกัน 7 วัน", color: "text-orange-500", bg: "bg-orange-500/10" },
     { icon: <Star className="w-6 h-6" />, title: "5 Star Rating", desc: "คะแนนเฉลี่ย 4.9+", color: "text-purple-500", bg: "bg-purple-500/10" },
     { icon: <CheckCircle2 className="w-6 h-6" />, title: "100% Success", desc: "งานสำเร็จ 100 งาน", color: "text-green-500", bg: "bg-green-500/10" },
-  ];
-
-  // Mock Active Jobs
-  const activeJobs = [
-    {
-      id: "job-1",
-      title: "ไลค์ Facebook แฟนเพจ",
-      team: "JohnBoost Team",
-      deadline: "2 ชม.",
-      payout: 20,
-      progress: 65,
-      total: 100,
-    },
-    {
-      id: "job-2",
-      title: "Follow Instagram",
-      team: "SocialPro",
-      deadline: "5 ชม.",
-      payout: 15,
-      progress: 20,
-      total: 50,
-    },
   ];
 
   return (
@@ -130,7 +108,7 @@ export default function WorkerDashboard() {
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Left Column: Profile & Achievements (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Profile Card (Moved from Profile Page) */}
+          {/* Profile Card */}
           <Card variant="elevated" padding="none" className="overflow-hidden border-none shadow-xl shadow-brand-primary/10 relative group">
             {/* Header Gradient */}
             <div className="h-24 bg-gradient-to-br from-brand-primary via-brand-primary/80 to-brand-accent relative">
@@ -190,7 +168,10 @@ export default function WorkerDashboard() {
             </div>
           </Card>
 
-          {/* Achievements (Moved from Profile Page) */}
+          {/* Daily Streak */}
+          <DailyStreak currentStreak={workerStats?.streak || 7} />
+
+          {/* Achievements */}
           <Card variant="elevated" className="border-none shadow-lg">
             <h3 className="font-bold text-brand-text-dark mb-4 flex items-center gap-2 text-base">
               <Award className="w-5 h-5 text-brand-accent" />
@@ -222,50 +203,54 @@ export default function WorkerDashboard() {
 
         {/* Right Column: Wallet, Stats, Jobs (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Wallet Card (Moved to Right Top) */}
+          {/* Wallet Card */}
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] text-white border-none shadow-xl shadow-[#8C6A54]/20 relative overflow-hidden md:col-span-2">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10" />
-              <div className="p-6 relative z-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                  <div>
-                    <p className="text-white/80 text-sm font-medium mb-1 flex items-center gap-2">
-                      <Wallet className="w-4 h-4" /> ยอดเงินคงเหลือ
-                    </p>
-                    <h2 className="text-5xl font-bold tracking-tight mb-2">
-                      {formatCurrency(mockWorkerStats.availableBalance)}
-                    </h2>
-                    <div className="flex items-center gap-4 text-sm text-white/70">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> รอตรวจสอบ {formatCurrency(mockWorkerStats.pendingBalance)}
-                      </span>
-                      <span className="w-1 h-1 bg-white/30 rounded-full" />
-                      <span>
-                        ถอนแล้ว {formatCurrency(mockWorkerStats.totalEarned)}
-                      </span>
+            {statsLoading ? (
+              <SkeletonCard className="h-[180px] md:col-span-2" />
+            ) : (
+              <Card className="bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] text-white border-none shadow-xl shadow-[#8C6A54]/20 relative overflow-hidden md:col-span-2">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10" />
+                <div className="p-6 relative z-10">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                      <p className="text-white/80 text-sm font-medium mb-1 flex items-center gap-2">
+                        <Wallet className="w-4 h-4" /> ยอดเงินคงเหลือ
+                      </p>
+                      <h2 className="text-5xl font-bold tracking-tight mb-2">
+                        {formatCurrency(workerStats?.availableBalance || 0)}
+                      </h2>
+                      <div className="flex items-center gap-4 text-sm text-white/70">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" /> รอตรวจสอบ {formatCurrency(workerStats?.pendingBalance || 0)}
+                        </span>
+                        <span className="w-1 h-1 bg-white/30 rounded-full" />
+                        <span>
+                          ถอนแล้ว {formatCurrency(workerStats?.totalEarned || 0)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3 w-full md:w-auto">
+                      <Link href="/work/earnings/withdraw" className="flex-1 md:flex-none">
+                        <Button variant="secondary" className="w-full md:w-auto bg-white text-[#8C6A54] hover:bg-white/90 border-transparent shadow-lg font-bold px-6 h-12">
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          ถอนเงิน
+                        </Button>
+                      </Link>
+                      <Link href="/work/earnings" className="flex-1 md:flex-none">
+                        <Button variant="secondary" className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm px-6 h-12">
+                          <History className="w-4 h-4 mr-2" />
+                          ประวัติ
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-3 w-full md:w-auto">
-                    <Link href="/work/earnings/withdraw" className="flex-1 md:flex-none">
-                      <Button variant="secondary" className="w-full md:w-auto bg-white text-[#8C6A54] hover:bg-white/90 border-transparent shadow-lg font-bold px-6 h-12">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        ถอนเงิน
-                      </Button>
-                    </Link>
-                    <Link href="/work/earnings" className="flex-1 md:flex-none">
-                      <Button variant="secondary" className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm px-6 h-12">
-                        <History className="w-4 h-4 mr-2" />
-                        ประวัติ
-                      </Button>
-                    </Link>
-                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            )}
           </div>
 
-          {/* Stats Grid (Updated with Profile Stats) */}
+          {/* Stats Grid */}
           <StatsGrid stats={dashboardStats} columns={4} />
 
           {/* Active Jobs Section */}
@@ -273,14 +258,19 @@ export default function WorkerDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-brand-text-dark flex items-center gap-2">
                 <PlayCircle className="w-5 h-5 text-brand-primary" />
-                งานที่กำลังทำอยู่ ({activeJobs.length})
+                งานที่กำลังทำอยู่ ({activeJobs?.length || 0})
               </h2>
               <Link href="/work/jobs" className="text-sm text-brand-primary hover:underline flex items-center gap-1">
                 ดูทั้งหมด <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
 
-            {activeJobs.length > 0 ? (
+            {jobsLoading ? (
+              <div className="grid md:grid-cols-2 gap-4">
+                <SkeletonCard className="h-[160px]" />
+                <SkeletonCard className="h-[160px]" />
+              </div>
+            ) : activeJobs && activeJobs.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-4">
                 {activeJobs.map((job) => (
                   <Link href={`/work/jobs/${job.id}`} key={job.id}>
@@ -344,12 +334,15 @@ export default function WorkerDashboard() {
             </div>
             
             <div className="grid md:grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <Card key={i} variant="elevated" className="hover:shadow-lg transition-all duration-300 group cursor-pointer border-none shadow-md">
+              {[
+                { id: 1, title: "กดไลค์เพจท่องเที่ยว", platform: "Facebook", type: "Human", payout: "0.5", desc: "ต้องการ 500 คน • จ่ายทันที", icon: "facebook" },
+                { id: 2, title: "ดูวิดีโอ TikTok", platform: "TikTok", type: "Bot", payout: "0.2", desc: "ต้องการ 1,000 คน • ง่ายมาก", icon: "tiktok" },
+              ].map((job) => (
+                <Card key={job.id} variant="elevated" className="hover:shadow-lg transition-all duration-300 group cursor-pointer border-none shadow-md">
                   <div className="p-5">
                     <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${i === 1 ? 'bg-[#1877F2]/10 text-[#1877F2]' : 'bg-gray-800/10 text-gray-800'}`}>
-                        {i === 1 ? (
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${job.icon === 'facebook' ? 'bg-[#1877F2]/10 text-[#1877F2]' : 'bg-gray-800/10 text-gray-800'}`}>
+                        {job.icon === 'facebook' ? (
                           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.962.925-1.962 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         ) : (
                           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.49-3.35-3.98-5.6-1.11-5.5 2.62-10.58 8.04-11.81 2.78-.59 5.53.17 7.78 1.83v-3.93c-2.16-1.49-4.81-2.06-7.41-1.4C6.06 2.7 3.33 5.42 2.11 8.2c-1.9 4.55-.4 10.3 3.64 13.44 2.44 1.91 5.76 2.39 8.66 1.22 1.97-1.02 3.33-2.92 3.73-5.06.33-1.9.25-3.8.3-5.69V.02z"/></svg>
@@ -358,21 +351,21 @@ export default function WorkerDashboard() {
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <h3 className="font-bold text-brand-text-dark text-lg group-hover:text-brand-primary transition-colors">
-                            {i === 1 ? "กดไลค์เพจท่องเที่ยว" : "ดูวิดีโอ TikTok"}
+                            {job.title}
                           </h3>
                           <Badge variant="success" className="bg-brand-success/10 text-brand-success border-none">
-                            ฿{i === 1 ? "0.5" : "0.2"}
+                            ฿{job.payout}
                           </Badge>
                         </div>
                         <p className="text-sm text-brand-text-light mt-1">
-                          {i === 1 ? "ต้องการ 500 คน • จ่ายทันที" : "ต้องการ 1,000 คน • ง่ายมาก"}
+                          {job.desc}
                         </p>
                         <div className="flex items-center gap-3 mt-3">
                           <span className="text-xs font-medium text-brand-text-light bg-brand-bg px-2 py-1 rounded-md">
-                            {i === 1 ? "Facebook" : "TikTok"}
+                            {job.platform}
                           </span>
                           <span className="text-xs font-medium text-brand-text-light bg-brand-bg px-2 py-1 rounded-md">
-                            {i === 1 ? "Human" : "Bot"}
+                            {job.type}
                           </span>
                         </div>
                       </div>
@@ -382,6 +375,9 @@ export default function WorkerDashboard() {
               ))}
             </div>
           </div>
+
+          {/* Level Benefits Table */}
+          <LevelBenefitsTable currentLevel={worker?.level || "gold"} />
         </div>
       </div>
     </div>
