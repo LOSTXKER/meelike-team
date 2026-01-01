@@ -19,6 +19,7 @@ import {
   Sparkles,
   Trophy,
   UserPlus,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,6 +37,9 @@ export interface NavGroup {
 
 export type NavConfig = (NavItem | NavGroup)[];
 
+// ============================================
+// ชั้นที่ 1: STORE LEVEL NAVIGATION
+// ============================================
 export const SELLER_NAV: NavConfig = [
   {
     label: "แดชบอร์ด",
@@ -56,13 +60,9 @@ export const SELLER_NAV: NavConfig = [
     ],
   },
   {
-    label: "ทีมงาน",
-    items: [
-      { label: "สมาชิก", href: "/seller/team", icon: Users },
-      { label: "งานทั้งหมด", href: "/seller/team/jobs", icon: ClipboardList },
-      { label: "รอตรวจสอบ", href: "/seller/team/review", icon: CheckCircle, badge: 5 },
-      { label: "จ่ายเงิน", href: "/seller/team/payouts", icon: DollarSign },
-    ],
+    label: "ทีม",
+    href: "/seller/team",
+    icon: Users,
   },
   {
     label: "การเงิน",
@@ -82,6 +82,46 @@ export const SELLER_NAV: NavConfig = [
   },
 ];
 
+// ============================================
+// ชั้นที่ 2: TEAM LEVEL NAVIGATION
+// ============================================
+export const getTeamNav = (teamId: string): NavConfig => [
+  {
+    label: "Dashboard",
+    href: `/seller/team/${teamId}`,
+    icon: LayoutDashboard,
+  },
+  {
+    label: "สมาชิก",
+    href: `/seller/team/${teamId}/members`,
+    icon: Users,
+  },
+  {
+    label: "งาน",
+    href: `/seller/team/${teamId}/jobs`,
+    icon: ClipboardList,
+  },
+  {
+    label: "ตรวจสอบงาน",
+    href: `/seller/team/${teamId}/review`,
+    icon: CheckCircle,
+    badge: 5, // TODO: dynamic from API
+  },
+  {
+    label: "จ่ายเงิน",
+    href: `/seller/team/${teamId}/payouts`,
+    icon: DollarSign,
+  },
+  {
+    label: "ตั้งค่าทีม",
+    href: `/seller/team/${teamId}/settings`,
+    icon: Settings,
+  },
+];
+
+// ============================================
+// WORKER NAVIGATION
+// ============================================
 export const WORKER_NAV: NavConfig = [
   {
     label: "หน้าแรก",
@@ -142,4 +182,3 @@ export const WORKER_BOTTOM_NAV: NavItem[] = [
 export function isNavGroup(item: NavItem | NavGroup): item is NavGroup {
   return "items" in item;
 }
-
