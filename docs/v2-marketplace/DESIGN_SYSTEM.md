@@ -1,6 +1,8 @@
 # Design System - MeeLike Marketplace V2
 
 > Minimal, Clean, Modern UI Guidelines
+> 
+> **Theme:** Coffee & Cream (โทนน้ำตาล-เหลืองทอง) - ใช้ธีมเดียวกับ MeeLike Seller
 
 ---
 
@@ -21,41 +23,88 @@
 [x] NO EMOJI      - ห้ามใช้ Emoji ทุกกรณี
 [/] USE ICONS     - ใช้ Lucide Icons เท่านั้น
 [/] CLEAN SPACE   - เว้นระยะให้หายใจ
-[/] MONOCHROME+   - สีหลัก 1 สี + Neutral
+[/] COFFEE THEME  - โทนน้ำตาล-เหลืองทอง
 ```
 
 ---
 
 ## Color Palette
 
+### Coffee & Cream Theme (Light Mode)
+
+```css
+/* From globals.css - ใช้ธีมเดียวกับ MeeLike Seller */
+
+:root {
+  /* Brand Colors - Coffee & Cream (Modern Earthy) */
+  --brand-bg: #FAF9F6;           /* Pearl White */
+  --brand-surface: #FFFFFF;
+  --brand-text-dark: #1A1512;    /* Deep Espresso */
+  --brand-text-light: #6D5E54;   /* Muted Cocoa */
+  
+  --brand-primary: #8C6A54;      /* Medium Roast - น้ำตาล */
+  --brand-primary-light: #E8DED5; /* Foam */
+  
+  --brand-secondary: #F4EFEA;    /* Light Cream */
+  --brand-secondary-light: #FDFBF9;
+  
+  --brand-accent: #D4A373;       /* Golden Caramel - เหลืองทอง */
+  --brand-border: #E6E0DB;       /* Subtle beige border */
+}
+```
+
 ### Brand Colors
 
 | Name | Hex | CSS Variable | Usage |
 |------|-----|--------------|-------|
-| Primary | `#FF6B35` | `--color-primary` | CTA, Links, Active states |
-| Primary Dark | `#E55A2B` | `--color-primary-dark` | Hover, Pressed |
-| Primary Light | `#FFF4F0` | `--color-primary-light` | Backgrounds, Highlights |
+| Primary (น้ำตาล) | `#8C6A54` | `--brand-primary` | CTA, Links, Active states |
+| Primary Light | `#E8DED5` | `--brand-primary-light` | Backgrounds, Highlights |
+| Accent (เหลืองทอง) | `#D4A373` | `--brand-accent` | Pop color, Warnings |
 
-### Neutral Colors
+### Background & Surface
 
 | Name | Hex | CSS Variable | Usage |
 |------|-----|--------------|-------|
-| Black | `#0F0F0F` | `--color-black` | Headlines |
-| Gray 800 | `#1F1F1F` | `--color-gray-800` | Body text |
-| Gray 600 | `#4B4B4B` | `--color-gray-600` | Secondary text |
-| Gray 400 | `#9B9B9B` | `--color-gray-400` | Placeholders |
-| Gray 200 | `#E5E5E5` | `--color-gray-200` | Borders |
-| Gray 100 | `#F5F5F5` | `--color-gray-100` | Backgrounds |
-| White | `#FFFFFF` | `--color-white` | Cards, Surfaces |
+| Background | `#FAF9F6` | `--brand-bg` | Page background |
+| Surface | `#FFFFFF` | `--brand-surface` | Cards, Modals |
+| Secondary | `#F4EFEA` | `--brand-secondary` | Subtle backgrounds |
+| Border | `#E6E0DB` | `--brand-border` | Borders, Dividers |
 
-### Status Colors
+### Text Colors
 
-| Status | Hex | Icon | Usage |
-|--------|-----|------|-------|
-| Success | `#22C55E` | `check-circle` | Completed, Verified |
-| Warning | `#F59E0B` | `alert-triangle` | Pending, Attention |
-| Error | `#EF4444` | `x-circle` | Failed, Error |
-| Info | `#3B82F6` | `info` | Information |
+| Name | Hex | CSS Variable | Usage |
+|------|-----|--------------|-------|
+| Dark | `#1A1512` | `--brand-text-dark` | Headlines, Primary text |
+| Light | `#6D5E54` | `--brand-text-light` | Secondary text, Captions |
+
+### Status Colors (Slightly Desaturated)
+
+| Status | Hex | CSS Variable | Usage |
+|--------|-----|--------------|-------|
+| Success | `#588157` | `--brand-success` | Completed, Verified |
+| Warning | `#D4A373` | `--brand-warning` | Pending (matches accent) |
+| Error | `#B04F4F` | `--brand-error` | Failed, Error |
+| Info | `#5FA8D3` | `--brand-info` | Information |
+
+### Dark Mode (Espresso)
+
+```css
+.dark {
+  --brand-bg: #0C0A09;           /* Rich Black */
+  --brand-surface: #1C1917;      /* Dark Roast */
+  --brand-text-dark: #FAF9F6;    /* Pearl */
+  --brand-text-light: #A8A29E;   /* Stone */
+  
+  --brand-primary: #D4A373;      /* Caramel as primary in dark */
+  --brand-primary-light: #8C6A54;
+  
+  --brand-secondary: #292524;
+  --brand-secondary-light: #44403C;
+  
+  --brand-accent: #D4A373;
+  --brand-border: #292524;
+}
+```
 
 ---
 
@@ -64,11 +113,11 @@
 ### Font Stack
 
 ```css
-/* Thai + English */
-font-family: 'IBM Plex Sans Thai', 'Inter', -apple-system, sans-serif;
+/* Thai Primary - Sarabun (ใช้อยู่แล้วใน globals.css) */
+font-family: 'Sarabun', sans-serif;
 
-/* Monospace (numbers, code) */
-font-family: 'JetBrains Mono', 'SF Mono', monospace;
+/* Import */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Type Scale
@@ -130,22 +179,26 @@ twitter     - X/Twitter brand icon
 | xl | 32px | Empty states |
 | 2xl | 48px | Hero sections |
 
-### Icon Colors
+### Icon Colors (Coffee Theme)
 
 ```css
 /* Default */
-color: var(--color-gray-600);
+color: var(--brand-text-light);  /* #6D5E54 - Muted Cocoa */
 
-/* Interactive */
-color: var(--color-primary);
+/* Interactive / Active */
+color: var(--brand-primary);     /* #8C6A54 - Medium Roast */
+
+/* Accent / Highlight */
+color: var(--brand-accent);      /* #D4A373 - Golden Caramel */
 
 /* On dark background */
-color: var(--color-white);
+color: var(--brand-bg);          /* #FAF9F6 - Pearl White */
 
 /* Status */
-color: var(--color-success);
-color: var(--color-warning);
-color: var(--color-error);
+color: var(--brand-success);     /* #588157 - Sage Green */
+color: var(--brand-warning);     /* #D4A373 - Golden */
+color: var(--brand-error);       /* #B04F4F - Muted Red */
+color: var(--brand-info);        /* #5FA8D3 - Soft Blue */
 ```
 
 ---
@@ -155,32 +208,44 @@ color: var(--color-error);
 ### Buttons
 
 ```
-PRIMARY BUTTON
+PRIMARY BUTTON (Coffee Theme)
 ┌────────────────────────────────────┐
 │  [icon]  Button Text               │
 │                                    │
-│  bg: primary                       │
+│  bg: #8C6A54 (brand-primary)       │
 │  text: white                       │
 │  padding: 12px 20px                │
 │  radius: 8px                       │
 │  font-weight: 600                  │
 │  transition: 150ms                 │
 │                                    │
-│  hover: bg primary-dark            │
+│  hover: brightness 0.9             │
 │  active: scale 0.98                │
+└────────────────────────────────────┘
+
+ACCENT BUTTON (Golden Caramel)
+┌────────────────────────────────────┐
+│  [icon]  Button Text               │
+│                                    │
+│  bg: #D4A373 (brand-accent)        │
+│  text: white                       │
+│  padding: 12px 20px                │
+│  radius: 8px                       │
+│                                    │
+│  hover: brightness 0.9             │
 └────────────────────────────────────┘
 
 SECONDARY BUTTON
 ┌────────────────────────────────────┐
 │  [icon]  Button Text               │
 │                                    │
-│  bg: white                         │
-│  text: gray-800                    │
-│  border: 1px gray-200              │
+│  bg: #FFFFFF (brand-surface)       │
+│  text: #1A1512 (brand-text-dark)   │
+│  border: 1px #E6E0DB (brand-border)│
 │  padding: 12px 20px                │
 │  radius: 8px                       │
 │                                    │
-│  hover: bg gray-50                 │
+│  hover: bg #F4EFEA (brand-secondary)│
 └────────────────────────────────────┘
 
 GHOST BUTTON
@@ -188,32 +253,33 @@ GHOST BUTTON
 │  [icon]  Button Text               │
 │                                    │
 │  bg: transparent                   │
-│  text: gray-600                    │
+│  text: #6D5E54 (brand-text-light)  │
 │  padding: 8px 12px                 │
 │                                    │
-│  hover: bg gray-100                │
+│  hover: bg #E8DED5 (primary-light) │
 └────────────────────────────────────┘
 
 ICON BUTTON
 ┌──────────┐
 │  [icon]  │  size: 40px x 40px
 │          │  radius: 8px
-└──────────┘  hover: bg gray-100
+└──────────┘  hover: bg #E8DED5 (primary-light)
 ```
 
 ### Cards
 
 ```
-STANDARD CARD
+STANDARD CARD (Coffee Theme)
 ┌────────────────────────────────────────────────┐
 │                                                │
-│  bg: white                                     │
-│  border: 1px gray-200                          │
+│  bg: #FFFFFF (brand-surface)                   │
+│  border: 1px #E6E0DB (brand-border)            │
 │  radius: 12px                                  │
 │  padding: 20px                                 │
-│  shadow: none (or 0 1px 3px rgba(0,0,0,0.08))  │
+│  shadow: 0 1px 2px 0 rgb(26 21 18 / 0.05)      │
 │                                                │
-│  hover: border gray-300 (if clickable)         │
+│  hover: border #8C6A54 (brand-primary)         │
+│         (if clickable)                         │
 │                                                │
 └────────────────────────────────────────────────┘
 
@@ -221,13 +287,28 @@ JOB CARD
 ┌────────────────────────────────────────────────┐
 │ [platform-icon]  Action Type        [price]    │
 │                                                │
-│ Target URL or Description                      │
+│ Target URL or Description (text-light)         │
 │                                                │
-│ ────────────────────────────────────────────   │
+│ ───────────────────────────────────────── (#E6E0DB)
 │                                                │
 │ [clock] Expires in 2d    [progress-bar] 85%    │
+│ (text-light)             (accent: #D4A373)     │
 │                                                │
-│                        [Secondary] [Primary]   │
+│                   [Secondary] [Primary #8C6A54]│
+└────────────────────────────────────────────────┘
+
+STATS CARD
+┌────────────────────────────────────────────────┐
+│                                                │
+│  bg: #F4EFEA (brand-secondary)                 │
+│  border: none                                  │
+│  radius: 12px                                  │
+│  padding: 16px                                 │
+│                                                │
+│  [icon] (brand-primary #8C6A54)                │
+│  Label (text-light #6D5E54)                    │
+│  Value (text-dark #1A1512, font-bold)          │
+│                                                │
 └────────────────────────────────────────────────┘
 ```
 
@@ -255,49 +336,55 @@ Specs:
 ### Badges / Tags
 
 ```
-STATUS BADGES (no emoji!)
+STATUS BADGES (no emoji! - Coffee Theme)
 
-[check-circle] Completed     bg: green-50, text: green-700
-[clock] Pending              bg: yellow-50, text: yellow-700
-[x-circle] Failed            bg: red-50, text: red-700
-[loader] Processing          bg: blue-50, text: blue-700
+[check-circle] Completed     bg: #588157/10, text: #588157 (success)
+[clock] Pending              bg: #D4A373/10, text: #D4A373 (warning/accent)
+[x-circle] Failed            bg: #B04F4F/10, text: #B04F4F (error)
+[loader] Processing          bg: #5FA8D3/10, text: #5FA8D3 (info)
 
-LEVEL BADGES
+LEVEL BADGES (Coffee & Gold tones)
 
-New        bg: gray-100, text: gray-600
-Bronze     bg: amber-100, text: amber-700
-Silver     bg: slate-100, text: slate-600
-Gold       bg: yellow-100, text: yellow-700
-Platinum   bg: violet-100, text: violet-700
+New        bg: #F4EFEA, text: #6D5E54 (secondary/text-light)
+Bronze     bg: #DEB887/20, text: #8B4513
+Silver     bg: #C0C0C0/20, text: #696969
+Gold       bg: #D4A373/20, text: #8C6A54 (accent/primary)
+Platinum   bg: #E5E4E2/30, text: #4A4A4A
 ```
 
 ### Navigation
 
 ```
-SIDEBAR (Desktop)
+SIDEBAR (Desktop) - Coffee Theme
 ┌──────────────────────┐
 │                      │
-│  MEELIKE             │  Logo - text only, bold
+│  MEELIKE             │  Logo - text #8C6A54, bold
 │                      │
-│  ────────────────    │
+│  ──────────────── (#E6E0DB)
 │                      │
 │  [home] Dashboard    │  Nav item - icon + text
-│  [briefcase] Jobs    │  Active: bg primary-light
-│  [wallet] Wallet     │           text primary
-│  [user] Profile      │           left border primary
-│                      │
-│  ────────────────    │
-│                      │
-│  [settings] Settings │
-│  [log-out] Logout    │
+│  [briefcase] Jobs    │  Active:
+│  [wallet] Wallet     │    bg: #E8DED5 (primary-light)
+│  [user] Profile      │    text: #8C6A54 (primary)
+│                      │    left-border: #8C6A54
+│  ──────────────── (#E6E0DB)
+│                      │  Inactive:
+│  [settings] Settings │    text: #6D5E54 (text-light)
+│  [log-out] Logout    │    hover: bg #F4EFEA
 │                      │
 └──────────────────────┘
+bg: #FFFFFF (brand-surface)
+border-right: 1px #E6E0DB (brand-border)
 
 BOTTOM NAV (Mobile)
 ┌──────┬──────┬──────┬──────┐
 │[home]│[brief]│[wall]│[user]│
 │ Home │ Jobs │Wallet│ Me   │
 └──────┴──────┴──────┴──────┘
+bg: #FFFFFF
+border-top: 1px #E6E0DB
+Active icon: #8C6A54 (primary)
+Inactive icon: #6D5E54 (text-light)
 ```
 
 ---
