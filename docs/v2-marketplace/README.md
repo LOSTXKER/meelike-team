@@ -32,12 +32,32 @@
 
 | File | Content |
 |------|---------|
+| [PROTOTYPE.md](./PROTOTYPE.md) | [star] Prototype Guide (Mock Data + LocalStorage) |
 | [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | UI/UX Guidelines, Components, Icons |
 | [BUSINESS_MODEL.md](./BUSINESS_MODEL.md) | Revenue Model, Pricing, Projections |
 | [EXTENSION_SPEC.md](./EXTENSION_SPEC.md) | Browser Extension Technical Spec |
 | [USER_FLOWS.md](./USER_FLOWS.md) | Employer & Worker Flows |
-| [DATABASE.md](./DATABASE.md) | Database Schema |
+| [DATABASE.md](./DATABASE.md) | Database Schema (for Production) |
 | [TIMELINE.md](./TIMELINE.md) | Development Timeline |
+
+---
+
+## Development Mode
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [flask] PROTOTYPE MODE (Current)                                           │
+│                                                                              │
+│  ├── [database] Database:   Mock Data + localStorage                        │
+│  ├── [server] Backend:      No real API (mock functions)                    │
+│  ├── [puzzle] Extension:    Mock Extension UI (modal)                       │
+│  └── [credit-card] Payment: Mock (auto-success)                             │
+│                                                                              │
+│  Purpose: Validate UX/UI before real development                            │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
