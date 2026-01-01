@@ -333,28 +333,22 @@ Screenshot ที่ Worker ส่งมา: [แนบรูป]
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Buffer System (15%)
+### ~~Buffer System~~ (ตัดออก)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                                                              │
-│  [shield] Buffer 15%                                                        │
+│  [x] ไม่ใช้ Buffer                                                          │
 │                                                                              │
 │  เหตุผล:                                                                    │
-│  ├── ป้องกัน Unlike หลังได้เงิน                                            │
-│  ├── ชดเชยงานที่ Reject                                                    │
-│  └── Employer ได้ครบตามสั่ง                                                │
+│  ├── AI ตรวจได้แม่นยำ 95%+                                                 │
+│  ├── Delayed Payout 24h ป้องกัน Unlike ได้                                 │
+│  ├── Dispute System ให้ Employer แจ้งได้                                   │
+│  └── ลด Cost ให้ Platform                                                  │
 │                                                                              │
-│  ตัวอย่าง:                                                                  │
-│  ├── Employer สั่ง: 100 likes                                              │
-│  ├── ระบบโพสต์งาน: 115 likes (buffer 15%)                                  │
-│  ├── สมมติ Reject 10 งาน + Unlike 5 งาน                                    │
-│  └── Employer ยังได้: 100 likes ครบ!                                       │
-│                                                                              │
-│  Cost:                                                                      │
-│  ├── Buffer Cost = 15% × Worker Pay                                        │
-│  ├── แต่จริงๆ ใช้ไม่ถึง 15% (AI ตรวจได้ดี)                                │
-│  └── คาดว่าใช้จริง ~5-8%                                                   │
+│  ถ้า Employer ไม่ได้ครบ:                                                    │
+│  ├── งานยังเปิดรับจนกว่าจะครบ                                              │
+│  └── ถ้า Reject → Slot กลับมาให้ Worker อื่นรับ                            │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -529,7 +523,6 @@ CREATE TABLE jobs (
   
   -- Quantities
   quantity        INTEGER NOT NULL,
-  buffer_quantity INTEGER NOT NULL, -- quantity * 1.15
   completed       INTEGER DEFAULT 0,
   
   -- Pricing
@@ -678,15 +671,15 @@ Evening:
 │  [check] แก้ Code ด้วย F12   → Mobile UI Check                              │
 │  [check] รูปคนอื่น           → Avatar Match                                 │
 │  [check] ไม่ได้ทำจริง        → 4-Point AI Check                             │
-│  [check] Unlike หลังได้เงิน  → Buffer 15% + Delayed Payout 24h             │
+│  [check] Unlike หลังได้เงิน  → Delayed Payout 24h + Dispute                 │
 │  [check] Multi-account       → Avatar Verification                          │
 │                                                                              │
 │  ─────────────────────────────────────────────────────────────────────────  │
 │                                                                              │
 │  Revenue: 15% (12% Job Fee + 3% Withdrawal)                                 │
-│  Buffer Cost: ~5-8% (ใช้จริงไม่ถึง 15%)                                     │
+│  Buffer Cost: 0% (ตัดออก)                                                   │
 │  AI Cost: ~1-2%                                                             │
-│  Net Margin: ~5-8%                                                          │
+│  Net Margin: ~13-14%                                                        │
 │                                                                              │
 │  [rocket] พร้อม Dev!                                                        │
 │                                                                              │
