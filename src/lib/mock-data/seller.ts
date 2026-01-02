@@ -9,6 +9,12 @@ export const mockSeller: Seller = {
   id: "seller-1",
   userId: "user-1",
   displayName: "John",
+  // Base store fields (required from BaseSellerStore)
+  name: "JohnBoost",
+  slug: "johnboost",
+  subscription: "pro",
+  theme: "meelike",
+  // Alias fields for backward compatibility
   storeName: "JohnBoost",
   storeSlug: "johnboost",
   avatar: "/avatars/seller-1.jpg",

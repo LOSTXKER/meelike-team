@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Card, Button, Skeleton } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { PageHeader, FilterBar, StatsGridCompact } from "@/components/shared";
 import { HubPostCard } from "@/components/hub";
 import { useRecruitPosts } from "@/lib/api/hooks";
@@ -71,16 +72,17 @@ export default function RecruitPage() {
   ], [recruitPosts]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <PageHeader
-        title="หาลูกทีม"
-        description="ประกาศรับสมัคร Worker เข้าทีมของคุณ"
-        icon={Users}
-        action={
-          <Link href="/hub/post/new?type=recruit">
-            <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์หาลูกทีม</Button>
-          </Link>
+    <Container size="xl">
+      <Section spacing="md">
+        {/* Header */}
+        <PageHeader
+          title="หาลูกทีม"
+          description="ประกาศรับสมัคร Worker เข้าทีมของคุณ"
+          icon={Users}
+          action={
+            <Link href="/hub/post/new?type=recruit">
+              <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์หาลูกทีม</Button>
+            </Link>
         }
       />
 
@@ -123,13 +125,14 @@ export default function RecruitPage() {
         </div>
       )}
 
-      {!isLoading && filteredPosts.length === 0 && (
-        <Card variant="bordered" padding="lg" className="text-center py-12">
-          <Users className="w-12 h-12 text-brand-text-light mx-auto mb-4" />
-          <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่พบโพสต์ที่ตรงกัน</p>
-          <p className="text-brand-text-light">ลองเปลี่ยนตัวกรองหรือคำค้นหา</p>
-        </Card>
-      )}
-    </div>
+        {!isLoading && filteredPosts.length === 0 && (
+          <Card variant="bordered" padding="lg" className="text-center py-12">
+            <Users className="w-12 h-12 text-brand-text-light mx-auto mb-4" />
+            <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่พบโพสต์ที่ตรงกัน</p>
+            <p className="text-brand-text-light">ลองเปลี่ยนตัวกรองหรือคำค้นหา</p>
+          </Card>
+        )}
+      </Section>
+    </Container>
   );
 }

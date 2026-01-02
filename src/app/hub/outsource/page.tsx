@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { PageHeader, PlatformIcon, FilterBar, StatsGrid } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import { useOutsourceJobs } from "@/lib/api/hooks";
@@ -101,16 +102,17 @@ export default function OutsourcePage() {
   ], [outsourceJobs, totalBudget, urgentCount]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <PageHeader
-        title="โยนงาน"
-        description="งานที่แม่ทีมต้องการโยนให้ทีมอื่นช่วยทำ"
-        icon={Briefcase}
-        iconClassName="text-brand-warning"
-        action={
-          <Link href="/hub/post/new?type=outsource">
-            <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์โยนงาน</Button>
+    <Container size="xl">
+      <Section spacing="md">
+        {/* Header */}
+        <PageHeader
+          title="โยนงาน"
+          description="งานที่แม่ทีมต้องการโยนให้ทีมอื่นช่วยทำ"
+          icon={Briefcase}
+          iconClassName="text-brand-warning"
+          action={
+            <Link href="/hub/post/new?type=outsource">
+              <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์โยนงาน</Button>
           </Link>
         }
       />
@@ -300,13 +302,14 @@ export default function OutsourcePage() {
         </div>
       )}
 
-      {!isLoading && filteredJobs.length === 0 && (
-        <Card variant="bordered" padding="lg" className="text-center py-12">
-          <Briefcase className="w-12 h-12 text-brand-text-light mx-auto mb-4" />
-          <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่พบงานที่ตรงกัน</p>
-          <p className="text-brand-text-light">ลองเปลี่ยน Platform หรือคำค้นหา</p>
-        </Card>
-      )}
-    </div>
+        {!isLoading && filteredJobs.length === 0 && (
+          <Card variant="bordered" padding="lg" className="text-center py-12">
+            <Briefcase className="w-12 h-12 text-brand-text-light mx-auto mb-4" />
+            <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่พบงานที่ตรงกัน</p>
+            <p className="text-brand-text-light">ลองเปลี่ยน Platform หรือคำค้นหา</p>
+          </Card>
+        )}
+      </Section>
+    </Container>
   );
 }

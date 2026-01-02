@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Progress, Modal, Input, Textarea, Select } from "@/components/ui";
+import { Card, Badge, Button, Progress, Dialog, Input, Textarea, Select, Dropdown, Modal } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { useSellerOrder, useSellerServices, useSellerTeams } from "@/lib/api/hooks";
 import {
   ArrowLeft,
@@ -73,7 +74,7 @@ export default function OrderDetailPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
   const getServiceInfo = (serviceId: string) => {
-    return mockServices?.find((s) => s.id === serviceId);
+    return mockServices?.find((s: { id: string }) => s.id === serviceId);
   };
 
   // Team options for select
@@ -156,16 +157,17 @@ export default function OrderDetailPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/seller/orders">
-            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <div>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in pb-12">
+        {/* Header */}
+        <HStack justify="between" align="center">
+          <HStack gap={4} align="center">
+            <Link href="/seller/orders">
+              <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            </Link>
+            <VStack gap={0}>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-brand-text-dark">
                 {order.orderNumber}
@@ -185,10 +187,10 @@ export default function OrderDetailPage() {
                 minute: "2-digit",
               })}
             </p>
-          </div>
-        </div>
+            </VStack>
+          </HStack>
 
-        <div className="flex gap-3">
+          <div className="flex gap-3">
           {order.status === "pending" && (
             <Button onClick={() => setShowConfirmPayment(true)} className="shadow-lg shadow-brand-primary/20 rounded-xl">
               <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -201,10 +203,10 @@ export default function OrderDetailPage() {
               อัปเดตสถานะ
             </Button>
           )}
-        </div>
-      </div>
+          </div>
+        </HStack>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Order Items */}
@@ -217,7 +219,7 @@ export default function OrderDetailPage() {
             </h2>
 
             <div className="space-y-6">
-              {order.items.map((item, index) => {
+              {order.items.map((item: { serviceId: string; completedQuantity: number; quantity: number; status: string; serviceName: string; platform: string; type: string; serviceType: string; targetUrl: string; unitPrice: number; subtotal: number; progress: number }, index: number) => {
                 const service = getServiceInfo(item.serviceId);
                 const progress = (item.completedQuantity / item.quantity) * 100;
 
@@ -845,7 +847,8 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }
 

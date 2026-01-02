@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Card, Button, Badge, Avatar, Skeleton } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { useWorkerTeams } from "@/lib/api/hooks";
 import { Users, Star, ClipboardList, ArrowRight, Lightbulb, Search, CheckCircle2, Sparkles } from "lucide-react";
@@ -28,21 +29,22 @@ export default function WorkerTeamsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="ทีมของฉัน"
-        description={`ทีมที่คุณเข้าร่วมอยู่ (${myTeams.length} ทีม)`}
-        icon={Users}
-        action={
-          <Link href="/hub">
-            <Button leftIcon={<Search className="w-4 h-4" />}>ค้นหาทีมใหม่</Button>
-          </Link>
-        }
-      />
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in">
+        {/* Header */}
+        <PageHeader
+          title="ทีมของฉัน"
+          description={`ทีมที่คุณเข้าร่วมอยู่ (${myTeams.length} ทีม)`}
+          icon={Users}
+          action={
+            <Link href="/hub">
+              <Button leftIcon={<Search className="w-4 h-4" />}>ค้นหาทีมใหม่</Button>
+            </Link>
+          }
+        />
 
-      {/* Teams */}
-      <div className="space-y-6">
+        {/* Teams */}
+        <div className="space-y-6">
         {myTeams.map((team) => (
           <Card key={team.id} variant="elevated" className="border-none shadow-md hover:shadow-lg transition-all duration-300">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
@@ -148,6 +150,7 @@ export default function WorkerTeamsPage() {
           </div>
         </div>
       </Card>
-    </div>
+      </Section>
+    </Container>
   );
 }

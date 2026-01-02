@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, Badge } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import {
   Trophy,
@@ -93,16 +94,17 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="Top Workers"
-        description="อันดับ Worker ประจำสัปดาห์นี้"
-        icon={Trophy}
-      />
+    <Container size="lg">
+      <Section spacing="md" className="animate-fade-in">
+        {/* Header */}
+        <PageHeader
+          title="Top Workers"
+          description="อันดับ Worker ประจำสัปดาห์นี้"
+          icon={Trophy}
+        />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-4">
         <Card variant="elevated" className="border-none shadow-md text-center p-5">
           <div className="p-3 bg-brand-primary/10 rounded-xl w-fit mx-auto mb-3">
             <Users className="w-6 h-6 text-brand-primary" />
@@ -234,6 +236,7 @@ export default function LeaderboardPage() {
           ))}
         </div>
       </Card>
-    </div>
+      </Section>
+    </Container>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Switch } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import {
   Crown,
@@ -72,15 +73,16 @@ export default function SubscriptionPage() {
   const rankProgress = getRankProgress(rollingAvgSpend, currentRank);
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="Subscription"
-        description="จัดการแพ็คเกจและการสมัครสมาชิก"
-        icon={Crown}
-      />
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <PageHeader
+          title="Subscription"
+          description="จัดการแพ็คเกจและการสมัครสมาชิก"
+          icon={Crown}
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Grid cols={1} responsive={{ lg: 3 }} gap={8}>
         {/* Left Column: Current Plan, Seller Rank & History */}
         <div className="lg:col-span-1 space-y-6">
           {/* Current Plan Card */}
@@ -514,7 +516,8 @@ export default function SubscriptionPage() {
             </div>
           </Card>
         </div>
-      </div>
-    </div>
+        </Grid>
+      </Section>
+    </Container>
   );
 }

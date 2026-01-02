@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, Button, Input, Badge } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import {
   Users,
@@ -74,16 +75,17 @@ export default function ReferralPage() {
   const totalReferred = referredFriends.length;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="ชวนเพื่อนมาทำงาน"
-        description="รับรางวัลเมื่อเพื่อนสมัครและทำงาน!"
-        icon={Users}
-      />
+    <Container size="lg">
+      <Section spacing="md" className="animate-fade-in">
+        {/* Header */}
+        <PageHeader
+          title="ชวนเพื่อนมาทำงาน"
+          description="รับรางวัลเมื่อเพื่อนสมัครและทำงาน!"
+          icon={Users}
+        />
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+        {/* Stats */}
+        <Grid cols={3} gap={4}>
         <Card variant="elevated" className="border-none shadow-md text-center p-5">
           <div className="p-3 bg-brand-primary/10 rounded-xl w-fit mx-auto mb-3">
             <UserPlus className="w-6 h-6 text-brand-primary" />
@@ -105,9 +107,9 @@ export default function ReferralPage() {
           <p className="text-2xl font-bold text-brand-text-dark">#12</p>
           <p className="text-xs text-brand-text-light font-medium">อันดับ Referrer</p>
         </Card>
-      </div>
+        </Grid>
 
-      {/* Referral Link Card */}
+        {/* Referral Link Card */}
       <Card variant="elevated" className="border-none shadow-lg overflow-hidden">
         <div className="p-6 bg-gradient-to-r from-brand-primary to-brand-accent text-white">
           <div className="flex items-center gap-4">
@@ -298,6 +300,7 @@ export default function ReferralPage() {
           </div>
         </div>
       </Card>
-    </div>
+      </Section>
+    </Container>
   );
 }

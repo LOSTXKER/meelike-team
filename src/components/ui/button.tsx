@@ -6,11 +6,12 @@ import { Loader2 } from "lucide-react";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "success" | "warning" | "link";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -22,6 +23,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       leftIcon,
       rightIcon,
+      fullWidth = false,
       children,
       disabled,
       ...props
@@ -29,7 +31,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
+      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-current";
 
     const variants = {
       primary:
@@ -42,6 +44,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         "text-brand-text-dark hover:bg-brand-secondary focus:ring-brand-border",
       danger:
         "bg-brand-error text-white hover:bg-brand-error/90 focus:ring-brand-error shadow-sm",
+      success:
+        "bg-brand-success text-white hover:bg-brand-success/90 focus:ring-brand-success shadow-sm",
+      warning:
+        "bg-brand-warning text-white hover:bg-brand-warning/90 focus:ring-brand-warning shadow-sm",
+      link:
+        "text-brand-primary hover:underline focus:ring-brand-primary",
     };
 
     const sizes = {
@@ -52,7 +60,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={cn(
+          baseStyles, 
+          variants[variant], 
+          sizes[size], 
+          fullWidth && "w-full",
+          className
+        )}
         ref={ref}
         disabled={disabled || isLoading}
         {...props}

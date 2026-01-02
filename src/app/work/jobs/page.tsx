@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Progress, Skeleton } from "@/components/ui";
+import { Container, Grid, Section } from "@/components/layout";
 import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import { useWorkerJobs } from "@/lib/api/hooks";
@@ -73,24 +74,25 @@ export default function WorkerJobsPage() {
   ], [workerJobs]);
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="งานของฉัน"
-        description="จัดการงานทั้งหมดที่คุณรับมา"
-        icon={Briefcase}
-      />
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in">
+        {/* Header */}
+        <PageHeader
+          title="งานของฉัน"
+          description="จัดการงานทั้งหมดที่คุณรับมา"
+          icon={Briefcase}
+        />
 
-      {/* Stats - Using StatsGridCompact */}
-      {isLoading ? (
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-[80px] rounded-xl" />
-          ))}
-        </div>
-      ) : (
-        <StatsGridCompact stats={statsData} columns={3} />
-      )}
+        {/* Stats - Using StatsGridCompact */}
+        {isLoading ? (
+          <Grid cols={3} gap={4}>
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[80px] rounded-xl" />
+            ))}
+          </Grid>
+        ) : (
+          <StatsGridCompact stats={statsData} columns={3} />
+        )}
 
       {/* Tabs - Using SegmentedControl */}
       <SegmentedControl
@@ -241,6 +243,7 @@ export default function WorkerJobsPage() {
           ))
         )}
       </div>
-    </div>
+      </Section>
+    </Container>
   );
 }

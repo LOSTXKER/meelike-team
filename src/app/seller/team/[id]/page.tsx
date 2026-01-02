@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Avatar, Skeleton } from "@/components/ui";
-import { StatsGrid, InviteTeamModal, getTeamStats } from "@/components/shared";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { StatsGrid, InviteTeamModal, getTeamStats, InfoCard } from "@/components/shared";
 import { getLevelInfo } from "@/lib/utils";
 import { useSellerTeams, useTeamMembersWithWorkers } from "@/lib/api/hooks";
 import { 
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 
 export default function TeamDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const teamId = params.id as string;
   
@@ -88,9 +90,10 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-2">
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in">
+        {/* Action Buttons */}
+        <HStack justify="end" gap={2}>
         <Button 
           variant="outline" 
           onClick={() => setIsInviteModalOpen(true)}
@@ -103,9 +106,9 @@ export default function TeamDetailPage() {
             ตั้งค่า
           </Button>
         </Link>
-      </div>
+        </HStack>
 
-      {/* Stats Cards */}
+        {/* Stats Cards */}
       <StatsGrid stats={getTeamStats(team)} columns={4} />
 
       {/* Quick Actions */}
@@ -272,12 +275,13 @@ export default function TeamDetailPage() {
         </Card>
       </div>
 
-      {/* Invite Modal */}
-      <InviteTeamModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        team={team}
-      />
-    </div>
+        {/* Invite Modal */}
+        <InviteTeamModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          team={team}
+        />
+      </Section>
+    </Container>
   );
 }

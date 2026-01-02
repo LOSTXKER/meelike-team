@@ -8,6 +8,7 @@ import { SELLER_NAV, USER_MENU_ITEMS, isNavGroup } from "@/lib/constants/navigat
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge, Button, Skeleton } from "@/components/ui";
+import { ErrorBoundary } from "@/components/shared";
 import { Award, Menu, X, Bell, Search, LogOut, ChevronDown, Wallet, Plus } from "lucide-react";
 
 export default function SellerLayout({
@@ -494,7 +495,9 @@ export default function SellerLayout({
 
       {/* Main Content - Centered */}
       <main className="max-w-7xl mx-auto p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </main>
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { PageHeader, PlatformIcon, FilterBar, StatsGridCompact } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import { useFindTeamPosts } from "@/lib/api/hooks";
@@ -82,16 +83,17 @@ export default function FindTeamPage() {
   ], [findTeamPosts]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <PageHeader
-        title="หาทีม"
-        description="Worker ที่กำลังหาทีมเข้าร่วม"
-        icon={Search}
-        iconClassName="text-brand-info"
-        action={
-          <Link href="/hub/post/new?type=find-team">
-            <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์หาทีม</Button>
+    <Container size="xl">
+      <Section spacing="md">
+        {/* Header */}
+        <PageHeader
+          title="หาทีม"
+          description="Worker ที่กำลังหาทีมเข้าร่วม"
+          icon={Search}
+          iconClassName="text-brand-info"
+          action={
+            <Link href="/hub/post/new?type=find-team">
+              <Button leftIcon={<Plus className="w-4 h-4" />}>โพสต์หาทีม</Button>
           </Link>
         }
       />
@@ -264,13 +266,14 @@ export default function FindTeamPage() {
         </div>
       )}
 
-      {!isLoading && filteredPosts.length === 0 && (
-        <Card variant="bordered" padding="lg" className="text-center py-12">
-          <User className="w-12 h-12 text-brand-text-light mx-auto mb-4" />
-          <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่พบ Worker ที่ตรงกัน</p>
-          <p className="text-brand-text-light">ลองเปลี่ยน Level หรือคำค้นหา</p>
-        </Card>
-      )}
-    </div>
+        {!isLoading && filteredPosts.length === 0 && (
+          <Card variant="bordered" padding="lg" className="text-center py-12">
+            <User className="w-12 h-12 text-brand-text-light mx-auto mb-4" />
+            <p className="text-lg font-bold text-brand-text-dark mb-1">ไม่พบ Worker ที่ตรงกัน</p>
+            <p className="text-brand-text-light">ลองเปลี่ยน Level หรือคำค้นหา</p>
+          </Card>
+        )}
+      </Section>
+    </Container>
   );
 }

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { Card, Button, Badge, Progress, Skeleton } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { StatCard } from "@/components/shared";
 import { formatCurrency, formatDate, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats } from "@/lib/api/hooks";
 import {
@@ -109,28 +111,29 @@ export default function WorkerEarningsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight flex items-center gap-3">
-            <span className="p-2.5 bg-brand-success/10 rounded-xl">
-              <DollarSign className="w-7 h-7 text-brand-success" />
-            </span>
-            รายได้ของฉัน
-          </h1>
-          <p className="text-brand-text-light mt-2 text-lg">
-            ติดตามรายได้และจัดการการถอนเงิน
-          </p>
-        </div>
-        <Link href="/work/earnings/history">
-          <Button variant="outline" className="bg-white shadow-sm" leftIcon={<History className="w-4 h-4" />}>
-            ดูประวัติทั้งหมด
-          </Button>
-        </Link>
-      </div>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
+          <VStack gap={2}>
+            <HStack gap={3} align="center" className="text-3xl font-bold text-brand-text-dark tracking-tight">
+              <span className="p-2.5 bg-brand-success/10 rounded-xl">
+                <DollarSign className="w-7 h-7 text-brand-success" />
+              </span>
+              รายได้ของฉัน
+            </HStack>
+            <p className="text-brand-text-light text-lg">
+              ติดตามรายได้และจัดการการถอนเงิน
+            </p>
+          </VStack>
+          <Link href="/work/earnings/history">
+            <Button variant="outline" className="bg-white shadow-sm" leftIcon={<History className="w-4 h-4" />}>
+              ดูประวัติทั้งหมด
+            </Button>
+          </Link>
+        </HStack>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Column: Balance & Quick Stats */}
         <div className="lg:col-span-1 space-y-6">
           {/* Balance Card */}
@@ -340,7 +343,8 @@ export default function WorkerEarningsPage() {
             </div>
           </Card>
         </div>
-      </div>
-    </div>
+        </div>
+      </Section>
+    </Container>
   );
 }

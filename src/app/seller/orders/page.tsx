@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Skeleton } from "@/components/ui";
-import { PageHeader, StatusBadge, EmptyState, FilterBar, StatsGrid } from "@/components/shared";
+import { Button, Input } from "@/components/ui";
+import { 
+  PageHeader, 
+  StatusBadge, 
+  EmptyState, 
+  FilterBar, 
+  StatsGrid,
+  AsyncBoundary,
+  GenericDataTable,
+  type Column
+} from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { useSellerOrders } from "@/lib/api/hooks";
+import { useFilters, useSort } from "@/lib/hooks";
 import type { Order } from "@/types";
 import {
   Plus,
@@ -16,103 +27,194 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   ChevronRight,
 } from "lucide-react";
 
 type OrderStatus = "all" | "pending" | "processing" | "completed" | "cancelled";
 
 export default function OrdersPage() {
-  // Use API hook instead of direct mock data import
-  const { data: orders, isLoading } = useSellerOrders();
+  const router = useRouter();
+  const { data: orders, isLoading, error, refetch } = useSellerOrders();
+  const [statusFilter, setStatusFilter] = useState<OrderStatus>("all");
   
-  const [filter, setFilter] = useState<OrderStatus>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Order | "profit"; direction: "asc" | "desc" }>({
-    key: "createdAt",
-    direction: "desc",
+  // Use new hooks for filtering
+  const filterConfig = {
+    status: (order: Order, value: any) => 
+      value === "all" || order.status === value,
+    search: (order: Order, value: any) => 
+      !value || 
+      order.orderNumber.toLowerCase().includes(value.toLowerCase()) ||
+      order.customer.name.toLowerCase().includes(value.toLowerCase())
+  };
+
+  const { filteredItems, setFilter, filters } = useFilters(orders || [], filterConfig, {
+    status: statusFilter,
+    search: ""
   });
 
-  const filteredOrders = useMemo(() => {
-    if (!orders) return [];
-    
-    return orders
-      .filter((order) => {
-        if (filter !== "all" && order.status !== filter) return false;
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          return (
-            order.orderNumber.toLowerCase().includes(query) ||
-            order.customer.name.toLowerCase().includes(query)
-          );
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        let aValue: string | number = a[sortConfig.key as keyof Order] as string | number;
-        let bValue: string | number = b[sortConfig.key as keyof Order] as string | number;
-
-        if (sortConfig.key === "profit") {
-          aValue = a.totalProfit;
-          bValue = b.totalProfit;
-        }
-
-        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-  }, [orders, filter, searchQuery, sortConfig]);
-
-  const handleSort = (key: keyof Order | "profit") => {
-    setSortConfig((current) => ({
-      key,
-      direction: current.key === key && current.direction === "asc" ? "desc" : "asc",
-    }));
-  };
-
-  const SortIcon = ({ column }: { column: keyof Order | "profit" }) => {
-    if (sortConfig.key !== column) return <ArrowUpDown className="w-3 h-3 text-brand-text-light/30 opacity-0 group-hover:opacity-50" />;
-    return sortConfig.direction === "asc" ? (
-      <ArrowUp className="w-3 h-3 text-brand-primary" />
-    ) : (
-      <ArrowDown className="w-3 h-3 text-brand-primary" />
-    );
-  };
+  // Use sort hook with custom comparator for profit
+  const { sortedItems, sortBy, sortConfig } = useSort(filteredItems, 
+    { key: "createdAt" as keyof Order, direction: "desc" },
+    {
+      profit: (a, b) => a.totalProfit - b.totalProfit
+    }
+  );
 
   const orderCounts = useMemo(() => ({
     all: orders?.length || 0,
-    pending: orders?.filter((o) => o.status === "pending").length || 0,
-    processing: orders?.filter((o) => o.status === "processing").length || 0,
-    completed: orders?.filter((o) => o.status === "completed").length || 0,
-    cancelled: orders?.filter((o) => o.status === "cancelled").length || 0,
+    pending: orders?.filter((o: { status: string }) => o.status === "pending").length || 0,
+    processing: orders?.filter((o: { status: string }) => o.status === "processing").length || 0,
+    completed: orders?.filter((o: { status: string }) => o.status === "completed").length || 0,
+    cancelled: orders?.filter((o: { status: string }) => o.status === "cancelled").length || 0,
   }), [orders]);
 
-  return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="จัดการออเดอร์"
-        description="ตรวจสอบและจัดการรายการสั่งซื้อทั้งหมดจากลูกค้า"
-        icon={Package}
-        action={
-          <Link href="/seller/orders/new">
-            <Button className="rounded-full shadow-lg shadow-brand-primary/20" leftIcon={<Plus className="w-4 h-4" />}>
-              สร้างออเดอร์ใหม่
-            </Button>
-          </Link>
-        }
-      />
+  // Update status filter when clicking on stats
+  const handleFilterChange = (newFilter: OrderStatus) => {
+    setStatusFilter(newFilter);
+    setFilter("status", newFilter);
+  };
 
-      {/* Stats Cards */}
-      {isLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[100px] rounded-xl" />
-          ))}
+  // Define columns for GenericDataTable
+  const columns: Column<Order>[] = [
+    {
+      key: "orderNumber",
+      label: "ออเดอร์",
+      sortable: true,
+      render: (_, order) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-brand-text-dark text-sm">
+            {order.orderNumber}
+          </span>
+          <span className="text-xs text-brand-text-light mt-0.5 flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {formatDateTime(order.createdAt)}
+          </span>
         </div>
-      ) : (
+      )
+    },
+    {
+      key: "customer",
+      label: "ลูกค้า",
+      render: (_, order) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary border border-brand-border">
+            {order.customer.name.charAt(0)}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-brand-text-dark">{order.customer.name}</span>
+            <span className="text-xs text-brand-text-light truncate max-w-[120px]">
+              {order.customer.contactType}: {order.customer.contactValue}
+            </span>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: "items",
+      label: "บริการ",
+      render: (_, order) => (
+        <div className="flex flex-col gap-1">
+          {order.items.slice(0, 2).map((item, idx) => (
+            <div key={idx} className="text-xs text-brand-text-dark truncate max-w-[200px] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary/50"></span>
+              {item.serviceName} <span className="text-brand-text-light">x{item.quantity}</span>
+            </div>
+          ))}
+          {order.items.length > 2 && (
+            <span className="text-xs text-brand-text-light pl-3">
+              +{order.items.length - 2} รายการอื่นๆ
+            </span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: "total",
+      label: "ยอดรวม",
+      align: "right",
+      sortable: true,
+      render: (_, order) => (
+        <span className="font-bold text-brand-primary text-sm">
+          {formatCurrency(order.total)}
+        </span>
+      )
+    },
+    {
+      key: "profit",
+      label: "กำไร",
+      align: "right",
+      sortable: true,
+      render: (_, order) => (
+        <div className="flex flex-col items-end">
+          <span className="font-medium text-brand-success text-sm">
+            +{formatCurrency(order.totalProfit)}
+          </span>
+          <span className="text-[10px] text-brand-success/80 bg-brand-success/10 px-1.5 py-0.5 rounded">
+            {Math.round((order.totalProfit / order.total) * 100)}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: "status",
+      label: "สถานะ",
+      sortable: true,
+      render: (_, order) => (
+        <div className="flex flex-col gap-1.5">
+          <StatusBadge status={order.status} type="order" size="sm" />
+          <div className="flex items-center gap-1 text-[10px] text-brand-text-light">
+            <StatusBadge status={order.paymentStatus} type="payment" size="sm" />
+          </div>
+        </div>
+      )
+    },
+    {
+      key: "id",
+      label: "จัดการ",
+      align: "center",
+      render: (_, order) => (
+        <Button variant="ghost" size="sm" className="text-brand-text-light hover:text-brand-primary">
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+      )
+    }
+  ];
+
+  return (
+    <AsyncBoundary
+      isLoading={isLoading}
+      error={error}
+      onRetry={refetch}
+      isEmpty={(orders?.length || 0) === 0}
+      emptyFallback={
+        <EmptyState
+          icon={Package}
+          title="ยังไม่มีออเดอร์"
+          description="สร้างออเดอร์แรกของคุณได้เลย"
+          action={
+            <Link href="/seller/orders/new">
+              <Button>สร้างออเดอร์แรก</Button>
+            </Link>
+          }
+        />
+      }
+    >
+      <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
+        {/* Header */}
+        <PageHeader
+          title="จัดการออเดอร์"
+          description="ตรวจสอบและจัดการรายการสั่งซื้อทั้งหมดจากลูกค้า"
+          icon={Package}
+          action={
+            <Link href="/seller/orders/new">
+              <Button className="rounded-full shadow-lg shadow-brand-primary/20" leftIcon={<Plus className="w-4 h-4" />}>
+                สร้างออเดอร์ใหม่
+              </Button>
+            </Link>
+          }
+        />
+
+        {/* Stats Cards */}
         <StatsGrid
           stats={[
             {
@@ -121,7 +223,7 @@ export default function OrdersPage() {
               icon: Clock,
               iconColor: "text-[#B06000]",
               iconBgColor: "bg-[#FEF7E0]",
-              onClick: () => setFilter("pending"),
+              onClick: () => handleFilterChange("pending"),
             },
             {
               label: "กำลังดำเนินการ",
@@ -129,7 +231,7 @@ export default function OrdersPage() {
               icon: Loader2,
               iconColor: "text-[#1967D2]",
               iconBgColor: "bg-[#E8F0FE]",
-              onClick: () => setFilter("processing"),
+              onClick: () => handleFilterChange("processing"),
             },
             {
               label: "เสร็จสิ้น",
@@ -137,7 +239,7 @@ export default function OrdersPage() {
               icon: CheckCircle2,
               iconColor: "text-[#1E8E3E]",
               iconBgColor: "bg-[#E6F4EA]",
-              onClick: () => setFilter("completed"),
+              onClick: () => handleFilterChange("completed"),
             },
             {
               label: "ยกเลิก",
@@ -145,198 +247,59 @@ export default function OrdersPage() {
               icon: XCircle,
               iconColor: "text-[#C5221F]",
               iconBgColor: "bg-[#FCE8E6]",
-              onClick: () => setFilter("cancelled"),
+              onClick: () => handleFilterChange("cancelled"),
             },
           ]}
           columns={4}
         />
-      )}
 
-      {/* Filters */}
-      <FilterBar<OrderStatus>
-        filters={[
-          { key: "all", label: "ทั้งหมด", count: orderCounts.all },
-          { key: "pending", label: "รอทำ", count: orderCounts.pending, color: "warning" },
-          { key: "processing", label: "กำลังทำ", count: orderCounts.processing, color: "info" },
-          { key: "completed", label: "เสร็จ", count: orderCounts.completed, color: "success" },
-          { key: "cancelled", label: "ยกเลิก", count: orderCounts.cancelled, color: "error" },
-        ]}
-        activeFilter={filter}
-        onFilterChange={setFilter}
-        showSearch={false}
-      />
+        {/* Filters */}
+        <FilterBar<OrderStatus>
+          filters={[
+            { key: "all", label: "ทั้งหมด", count: orderCounts.all },
+            { key: "pending", label: "รอทำ", count: orderCounts.pending, color: "warning" },
+            { key: "processing", label: "กำลังทำ", count: orderCounts.processing, color: "info" },
+            { key: "completed", label: "เสร็จ", count: orderCounts.completed, color: "success" },
+            { key: "cancelled", label: "ยกเลิก", count: orderCounts.cancelled, color: "error" },
+          ]}
+          activeFilter={statusFilter}
+          onFilterChange={handleFilterChange}
+          showSearch={false}
+        />
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
-        {/* Table Header with Search */}
-        <div className="p-4 border-b border-brand-border/50">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3 shrink-0">
-              <h2 className="font-bold text-brand-text-dark">รายการออเดอร์</h2>
-              <span className="text-sm text-brand-text-light bg-brand-bg px-2 py-0.5 rounded-full">{filteredOrders.length} รายการ</span>
-            </div>
-            <div className="w-full sm:w-auto sm:min-w-[280px]">
-              <Input
-                placeholder="ค้นหาเลขออเดอร์, ชื่อลูกค้า..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border-brand-border/50 bg-brand-bg/50 focus:bg-white !py-2 !rounded-xl"
-                leftIcon={<Search className="w-4 h-4 text-brand-text-light" />}
-              />
+        {/* Orders Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
+          {/* Table Header with Search */}
+          <div className="p-4 border-b border-brand-border/50">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3 shrink-0">
+                <h2 className="font-bold text-brand-text-dark">รายการออเดอร์</h2>
+                <span className="text-sm text-brand-text-light bg-brand-bg px-2 py-0.5 rounded-full">
+                  {sortedItems.length} รายการ
+                </span>
+              </div>
+              <div className="w-full sm:w-auto sm:min-w-[280px]">
+                <Input
+                  placeholder="ค้นหาเลขออเดอร์, ชื่อลูกค้า..."
+                  value={filters.search as string || ""}
+                  onChange={(e) => setFilter("search", e.target.value)}
+                  className="w-full border-brand-border/50 bg-brand-bg/50 focus:bg-white !py-2 !rounded-xl"
+                  leftIcon={<Search className="w-4 h-4 text-brand-text-light" />}
+                />
+              </div>
             </div>
           </div>
+
+          <GenericDataTable
+            data={sortedItems}
+            columns={columns}
+            onRowClick={(order) => router.push(`/seller/orders/${order.id}`)}
+            sortConfig={sortConfig}
+            onSort={sortBy}
+            emptyMessage="ไม่พบออเดอร์ที่ค้นหา"
+          />
         </div>
-
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-20 rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-brand-bg/50 border-b border-brand-border/50 text-xs text-brand-text-light uppercase tracking-wider">
-                  <th 
-                    className="p-4 pl-6 font-medium cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                    onClick={() => handleSort("orderNumber")}
-                  >
-                    <div className="flex items-center gap-2">
-                      ออเดอร์
-                      <SortIcon column="orderNumber" />
-                    </div>
-                  </th>
-                  <th className="p-4 font-medium">ลูกค้า</th>
-                  <th className="p-4 font-medium">บริการ</th>
-                  <th 
-                    className="p-4 font-medium text-right cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                    onClick={() => handleSort("total")}
-                  >
-                    <div className="flex items-center justify-end gap-2">
-                      ยอดรวม
-                      <SortIcon column="total" />
-                    </div>
-                  </th>
-                  <th 
-                    className="p-4 font-medium text-right cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                    onClick={() => handleSort("profit")}
-                  >
-                    <div className="flex items-center justify-end gap-2">
-                      กำไร
-                      <SortIcon column="profit" />
-                    </div>
-                  </th>
-                  <th 
-                    className="p-4 font-medium cursor-pointer group hover:bg-brand-border/30 transition-colors"
-                    onClick={() => handleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      สถานะ
-                      <SortIcon column="status" />
-                    </div>
-                  </th>
-                  <th className="p-4 font-medium text-center">จัดการ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-border/30">
-                {filteredOrders.map((order) => (
-                  <tr 
-                    key={order.id} 
-                    className="group hover:bg-brand-primary/5 transition-colors cursor-pointer"
-                    onClick={() => window.location.href = `/seller/orders/${order.id}`}
-                  >
-                    <td className="p-4 pl-6">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-brand-text-dark text-sm group-hover:text-brand-primary transition-colors">
-                          {order.orderNumber}
-                        </span>
-                        <span className="text-xs text-brand-text-light mt-0.5 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDateTime(order.createdAt)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary border border-brand-border">
-                          {order.customer.name.charAt(0)}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-brand-text-dark">{order.customer.name}</span>
-                          <span className="text-xs text-brand-text-light truncate max-w-[120px]">
-                            {order.customer.contactType}: {order.customer.contactValue}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1">
-                        {order.items.slice(0, 2).map((item, idx) => (
-                          <div key={idx} className="text-xs text-brand-text-dark truncate max-w-[200px] flex items-center gap-1.5">
-                             <span className="w-1.5 h-1.5 rounded-full bg-brand-primary/50"></span>
-                             {item.serviceName} <span className="text-brand-text-light">x{item.quantity}</span>
-                          </div>
-                        ))}
-                        {order.items.length > 2 && (
-                          <span className="text-xs text-brand-text-light pl-3">
-                            +{order.items.length - 2} รายการอื่นๆ
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4 text-right">
-                      <span className="font-bold text-brand-primary text-sm">
-                        {formatCurrency(order.total)}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex flex-col items-end">
-                        <span className="font-medium text-brand-success text-sm">
-                          +{formatCurrency(order.totalProfit)}
-                        </span>
-                        <span className="text-[10px] text-brand-success/80 bg-brand-success/10 px-1.5 py-0.5 rounded">
-                          {Math.round((order.totalProfit / order.total) * 100)}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1.5">
-                         <StatusBadge status={order.status} type="order" size="sm" />
-                         <div className="flex items-center gap-1 text-[10px] text-brand-text-light">
-                            <StatusBadge status={order.paymentStatus} type="payment" size="sm" />
-                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                      <Link href={`/seller/orders/${order.id}`}>
-                        <Button variant="ghost" size="sm" className="text-brand-text-light hover:text-brand-primary">
-                          <ChevronRight className="w-5 h-5" />
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {!isLoading && filteredOrders.length === 0 && (
-          <div className="p-12">
-            <EmptyState
-              icon={Package}
-              title="ไม่พบออเดอร์"
-              description="ลองเปลี่ยนตัวกรองหรือสร้างออเดอร์ใหม่"
-              action={
-                <Link href="/seller/orders/new">
-                  <Button className="rounded-full">สร้างออเดอร์ใหม่</Button>
-                </Link>
-              }
-            />
-          </div>
-        )}
       </div>
-    </div>
+    </AsyncBoundary>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, Button, Input, Badge } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { useAuthStore } from "@/lib/store";
 import {
   User,
@@ -38,21 +39,22 @@ export default function WorkerProfilePage() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight flex items-center gap-3">
-          <span className="p-2.5 bg-brand-primary/10 rounded-xl">
-            <Settings className="w-7 h-7 text-brand-primary" />
-          </span>
-          ตั้งค่าบัญชี
-        </h1>
-        <p className="text-brand-text-light mt-2 text-lg">
-          จัดการข้อมูลส่วนตัวและรหัสผ่าน
-        </p>
-      </div>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <VStack gap={2}>
+          <HStack gap={3} align="center" className="text-3xl font-bold text-brand-text-dark tracking-tight">
+            <span className="p-2.5 bg-brand-primary/10 rounded-xl">
+              <Settings className="w-7 h-7 text-brand-primary" />
+            </span>
+            ตั้งค่าบัญชี
+          </HStack>
+          <p className="text-brand-text-light text-lg">
+            จัดการข้อมูลส่วนตัวและรหัสผ่าน
+          </p>
+        </VStack>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+        <Grid cols={1} responsive={{ lg: 3 }} gap={8}>
         {/* Left Column - Quick Profile & Navigation (Optional future nav) */}
         <div className="lg:col-span-1 space-y-6">
           {/* Simple Profile Card */}
@@ -200,8 +202,9 @@ export default function WorkerProfilePage() {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+        </Grid>
+      </Section>
+    </Container>
   );
 }
 

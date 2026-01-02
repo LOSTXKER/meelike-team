@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Progress, Avatar } from "@/components/ui";
+import { Container, Section, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact, ClaimJobModal, ReviewTeamModal } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import type { Platform, ServiceMode } from "@/types";
@@ -196,16 +197,17 @@ export default function TeamJobsPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <Card className="border-none shadow-lg bg-gradient-to-r from-brand-primary/10 to-transparent p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="relative flex items-center gap-6">
-          <Link href="/work/teams">
-            <button className="p-3 hover:bg-white bg-white/60 backdrop-blur-sm border border-brand-border/50 rounded-xl transition-all shadow-sm group">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
-            </button>
-          </Link>
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in">
+        {/* Header */}
+        <Card className="border-none shadow-lg bg-gradient-to-r from-brand-primary/10 to-transparent p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+          <HStack gap={6} align="center" className="relative">
+            <Link href="/work/teams">
+              <button className="p-3 hover:bg-white bg-white/60 backdrop-blur-sm border border-brand-border/50 rounded-xl transition-all shadow-sm group">
+                <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
+              </button>
+            </Link>
           <div className="flex-1 flex items-center gap-5">
             <Avatar fallback={team.name} size="xl" className="w-20 h-20 text-2xl border-4 border-white shadow-md" />
             <div>
@@ -237,10 +239,10 @@ export default function TeamJobsPage() {
               </Button>
             </Link>
           </div>
-        </div>
-      </Card>
+          </HStack>
+        </Card>
 
-      {/* Stats */}
+        {/* Stats */}
       <StatsGridCompact stats={statsData} columns={3} />
 
       {/* Tabs */}
@@ -464,6 +466,7 @@ export default function TeamJobsPage() {
           setReviewJobName("");
         }}
       />
-    </div>
+      </Section>
+    </Container>
   );
 }

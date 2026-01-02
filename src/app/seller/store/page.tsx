@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
-import { Card, Button, Input, Textarea, Badge, Avatar, Select } from "@/components/ui";
+import { Card, Button, Input, Textarea, Badge, Avatar, Select, Tabs, Switch } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import type { StoreTheme, StoreService } from "@/types";
@@ -235,57 +236,43 @@ export default function StorePage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
-      {/* Page Header */}
-      <PageHeader
-        title="จัดการร้านค้า"
-        description="ตกแต่งร้าน จัดบริการ ดูรีวิว และตั้งค่าร้านของคุณ"
-        icon={Store}
-        action={
-          <div className="flex items-center gap-3">
-            <a href={`/s/${storeData.storeSlug}`} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" leftIcon={<Eye className="w-4 h-4" />}>
-                ดูหน้าร้าน
-              </Button>
-            </a>
-            <Button 
-              onClick={handleSave} 
-              isLoading={isSaving}
-              leftIcon={<Save className="w-4 h-4" />}
-            >
-              บันทึก
-            </Button>
-          </div>
-        }
-      />
-
-      {/* Tabs Navigation */}
-      <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 p-1.5">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar">
-          {tabs.map((tab) => {
-            const TabIcon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "bg-brand-primary text-white shadow-md"
-                    : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50"
-                }`}
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in pb-12">
+        {/* Page Header */}
+        <PageHeader
+          title="จัดการร้านค้า"
+          description="ตกแต่งร้าน จัดบริการ ดูรีวิว และตั้งค่าร้านของคุณ"
+          icon={Store}
+          action={
+            <HStack gap={3}>
+              <a href={`/s/${storeData.storeSlug}`} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" leftIcon={<Eye className="w-4 h-4" />}>
+                  ดูหน้าร้าน
+                </Button>
+              </a>
+              <Button
+                onClick={handleSave}
+                isLoading={isSaving}
+                leftIcon={<Save className="w-4 h-4" />}
               >
-                <TabIcon className="w-4 h-4" />
-                {tab.label}
-                {tab.id === "reviews" && reviewStats.pending > 0 && (
-                  <Badge variant={activeTab === tab.id ? "default" : "error"} size="sm" className={activeTab === tab.id ? "bg-white/20 text-white" : ""}>
-                    {reviewStats.pending}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                บันทึก
+              </Button>
+            </HStack>
+          }
+        />
+
+        {/* Tabs Navigation */}
+        <Tabs
+          tabs={tabs.map(tab => ({
+            id: tab.id,
+            label: tab.label,
+            icon: tab.icon,
+            count: tab.id === "reviews" && reviewStats.pending > 0 ? reviewStats.pending : undefined
+          }))}
+          activeTab={activeTab}
+          onChange={(id) => setActiveTab(id as TabId)}
+          variant="pills"
+        />
 
       {/* Tab Content */}
       <div className="animate-fade-in">
@@ -1105,10 +1092,10 @@ export default function StorePage() {
                   </div>
                   <div className="p-5 space-y-4">
                     {[
-                      { key: "isPublic", label: "เปิดให้สาธารณะ", desc: "ให้คนอื่นค้นหาและเข้าชมร้านได้", icon: Globe },
-                      { key: "showPricing", label: "แสดงราคา", desc: "แสดงราคาบริการในหน้าร้าน", icon: Tag },
-                      { key: "showReviews", label: "แสดงรีวิว", desc: "แสดงรีวิวจากลูกค้าในหน้าร้าน", icon: Star },
-                      { key: "allowDirectOrder", label: "สั่งซื้อโดยตรง", desc: "ให้ลูกค้าสั่งซื้อผ่านหน้าร้านได้เลย", icon: Package },
+                      { key: "isPublic" as const, label: "เปิดให้สาธารณะ", desc: "ให้คนอื่นค้นหาและเข้าชมร้านได้", icon: Globe },
+                      { key: "showPricing" as const, label: "แสดงราคา", desc: "แสดงราคาบริการในหน้าร้าน", icon: Tag },
+                      { key: "showReviews" as const, label: "แสดงรีวิว", desc: "แสดงรีวิวจากลูกค้าในหน้าร้าน", icon: Star },
+                      { key: "allowDirectOrder" as const, label: "สั่งซื้อโดยตรง", desc: "ให้ลูกค้าสั่งซื้อผ่านหน้าร้านได้เลย", icon: Package },
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
@@ -1122,18 +1109,10 @@ export default function StorePage() {
                               <p className="text-xs text-brand-text-light">{item.desc}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => setStoreSettings(prev => ({ ...prev, [item.key]: !prev[item.key as keyof typeof storeSettings] }))}
-                            className={`relative w-11 h-6 rounded-full transition-colors ${
-                              storeSettings[item.key as keyof typeof storeSettings] ? 'bg-brand-success' : 'bg-gray-200'
-                            }`}
-                          >
-                            <span
-                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                                storeSettings[item.key as keyof typeof storeSettings] ? 'translate-x-5' : ''
-                              }`}
-                            />
-                          </button>
+                          <Switch
+                            checked={storeSettings[item.key]}
+                            onChange={(checked) => setStoreSettings(prev => ({ ...prev, [item.key]: checked }))}
+                          />
                         </div>
                       );
                     })}
@@ -1273,7 +1252,8 @@ export default function StorePage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+        </div>
+      </Section>
+    </Container>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Button, Input, Badge, Select } from "@/components/ui";
+import { Card, Button, Input, Badge, Select, Switch } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
@@ -47,6 +48,13 @@ export default function SellerSettingsPage() {
     isVerified: true,
   });
 
+  const [notifications, setNotifications] = useState({
+    orders: true,
+    team: true,
+    finance: false,
+    promo: false,
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -71,15 +79,16 @@ export default function SellerSettingsPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="ตั้งค่าบัญชี"
-        description="จัดการข้อมูลส่วนตัว บัญชีรับเงิน ความปลอดภัย และการตั้งค่าบัญชีของคุณ"
-        icon={User}
-      />
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <PageHeader
+          title="ตั้งค่าบัญชี"
+          description="จัดการข้อมูลส่วนตัว บัญชีรับเงิน ความปลอดภัย และการตั้งค่าบัญชีของคุณ"
+          icon={User}
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Grid cols={1} responsive={{ lg: 3 }} gap={8}>
         {/* Left Column: Profile & Menu */}
         <div className="lg:col-span-1 space-y-6">
           {/* Profile Card */}
@@ -377,12 +386,12 @@ export default function SellerSettingsPage() {
                </h2>
             </div>
             
-            <div className="space-y-1">
+            <VStack gap={0}>
               {[
-                { key: "orders", label: "ออเดอร์ใหม่", desc: "แจ้งเตือนทันทีเมื่อมีลูกค้าสั่งซื้อบริการ", enabled: true },
-                { key: "team", label: "งานทีม", desc: "แจ้งเตือนเมื่อ Worker ส่งงานหรือขอเบิกเงิน", enabled: true },
-                { key: "finance", label: "การเงิน", desc: "แจ้งเตือนเมื่อมีการเติมเงินหรือถอนเงิน", enabled: false },
-                { key: "promo", label: "โปรโมชั่น", desc: "รับข่าวสารโปรโมชั่นและอัพเดทใหม่ๆ", enabled: false },
+                { key: "orders" as const, label: "ออเดอร์ใหม่", desc: "แจ้งเตือนทันทีเมื่อมีลูกค้าสั่งซื้อบริการ" },
+                { key: "team" as const, label: "งานทีม", desc: "แจ้งเตือนเมื่อ Worker ส่งงานหรือขอเบิกเงิน" },
+                { key: "finance" as const, label: "การเงิน", desc: "แจ้งเตือนเมื่อมีการเติมเงินหรือถอนเงิน" },
+                { key: "promo" as const, label: "โปรโมชั่น", desc: "รับข่าวสารโปรโมชั่นและอัพเดทใหม่ๆ" },
               ].map((item, index) => (
                 <div
                   key={item.key}
@@ -392,36 +401,33 @@ export default function SellerSettingsPage() {
                     <p className="font-bold text-brand-text-dark text-sm">{item.label}</p>
                     <p className="text-xs text-brand-text-light mt-0.5">{item.desc}</p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      defaultChecked={item.enabled}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-brand-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
-                  </label>
+                  <Switch
+                    checked={notifications[item.key]}
+                    onChange={(checked) => setNotifications({ ...notifications, [item.key]: checked })}
+                  />
                 </div>
               ))}
-            </div>
+            </VStack>
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-4 border-t border-brand-border/50">
-             <Button variant="ghost" className="text-brand-error hover:bg-brand-error/10 hover:text-brand-error">
-                <LogOut className="w-4 h-4 mr-2" />
-                ออกจากระบบ
-             </Button>
-             <div className="flex gap-3">
-                <Button variant="outline" className="px-6">ยกเลิก</Button>
-                <Button onClick={handleSave} className="px-8 shadow-lg shadow-brand-primary/20">
-                  <Save className="w-4 h-4 mr-2" />
-                  บันทึกการเปลี่ยนแปลง
-                </Button>
-             </div>
-          </div>
+          <HStack justify="end" gap={4} className="flex-col-reverse sm:flex-row pt-4 border-t border-brand-border/50">
+            <Button variant="ghost" className="text-brand-error hover:bg-brand-error/10 hover:text-brand-error">
+              <LogOut className="w-4 h-4 mr-2" />
+              ออกจากระบบ
+            </Button>
+            <HStack gap={3}>
+              <Button variant="outline" className="px-6">ยกเลิก</Button>
+              <Button onClick={handleSave} className="px-8 shadow-lg shadow-brand-primary/20">
+                <Save className="w-4 h-4 mr-2" />
+                บันทึกการเปลี่ยนแปลง
+              </Button>
+            </HStack>
+          </HStack>
         </div>
-      </div>
-    </div>
+        </Grid>
+      </Section>
+    </Container>
   );
 }
 

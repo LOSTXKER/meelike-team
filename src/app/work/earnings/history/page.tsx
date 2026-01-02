@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Tabs } from "@/components/ui";
+import { Container, Section, HStack, VStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import {
@@ -160,30 +161,31 @@ export default function EarningsHistoryPage() {
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/work/earnings">
-            <button className="p-2.5 hover:bg-white bg-white/50 border border-brand-border/50 rounded-xl transition-all shadow-sm group">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
-            </button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-              <Wallet className="w-6 h-6 text-brand-primary" />
-              ประวัติรายได้
-            </h1>
-            <p className="text-brand-text-light text-sm mt-0.5">ดูประวัติรายได้และการถอนเงินทั้งหมด</p>
-          </div>
-        </div>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="gap-4">
+          <HStack gap={4} align="center">
+            <Link href="/work/earnings">
+              <button className="p-2.5 hover:bg-white bg-white/50 border border-brand-border/50 rounded-xl transition-all shadow-sm group">
+                <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
+              </button>
+            </Link>
+            <VStack gap={1}>
+              <HStack gap={2} align="center" className="text-2xl font-bold text-brand-text-dark">
+                <Wallet className="w-6 h-6 text-brand-primary" />
+                ประวัติรายได้
+              </HStack>
+              <p className="text-brand-text-light text-sm">ดูประวัติรายได้และการถอนเงินทั้งหมด</p>
+            </VStack>
+          </HStack>
+        </HStack>
         <Button variant="outline" className="bg-white border-brand-border/50 shadow-sm hidden sm:flex">
           <Download className="w-4 h-4 mr-2" />
           ดาวน์โหลด
         </Button>
-      </div>
 
-      {/* Stats Cards */}
+        {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card variant="elevated" className="border-none shadow-md hover:-translate-y-1 transition-transform relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-brand-success/5 rounded-full blur-2xl -mr-8 -mt-8" />
@@ -350,12 +352,13 @@ export default function EarningsHistoryPage() {
 
       {/* Load More */}
       {filteredTransactions.length > 0 && (
-        <div className="text-center pt-4">
-          <Button variant="outline" className="bg-white border-brand-border/50 shadow-sm hover:bg-brand-bg px-8 py-6 h-auto text-base">
-            โหลดเพิ่มเติม
-          </Button>
-        </div>
-      )}
-    </div>
+          <div className="text-center pt-4">
+            <Button variant="outline" className="bg-white border-brand-border/50 shadow-sm hover:bg-brand-bg px-8 py-6 h-auto text-base">
+              โหลดเพิ่มเติม
+            </Button>
+          </div>
+        )}
+      </Section>
+    </Container>
   );
 }

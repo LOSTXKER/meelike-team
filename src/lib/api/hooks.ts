@@ -17,92 +17,144 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "./index";
 import type { TeamMember, Worker } from "@/types";
 
-// Generic hook for data fetching
-function useApiCall<T>(
+// ===== API CALL STATE =====
+
+export interface ApiCallState<T, E = Error> {
+  data: T | null;
+  isLoading: boolean;
+  isError: boolean;
+  error: E | null;
+}
+
+export interface ApiCallOptions<T, E = Error> {
+  deps?: unknown[];
+  enabled?: boolean;
+  onSuccess?: (data: T) => void;
+  onError?: (error: E) => void;
+  initialData?: T;
+}
+
+export interface ApiCallResult<T, E = Error> extends ApiCallState<T, E> {
+  refetch: () => Promise<void>;
+  reset: () => void;
+}
+
+// ===== GENERIC API HOOK =====
+
+/**
+ * Generic hook for data fetching with improved type inference
+ * @template T - The type of data returned
+ * @template E - The type of error (defaults to Error)
+ */
+function useApiCall<T, E = Error>(
   fetcher: () => Promise<T>,
-  deps: unknown[] = []
-) {
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  options: ApiCallOptions<T, E> = {}
+): ApiCallResult<T, E> {
+  const { deps = [], enabled = true, onSuccess, onError, initialData } = options;
+  
+  const [data, setData] = useState<T | null>(initialData ?? null);
+  const [isLoading, setIsLoading] = useState(enabled);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<E | null>(null);
 
   const refetch = useCallback(async () => {
+    if (!enabled) return;
+    
     setIsLoading(true);
+    setIsError(false);
     setError(null);
+    
     try {
       const result = await fetcher();
       setData(result);
+      onSuccess?.(result);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Unknown error"));
+      const errorObj = (err instanceof Error ? err : new Error("Unknown error")) as E;
+      setError(errorObj);
+      setIsError(true);
+      onError?.(errorObj);
     } finally {
       setIsLoading(false);
     }
-  }, deps);
+  }, [enabled, ...deps]);
+
+  const reset = useCallback(() => {
+    setData(initialData ?? null);
+    setIsLoading(enabled);
+    setIsError(false);
+    setError(null);
+  }, [enabled, initialData]);
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    if (enabled) {
+      refetch();
+    }
+  }, [refetch, enabled]);
 
-  return { data, isLoading, error, refetch };
+  return { data, isLoading, isError, error, refetch, reset };
 }
 
 // ===== SELLER HOOKS =====
-export function useSellerStats() {
-  return useApiCall(() => api.seller.getStats(), []);
+
+export function useSellerStats(options?: Omit<ApiCallOptions<any>, 'deps'>) {
+  return useApiCall(() => api.seller.getStats(), { ...options, deps: [] });
 }
 
-export function useSellerOrders() {
-  return useApiCall(() => api.seller.getOrders(), []);
+export function useSellerOrders(options?: Omit<ApiCallOptions<any>, 'deps'>) {
+  return useApiCall(() => api.seller.getOrders(), { ...options, deps: [] });
 }
 
-export function useSellerOrder(id: string) {
-  return useApiCall(() => api.seller.getOrderById(id), [id]);
+export function useSellerOrder(id: string, options?: Omit<ApiCallOptions<any>, 'deps'>) {
+  return useApiCall(
+    () => api.seller.getOrderById(id), 
+    { ...options, deps: [id], enabled: options?.enabled !== false && !!id }
+  );
 }
 
-export function useSellerServices() {
-  return useApiCall(() => api.seller.getServices(), []);
+export function useSellerServices(options?: Omit<ApiCallOptions<any>, 'deps'>) {
+  return useApiCall(() => api.seller.getServices(), { ...options, deps: [] });
 }
 
 // Seller มีได้หลายทีม
 export function useSellerTeams() {
-  return useApiCall(() => api.seller.getTeams(), []);
+  return useApiCall(() => api.seller.getTeams(), { deps: [] });
 }
 
 // Legacy: เข้ากันได้กับ code เดิม (return ทีมแรก)
 export function useSellerTeam() {
-  return useApiCall(() => api.seller.getTeam(), []);
+  return useApiCall(() => api.seller.getTeam(), { deps: [] });
 }
 
 export function useSellerTeamById(id: string) {
-  return useApiCall(() => api.seller.getTeamById(id), [id]);
+  return useApiCall(() => api.seller.getTeamById(id), { deps: [id] });
 }
 
 export function useSellerTeamMembers(teamId?: string) {
-  return useApiCall(() => api.seller.getTeamMembers(teamId), [teamId]);
+  return useApiCall(() => api.seller.getTeamMembers(teamId), { deps: [teamId] });
 }
 
 export function useSellerJobs() {
-  return useApiCall(() => api.seller.getJobs(), []);
+  return useApiCall(() => api.seller.getJobs(), { deps: [] });
 }
 
 export function usePendingReviews() {
-  return useApiCall(() => api.seller.getPendingReviews(), []);
+  return useApiCall(() => api.seller.getPendingReviews(), { deps: [] });
 }
 
 export function useTeamJobs() {
-  return useApiCall(() => api.seller.getTeamJobs(), []);
+  return useApiCall(() => api.seller.getTeamJobs(), { deps: [] });
 }
 
 export function useTeamPayouts() {
-  return useApiCall(() => api.seller.getTeamPayouts(), []);
+  return useApiCall(() => api.seller.getTeamPayouts(), { deps: [] });
 }
 
 export function useWorkerBalances() {
-  return useApiCall(() => api.seller.getWorkerBalances(), []);
+  return useApiCall(() => api.seller.getWorkerBalances(), { deps: [] });
 }
 
 export function useSeller() {
-  return useApiCall(() => api.seller.getSeller(), []);
+  return useApiCall(() => api.seller.getSeller(), { deps: [] });
 }
 
 // ===== COMBINED HOOKS (Data with joins) =====
@@ -141,63 +193,63 @@ export function useTeamMembersWithWorkers(teamId?: string) {
 
 // ===== WORKER HOOKS =====
 export function useWorkerStats() {
-  return useApiCall(() => api.worker.getStats(), []);
+  return useApiCall(() => api.worker.getStats(), { deps: [] });
 }
 
 export function useWorkerActiveJobs() {
-  return useApiCall(() => api.worker.getActiveJobs(), []);
+  return useApiCall(() => api.worker.getActiveJobs(), { deps: [] });
 }
 
 export function useWorkerJobs() {
-  return useApiCall(() => api.worker.getJobs(), []);
+  return useApiCall(() => api.worker.getJobs(), { deps: [] });
 }
 
 export function useWorkerAccounts() {
-  return useApiCall(() => api.worker.getAccounts(), []);
+  return useApiCall(() => api.worker.getAccounts(), { deps: [] });
 }
 
 export function useWorkerTeams() {
-  return useApiCall(() => api.worker.getTeams(), []);
+  return useApiCall(() => api.worker.getTeams(), { deps: [] });
 }
 
 // ===== HUB HOOKS =====
 export function useHubPosts(type?: "all" | "recruit" | "find-team" | "outsource") {
-  return useApiCall(() => api.hub.getPosts(type), [type]);
+  return useApiCall(() => api.hub.getPosts(type), { deps: [type] });
 }
 
 export function useHubStats() {
-  return useApiCall(() => api.hub.getStats(), []);
+  return useApiCall(() => api.hub.getStats(), { deps: [] });
 }
 
 export function useFindTeamPosts() {
-  return useApiCall(() => api.hub.getFindTeamPosts(), []);
+  return useApiCall(() => api.hub.getFindTeamPosts(), { deps: [] });
 }
 
 export function useOutsourceJobs() {
-  return useApiCall(() => api.hub.getOutsourceJobs(), []);
+  return useApiCall(() => api.hub.getOutsourceJobs(), { deps: [] });
 }
 
 export function useRecruitPosts() {
-  return useApiCall(() => api.hub.getRecruitPosts(), []);
+  return useApiCall(() => api.hub.getRecruitPosts(), { deps: [] });
 }
 
 // ===== TEAM HOOKS =====
 export function useTeam(id: string) {
-  return useApiCall(() => api.team.getTeamById(id), [id]);
+  return useApiCall(() => api.team.getTeamById(id), { deps: [id] });
 }
 
 export function useAllTeams() {
-  return useApiCall(() => api.team.getAllTeams(), []);
+  return useApiCall(() => api.team.getAllTeams(), { deps: [] });
 }
 
 export function usePublicTeams() {
-  return useApiCall(() => api.team.getPublicTeams(), []);
+  return useApiCall(() => api.team.getPublicTeams(), { deps: [] });
 }
 
 export function useTeamMembers(teamId: string) {
-  return useApiCall(() => api.team.getMembers(teamId), [teamId]);
+  return useApiCall(() => api.team.getMembers(teamId), { deps: [teamId] });
 }
 
 export function useWorkers() {
-  return useApiCall(() => api.team.getWorkers(), []);
+  return useApiCall(() => api.team.getWorkers(), { deps: [] });
 }

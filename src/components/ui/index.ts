@@ -1,3 +1,4 @@
+// Base Components
 export { Button } from "./button";
 export { Input } from "./input";
 export { Textarea } from "./textarea";
@@ -22,3 +23,12 @@ export {
   WorkerJobsSkeleton,
   WorkerEarningsSkeleton,
 } from "./skeleton";
+
+// Interactive Components (New)
+export { Tooltip } from "./Tooltip";
+export { Dropdown } from "./Dropdown";
+export { Tabs } from "./Tabs";
+export { Switch } from "./Switch";
+export { Checkbox } from "./Checkbox";
+export { RadioGroup } from "./Radio";
+export { Dialog } from "./Dialog";

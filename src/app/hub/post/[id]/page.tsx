@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Card, Badge, Button, Avatar, Skeleton } from "@/components/ui";
-import { PageHeader, PlatformIcon } from "@/components/shared";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { PageHeader, PlatformIcon, StatCard } from "@/components/shared";
 import { useHubPosts } from "@/lib/api/hooks";
 import { getLevelColor } from "@/lib/mock-data/helpers";
 import type { Platform } from "@/types";
@@ -105,21 +106,22 @@ export default function HubPostDetailPage() {
   const TypeIcon = config?.icon || Users;
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => router.back()}
-          className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <Badge variant={config?.color || "default"} className="shadow-sm">
-              <TypeIcon className="w-3.5 h-3.5 mr-1" />
-              {config?.label}
-            </Badge>
+    <Container size="lg">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack gap={4} align="center">
+          <button
+            onClick={() => router.back()}
+            className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <VStack gap={3} className="flex-1">
+            <HStack gap={3} align="center">
+              <Badge variant={config?.color || "default"} className="shadow-sm">
+                <TypeIcon className="w-3.5 h-3.5 mr-1" />
+                {config?.label}
+              </Badge>
             {post.isHot && (
               <Badge variant="error" size="sm" className="animate-pulse">
                 <Flame className="w-3 h-3 mr-1" /> Hot
@@ -130,10 +132,10 @@ export default function HubPostDetailPage() {
                 <Zap className="w-3 h-3 mr-1" /> ด่วน
               </Badge>
             )}
-          </div>
-          <h1 className="text-2xl font-bold text-brand-text-dark mt-2">{post.title}</h1>
-        </div>
-      </div>
+            </HStack>
+            <h1 className="text-2xl font-bold text-brand-text-dark mt-2">{post.title}</h1>
+          </VStack>
+        </HStack>
 
       {/* Main Content */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -451,7 +453,8 @@ export default function HubPostDetailPage() {
             )}
           </Card>
         </div>
-      </div>
-    </div>
+        </div>
+      </Section>
+    </Container>
   );
 }

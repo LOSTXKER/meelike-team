@@ -1,10 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
-import { StatsCard, Card, Badge, Button, Progress, Skeleton, SkeletonCard, Modal, Input } from "@/components/ui";
-import { ServiceTypeBadge, EmptyState, PlanBadge } from "@/components/shared";
+import type { ServiceMode } from "@/types";
+import { 
+  Card, 
+  Badge, 
+  Button, 
+  Progress, 
+  Skeleton, 
+  SkeletonCard, 
+  Dialog 
+} from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { 
+  ServiceTypeBadge, 
+  EmptyState, 
+  PlanBadge,
+  StatCard,
+  QuickActionCard
+} from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { useSellerStats, useSellerOrders, useSellerTeams } from "@/lib/api/hooks";
 import {
@@ -24,10 +41,13 @@ import {
   Percent,
   ChevronRight,
   TrendingUp,
+  LayoutGrid,
+  CheckCircle,
 } from "lucide-react";
 import { getRankConfig } from "@/lib/constants/plans";
 
 export default function SellerDashboard() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const seller = user?.seller;
 
@@ -60,134 +80,80 @@ export default function SellerDashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header & Stats */}
-      <section className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 flex-wrap">
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
+          <VStack gap={1}>
+            <HStack gap={3} wrap className="items-center">
               <h1 className="text-2xl font-bold text-brand-text-dark">
                 สวัสดี, {seller?.displayName} 👋
               </h1>
-              {/* Current Plan Badge */}
               <PlanBadge 
                 plan={seller?.plan || 'free'} 
                 expiresAt={seller?.planExpiresAt}
               />
-            </div>
-            <p className="text-brand-text-light text-sm mt-1">
+            </HStack>
+            <p className="text-brand-text-light text-sm">
               ภาพรวมร้านค้าของคุณวันนี้
             </p>
-          </div>
+          </VStack>
           <Link href="/seller/orders/new">
             <Button className="rounded-full px-6 shadow-lg shadow-brand-primary/20">
               + สร้างออเดอร์
             </Button>
           </Link>
-        </div>
+        </HStack>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statsLoading ? (
-            <>
-              <SkeletonCard className="h-[110px]" />
-              <SkeletonCard className="h-[110px]" />
-              <SkeletonCard className="h-[110px]" />
-              <SkeletonCard className="h-[110px]" />
-            </>
-          ) : (
-            <>
-              {/* รายได้เดือนนี้ */}
-              <Link href="/seller/finance">
-                <div className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg hover:border-brand-primary/30 border border-transparent transition-all cursor-pointer group h-full relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-brand-text-light">รายได้เดือนนี้</span>
-                    <div className="p-1.5 rounded-full bg-brand-primary/10 text-brand-primary">
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-brand-text-dark">{formatCurrency(stats?.monthRevenue || 0)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="w-3 h-3 text-brand-success" />
-                    <span className="text-xs text-brand-success font-medium">+12.5%</span>
-                    <span className="text-xs text-brand-text-light">จากเดือนก่อน</span>
-                  </div>
-                  {/* Hover indicator */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight className="w-5 h-5 text-brand-primary" />
-                  </div>
-                </div>
-              </Link>
-
-              {/* ออเดอร์รอดำเนินการ */}
-              <Link href="/seller/orders?status=pending">
-                <div className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg hover:border-brand-primary/30 border border-transparent transition-all cursor-pointer group h-full relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-brand-text-light">ออเดอร์รอดำเนินการ</span>
-                    <div className="p-1.5 rounded-full bg-brand-warning/10 text-brand-warning">
-                      <ShoppingBag className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-brand-text-dark">
-                    {orders?.filter(o => o.status === 'pending' || o.status === 'processing').length || 0}
-                  </p>
-                  <p className="text-xs text-brand-text-light mt-1">รายการ</p>
-                  {/* Hover indicator */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight className="w-5 h-5 text-brand-primary" />
-                  </div>
-                </div>
-              </Link>
-
-              {/* Wallet */}
-              <Link href="/seller/finance">
-                <div className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg hover:border-brand-primary/30 border border-transparent transition-all cursor-pointer group h-full relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-brand-text-light">Wallet</span>
-                    <div className="p-1.5 rounded-full bg-brand-info/10 text-brand-info">
-                      <Wallet className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-brand-text-dark">{formatCurrency(seller?.balance || 0)}</p>
-                  <p className="text-xs text-brand-primary mt-1 group-hover:underline">เติมเงิน →</p>
-                  {/* Hover indicator */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight className="w-5 h-5 text-brand-primary" />
-                  </div>
-                </div>
-              </Link>
-
-              {/* Seller Rank */}
-              <Link href="/seller/settings/subscription">
-                <div className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg hover:border-brand-primary/30 border border-transparent transition-all cursor-pointer group h-full relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-brand-text-light">Seller Rank</span>
-                    <div className="p-1.5 rounded-full bg-brand-primary/10 text-brand-primary">
-                      <Percent className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{getRankConfig(seller?.sellerRank || 'bronze').icon}</span>
-                    <span className="text-lg font-bold text-brand-text-dark">
-                      {getRankConfig(seller?.sellerRank || 'bronze').name}
-                    </span>
-                    <span 
-                      className="text-xs font-bold px-2 py-0.5 rounded-full text-white ml-auto"
-                      style={{ backgroundColor: getRankConfig(seller?.sellerRank || 'bronze').color }}
-                    >
-                      {seller?.platformFeePercent || 12}%
-                    </span>
-                  </div>
-                  <p className="text-xs text-brand-primary mt-1 group-hover:underline">ดูสิทธิพิเศษ →</p>
-                  {/* Hover indicator */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight className="w-5 h-5 text-brand-primary" />
-                  </div>
-                </div>
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
+        {/* Stats Grid */}
+        {statsLoading ? (
+          <Grid cols={2} responsive={{ lg: 4 }} gap={4}>
+            <SkeletonCard className="h-[110px]" />
+            <SkeletonCard className="h-[110px]" />
+            <SkeletonCard className="h-[110px]" />
+            <SkeletonCard className="h-[110px]" />
+          </Grid>
+        ) : (
+          <Grid cols={2} responsive={{ lg: 4 }} gap={4}>
+            <StatCard
+              label="รายได้เดือนนี้"
+              value={formatCurrency(stats?.monthRevenue || 0)}
+              icon={DollarSign}
+              iconColor="text-brand-success"
+              iconBgColor="bg-brand-success/10"
+              trend={{ value: 12.5, isPositive: true }}
+              onClick={() => router.push('/seller/finance')}
+            />
+            
+            <StatCard
+              label="ออเดอร์รอดำเนินการ"
+              value={orders?.filter((o: { status: string }) => o.status === 'pending' || o.status === 'processing').length || 0}
+              icon={ShoppingBag}
+              iconColor="text-brand-warning"
+              iconBgColor="bg-brand-warning/10"
+              onClick={() => router.push('/seller/orders?status=pending')}
+            />
+            
+            <StatCard
+              label="Wallet"
+              value={formatCurrency(seller?.balance || 0)}
+              icon={Wallet}
+              iconColor="text-brand-info"
+              iconBgColor="bg-brand-info/10"
+              onClick={() => router.push('/seller/finance')}
+            />
+            
+            <StatCard
+              label="Seller Rank"
+              value={getRankConfig(seller?.sellerRank || 'bronze').name}
+              icon={Percent}
+              iconColor="text-brand-primary"
+              iconBgColor="bg-brand-primary/10"
+              onClick={() => router.push('/seller/settings/subscription')}
+            />
+          </Grid>
+        )}
+      </Section>
 
       {/* Teams Section - Featured */}
       <section className="relative -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-6 bg-gradient-to-br from-brand-primary/5 via-brand-secondary/30 to-brand-primary/10 rounded-3xl">
@@ -384,7 +350,7 @@ export default function SellerDashboard() {
               <SkeletonCard className="h-[140px]" />
             </>
           ) : orders && orders.length > 0 ? (
-            orders.slice(0, 3).map((order) => (
+            orders.slice(0, 3).map((order: { id: string; orderNumber: string; customer: { name: string }; status: string; progress: number; createdAt: string; items: { id: string; platform: string; serviceName: string; quantity: number; serviceType: ServiceMode; completedQuantity: number }[]; total: number }) => (
               <Link key={order.id} href={`/seller/orders/${order.id}`}>
                 <Card 
                   variant="elevated" 
@@ -467,57 +433,59 @@ export default function SellerDashboard() {
         </div>
       </section>
 
-      {/* Create Team Modal */}
-      <Modal
-        isOpen={isCreateTeamModalOpen}
+      {/* Create Team Dialog */}
+      <Dialog
+        open={isCreateTeamModalOpen}
         onClose={() => setIsCreateTeamModalOpen(false)}
-        title="สร้างทีมใหม่"
         size="sm"
       >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
-              ชื่อทีม <span className="text-brand-error">*</span>
-            </label>
-            <Input
-              placeholder="เช่น TikTok Team"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-            />
-          </div>
+        <Dialog.Header>
+          <Dialog.Title>สร้างทีมใหม่</Dialog.Title>
+          <Dialog.Description>สร้างทีมเพื่อบริหารจัดการ Worker</Dialog.Description>
+        </Dialog.Header>
+        
+        <Dialog.Body>
+          <VStack gap={4}>
+            <div>
+              <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
+                ชื่อทีม <span className="text-brand-error">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="เช่น TikTok Team"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                className="w-full p-3 rounded-xl border border-brand-border/50 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none text-sm"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
-              คำอธิบาย
-            </label>
-            <textarea
-              className="w-full p-3 rounded-xl border border-brand-border/50 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none resize-none text-sm"
-              rows={2}
-              placeholder="ทีมเฉพาะทาง TikTok"
-              value={newTeamDescription}
-              onChange={(e) => setNewTeamDescription(e.target.value)}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateTeamModalOpen(false)}
-              className="flex-1"
-              size="sm"
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              onClick={handleCreateTeam}
-              className="flex-1"
-              size="sm"
-            >
-              สร้างทีม
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
+                คำอธิบาย
+              </label>
+              <textarea
+                className="w-full p-3 rounded-xl border border-brand-border/50 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none resize-none text-sm"
+                rows={2}
+                placeholder="ทีมเฉพาะทาง TikTok"
+                value={newTeamDescription}
+                onChange={(e) => setNewTeamDescription(e.target.value)}
+              />
+            </div>
+          </VStack>
+        </Dialog.Body>
+        
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => setIsCreateTeamModalOpen(false)}
+          >
+            ยกเลิก
+          </Button>
+          <Button onClick={handleCreateTeam}>
+            สร้างทีม
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
+    </Container>
   );
 }

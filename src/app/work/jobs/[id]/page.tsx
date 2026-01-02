@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Progress, Modal, Textarea } from "@/components/ui";
+import { Card, Badge, Button, Progress, Dialog, Textarea, Modal } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import {
   ArrowLeft,
   ExternalLink,
@@ -68,26 +69,27 @@ export default function JobDetailPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/work/jobs">
-            <button className="p-3 hover:bg-white bg-white/60 backdrop-blur-sm border border-brand-border/50 rounded-xl transition-all shadow-sm group">
-              <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
-            </button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight">
-                {job.serviceName}
-              </h1>
-              <Badge variant="warning" className="text-sm px-2.5 py-0.5 shadow-sm animate-pulse">
-                <Clock className="w-3 h-3 mr-1" />
-                กำลังทำ
-              </Badge>
-            </div>
-            <div className="flex items-center gap-3 mt-2">
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col md:flex-row gap-4">
+          <HStack gap={4} align="center">
+            <Link href="/work/jobs">
+              <button className="p-3 hover:bg-white bg-white/60 backdrop-blur-sm border border-brand-border/50 rounded-xl transition-all shadow-sm group">
+                <ArrowLeft className="w-5 h-5 text-brand-text-dark group-hover:text-brand-primary" />
+              </button>
+            </Link>
+            <VStack gap={2}>
+              <HStack gap={3} align="center">
+                <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight">
+                  {job.serviceName}
+                </h1>
+                <Badge variant="warning" className="text-sm px-2.5 py-0.5 shadow-sm animate-pulse">
+                  <Clock className="w-3 h-3 mr-1" />
+                  กำลังทำ
+                </Badge>
+              </HStack>
+              <div className="flex items-center gap-3 mt-2">
               <Badge variant="default" className="bg-brand-bg text-brand-text-dark border-brand-border/50 font-medium px-3 py-1">
                 <Users className="w-3.5 h-3.5 mr-1.5 text-brand-text-light" />
                 {job.teamName}
@@ -97,16 +99,16 @@ export default function JobDetailPage() {
                 จ่ายไว
               </Badge>
             </div>
-          </div>
-        </div>
+            </VStack>
+          </HStack>
 
-        <Button onClick={() => setShowSubmitModal(true)} size="lg" className="shadow-lg shadow-brand-primary/20 px-8">
-          <Upload className="w-5 h-5 mr-2" />
-          ส่งงานทันที
-        </Button>
-      </div>
+          <Button onClick={() => setShowSubmitModal(true)} size="lg" className="shadow-lg shadow-brand-primary/20 px-8">
+            <Upload className="w-5 h-5 mr-2" />
+            ส่งงานทันที
+          </Button>
+        </HStack>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Progress Card */}
@@ -437,7 +439,8 @@ export default function JobDetailPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }
 

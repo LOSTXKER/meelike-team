@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Card, Button, Badge, Progress, Skeleton, SkeletonCard } from "@/components/ui";
-import { StatsGrid, EmptyState, DailyStreak, LevelBenefitsTable } from "@/components/shared";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { StatsGrid, EmptyState, DailyStreak, LevelBenefitsTable, StatCard } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats, useWorkerActiveJobs } from "@/lib/api/hooks";
@@ -86,26 +87,27 @@ export default function WorkerDashboard() {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 lg:pb-0 max-w-7xl mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark">
-            สวัสดี, {worker?.displayName || "นุ่น"} 👋
-          </h1>
-          <p className="text-brand-text-light">
-            วันนี้คุณพร้อมสร้างรายได้หรือยัง?
-          </p>
-        </div>
-        <Link href="/hub">
-          <Button className="shadow-lg shadow-brand-primary/20 rounded-full px-6">
-            <Sparkles className="w-4 h-4 mr-2" />
-            หางานใหม่
-          </Button>
-        </Link>
-      </div>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in pb-20 lg:pb-0">
+        {/* Header Section */}
+        <HStack justify="between" align="center" className="flex-col md:flex-row gap-4">
+          <VStack gap={1}>
+            <h1 className="text-2xl font-bold text-brand-text-dark">
+              สวัสดี, {worker?.displayName || "นุ่น"} 👋
+            </h1>
+            <p className="text-brand-text-light">
+              วันนี้คุณพร้อมสร้างรายได้หรือยัง?
+            </p>
+          </VStack>
+          <Link href="/hub">
+            <Button className="shadow-lg shadow-brand-primary/20 rounded-full px-6">
+              <Sparkles className="w-4 h-4 mr-2" />
+              หางานใหม่
+            </Button>
+          </Link>
+        </HStack>
 
-      <div className="grid lg:grid-cols-12 gap-8">
+        <div className="grid lg:grid-cols-12 gap-8">
         {/* Left Column: Profile & Achievements (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
           {/* Profile Card */}
@@ -379,7 +381,8 @@ export default function WorkerDashboard() {
           {/* Level Benefits Table */}
           <LevelBenefitsTable currentLevel={worker?.level || "gold"} />
         </div>
-      </div>
-    </div>
+        </div>
+      </Section>
+    </Container>
   );
 }

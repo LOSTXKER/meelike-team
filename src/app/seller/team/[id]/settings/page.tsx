@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Button, Input, Textarea, Select, Modal, Skeleton } from "@/components/ui";
+import { Card, Button, Input, Textarea, Select, Dialog, Skeleton, Switch, Modal } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { useSellerTeams } from "@/lib/api/hooks";
 import {
@@ -71,25 +72,26 @@ export default function TeamSettingsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <PageHeader
-          title="ตั้งค่าทีม"
-          description={`จัดการการตั้งค่าของทีม ${currentTeam?.name || ""}`}
-          icon={Settings}
-        />
-        
-        <Button
+    <Container size="lg">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
+          <PageHeader
+            title="ตั้งค่าทีม"
+            description={`จัดการการตั้งค่าของทีม ${currentTeam?.name || ""}`}
+            icon={Settings}
+          />
+
+          <Button
           onClick={handleSave}
           leftIcon={<Save className="w-4 h-4" />}
           className="shadow-lg shadow-brand-primary/20"
         >
           บันทึกการตั้งค่า
         </Button>
-      </div>
+        </HStack>
 
-      {/* Basic Info */}
+        {/* Basic Info */}
       <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5">
         <div className="p-6 border-b border-brand-border/30 bg-brand-bg/30">
           <h3 className="font-bold text-lg text-brand-text-dark flex items-center gap-2">
@@ -413,6 +415,7 @@ export default function TeamSettingsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }

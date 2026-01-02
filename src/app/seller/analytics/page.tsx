@@ -24,7 +24,8 @@ import {
   Activity,
   Eye,
 } from "lucide-react";
-import { Card, Badge, Button, Skeleton } from "@/components/ui";
+import { Card, Badge, Button, Skeleton, Tabs } from "@/components/ui";
+import { Container, Grid, Section } from "@/components/layout";
 import { PageHeader, StatsGrid } from "@/components/shared";
 import { useSellerStats } from "@/lib/api/hooks";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -137,36 +138,32 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader
-          title="Analytics"
-          description="วิเคราะห์ข้อมูลและประสิทธิภาพธุรกิจของคุณ"
-          icon={BarChart3}
-        />
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in pb-12">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <PageHeader
+            title="Analytics"
+            description="วิเคราะห์ข้อมูลและประสิทธิภาพธุรกิจของคุณ"
+            icon={BarChart3}
+          />
 
-        {/* Period Selector */}
-        <div className="flex items-center gap-2 bg-brand-bg rounded-xl p-1">
-          {(["today", "week", "month", "year"] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                period === p
-                  ? "bg-white text-brand-primary shadow-sm"
-                  : "text-brand-text-light hover:text-brand-text-dark"
-              )}
-            >
-              {periodLabels[p]}
-            </button>
-          ))}
+          {/* Period Selector */}
+          <Tabs
+            tabs={[
+              { id: "today", label: "วันนี้" },
+              { id: "week", label: "สัปดาห์นี้" },
+              { id: "month", label: "เดือนนี้" },
+              { id: "year", label: "ปีนี้" },
+            ]}
+            activeTab={period}
+            onChange={(id) => setPeriod(id as Period)}
+            variant="pills"
+          />
         </div>
-      </div>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Overview Stats */}
+        <Grid cols={2} responsive={{ md: 3, lg: 4 }} gap={4}>
         <StatCard
           label="รายได้รวม"
           value={formatCurrency(mockAnalytics.overview.totalRevenue)}
@@ -202,10 +199,10 @@ export default function AnalyticsPage() {
           icon={Target}
           color="orange"
         />
-      </div>
+        </Grid>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Charts Row */}
+        <Grid cols={1} responsive={{ lg: 2 }} gap={6}>
         {/* Revenue Chart */}
         <Card variant="elevated" className="p-6 border-none shadow-lg">
           <div className="flex items-center justify-between mb-6">
@@ -286,10 +283,10 @@ export default function AnalyticsPage() {
             })}
           </div>
         </Card>
-      </div>
+        </Grid>
 
-      {/* Second Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Second Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Status */}
         <Card variant="elevated" className="p-6 border-none shadow-lg">
           <h3 className="font-bold text-brand-text-dark flex items-center gap-2 mb-6">
@@ -392,10 +389,10 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </Card>
-      </div>
+        </div>
 
-      {/* Third Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Third Row */}
+        <Grid cols={1} responsive={{ lg: 3 }} gap={6}>
         {/* Customer Insights */}
         <Card variant="elevated" className="p-6 border-none shadow-lg">
           <h3 className="font-bold text-brand-text-dark flex items-center gap-2 mb-6">
@@ -514,9 +511,9 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </Card>
-      </div>
+        </Grid>
 
-      {/* Monthly Revenue Chart */}
+        {/* Monthly Revenue Chart */}
       <Card variant="elevated" className="p-6 border-none shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -567,10 +564,10 @@ export default function AnalyticsPage() {
             );
           })}
         </div>
-      </Card>
+        </Card>
 
-      {/* Quick Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Quick Insights */}
+        <Grid cols={1} responsive={{ md: 2, lg: 4 }} gap={4}>
         <InsightCard
           icon={Eye}
           title="การเข้าชมหน้าร้าน"
@@ -599,8 +596,9 @@ export default function AnalyticsPage() {
           change={0.1}
           description="จาก 5 คะแนน"
         />
-      </div>
-    </div>
+        </Grid>
+      </Section>
+    </Container>
   );
 }
 

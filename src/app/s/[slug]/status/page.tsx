@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Card, Badge, Button, Input, Progress, Skeleton } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { api } from "@/lib/api";
 import type { Order, StoreService } from "@/types";
 import {
@@ -156,7 +157,8 @@ export default function OrderStatusPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-4 space-y-6">
+      <Container size="md">
+        <Section spacing="md">
         {/* Search Box */}
         <Card variant="bordered" padding="lg">
           <div className="space-y-4">
@@ -461,7 +463,8 @@ export default function OrderStatusPage() {
             </div>
           </Card>
         )}
-      </main>
+        </Section>
+      </Container>
     </div>
   );
 }

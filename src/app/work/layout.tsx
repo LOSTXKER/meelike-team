@@ -5,6 +5,7 @@ import { useRequireAuth } from "@/lib/hooks";
 import { useAppStore } from "@/lib/store";
 import { DashboardLayout } from "@/components/layout";
 import { WorkerBottomNav } from "@/components/worker/bottom-nav";
+import { ErrorBoundary } from "@/components/shared";
 import { WORKER_NAV } from "@/lib/constants/navigation";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { Avatar } from "@/components/ui";
@@ -54,21 +55,23 @@ export default function WorkerLayout({
   );
 
   return (
-    <DashboardLayout
-      nav={WORKER_NAV}
-      logo={{
-        href: "/work",
-        title: "MeeLike Worker",
-        color: "bg-brand-info",
-      }}
-      userSection={userSection}
-      onLogout={handleLogout}
-      isLoading={!isReady}
-      showMobileLogo
-      bottomNav={<WorkerBottomNav />}
-      sidebarHiddenOnMobile
-    >
-      {children}
-    </DashboardLayout>
+    <ErrorBoundary>
+      <DashboardLayout
+        nav={WORKER_NAV}
+        logo={{
+          href: "/work",
+          title: "MeeLike Worker",
+          color: "bg-brand-info",
+        }}
+        userSection={userSection}
+        onLogout={handleLogout}
+        isLoading={!isReady}
+        showMobileLogo
+        bottomNav={<WorkerBottomNav />}
+        sidebarHiddenOnMobile
+      >
+        {children}
+      </DashboardLayout>
+    </ErrorBoundary>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Badge, Button, Input, Modal, Select } from "@/components/ui";
+import { Badge, Button, Input, Dialog, Select, Dropdown, Modal } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { 
   PageHeader, 
   EmptyState, 
@@ -28,6 +29,8 @@ import {
   Mail,
   Phone,
   Calendar,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 export default function TeamMembersPage() {
@@ -157,26 +160,27 @@ export default function TeamMembersPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <PageHeader
-          title="สมาชิกทีม"
-          description={`จัดการสมาชิกของทีม ${currentTeam?.name || ""}`}
-          icon={Users}
-        />
-        
-        <Button
-          onClick={() => setShowInviteModal(true)}
-          leftIcon={<UserPlus className="w-4 h-4" />}
-          className="shadow-lg shadow-brand-primary/20"
-        >
-          เชิญสมาชิก
-        </Button>
-      </div>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <PageHeader
+            title="สมาชิกทีม"
+            description={`จัดการสมาชิกของทีม ${currentTeam?.name || ""}`}
+            icon={Users}
+          />
 
-      {/* Stats */}
-      <StatsGrid stats={getMemberRoleStats(stats)} columns={4} />
+          <Button
+            onClick={() => setShowInviteModal(true)}
+            leftIcon={<UserPlus className="w-4 h-4" />}
+            className="shadow-lg shadow-brand-primary/20"
+          >
+            เชิญสมาชิก
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <StatsGrid stats={getMemberRoleStats(stats)} columns={4} />
 
       {/* Filter & Search */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
@@ -331,6 +335,7 @@ export default function TeamMembersPage() {
           </div>
         )}
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Card, Button, Skeleton } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
 import { FilterBar, StatsGrid } from "@/components/shared";
 import { HubPostCard } from "@/components/hub";
 import { useHubPosts, useHubStats } from "@/lib/api/hooks";
@@ -64,7 +65,8 @@ export default function HubPage() {
   }, [hubStats]);
 
   return (
-    <div className="space-y-10 animate-fade-in">
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] p-10 text-white shadow-xl shadow-brand-primary/20">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -141,15 +143,16 @@ export default function HubPage() {
         </div>
       )}
 
-      {/* Load More */}
-      {!postsLoading && filteredPosts.length > 0 && (
-        <div className="text-center">
-          <Button variant="outline" size="lg">
-            โหลดเพิ่มเติม
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
-      )}
-    </div>
+        {/* Load More */}
+        {!postsLoading && filteredPosts.length > 0 && (
+          <div className="text-center">
+            <Button variant="outline" size="lg">
+              โหลดเพิ่มเติม
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
+      </Section>
+    </Container>
   );
 }

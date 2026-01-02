@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Badge, Button, Input, Progress } from "@/components/ui";
+import { Container, Section, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, EmptyState, StatsGrid, FilterTabs, PageSkeleton, getJobStats, type JobFilterStatus } from "@/components/shared";
 import { useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
 import { TEAM_JOB_STATUSES, getJobStatusLabel, getJobStatusVariant, type TeamJobStatus } from "@/lib/constants/statuses";
@@ -62,26 +63,27 @@ export default function TeamJobsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <PageHeader
-          title="งานทั้งหมด"
-          description={`จัดการงานของทีม ${currentTeam?.name || ""}`}
-          icon={ClipboardList}
-        />
-        
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href={`/seller/team/${teamId}/review`}>
-            <Button 
-              variant="secondary" 
-              leftIcon={<CheckCircle2 className="w-4 h-4" />}
-              className="bg-[#FEF7E0] text-[#B06000] border-[#FEEFC3] hover:bg-[#FEEFC3]"
-            >
-              รอตรวจสอบ ({stats.pendingReview})
-            </Button>
-          </Link>
-          <Link href={`/seller/team/${teamId}/jobs/new`}>
+    <Container size="xl">
+      <div className="space-y-6 animate-fade-in">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <PageHeader
+            title="งานทั้งหมด"
+            description={`จัดการงานของทีม ${currentTeam?.name || ""}`}
+            icon={ClipboardList}
+          />
+
+          <HStack gap={3} className="flex-wrap">
+            <Link href={`/seller/team/${teamId}/review`}>
+              <Button
+                variant="secondary"
+                leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                className="bg-[#FEF7E0] text-[#B06000] border-[#FEEFC3] hover:bg-[#FEEFC3]"
+              >
+                รอตรวจสอบ ({stats.pendingReview})
+              </Button>
+            </Link>
+            <Link href={`/seller/team/${teamId}/jobs/new`}>
             <Button 
               leftIcon={<Plus className="w-4 h-4" />}
               className="shadow-lg shadow-brand-primary/20"
@@ -89,10 +91,10 @@ export default function TeamJobsPage() {
               สร้างงานใหม่
             </Button>
           </Link>
+          </HStack>
         </div>
-      </div>
 
-      {/* Stats Cards */}
+        {/* Stats Cards */}
       <StatsGrid stats={getJobStats(stats)} columns={5} />
 
       {/* Filter & Search */}
@@ -233,6 +235,7 @@ export default function TeamJobsPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </Container>
   );
 }

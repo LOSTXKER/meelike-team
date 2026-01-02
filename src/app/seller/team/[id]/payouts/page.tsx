@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Input, Modal, Skeleton } from "@/components/ui";
+import { Card, Badge, Button, Input, Dialog, Skeleton, Modal } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState, StatsGrid, FilterTabs, getPayoutStats, type PayoutFilterStatus } from "@/components/shared";
 import { useTeamPayouts, useWorkerBalances, useWorkers, useSellerTeams } from "@/lib/api/hooks";
 import type { TeamPayout } from "@/types";
@@ -96,21 +97,20 @@ export default function TeamPayoutsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
         <PageHeader
           title="จ่ายเงินลูกทีม"
           description={`จัดการการจ่ายเงินของทีม ${currentTeam?.name || ""}`}
           icon={DollarSign}
         />
-      </div>
 
-      {/* Summary Stats */}
-      <StatsGrid
-        stats={getPayoutStats({
-          pendingCount: pendingPayouts.length,
-          pendingAmount: totalPending,
+        {/* Summary Stats */}
+        <StatsGrid
+          stats={getPayoutStats({
+            pendingCount: pendingPayouts.length,
+            pendingAmount: totalPending,
           completedAmount: payouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0),
           totalWorkers: workers.length,
         })}
@@ -380,6 +380,7 @@ export default function TeamPayoutsPage() {
           </div>
         )}
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }

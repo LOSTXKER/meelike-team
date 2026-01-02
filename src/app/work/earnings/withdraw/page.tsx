@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Modal, Progress } from "@/components/ui";
+import { Card, Button, Badge, Input, Dialog, Progress, Modal } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats } from "@/lib/api/hooks";
@@ -57,7 +58,8 @@ export default function WithdrawPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl mx-auto pb-8">
+    <Container size="md">
+      <Section spacing="md" className="animate-fade-in pb-8">
       {/* Header */}
       <Card className="border-none shadow-lg bg-gradient-to-r from-brand-success/10 to-transparent p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-success/5 rounded-full blur-3xl -mr-24 -mt-24" />
@@ -425,6 +427,7 @@ export default function WithdrawPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }

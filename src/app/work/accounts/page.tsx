@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, Button, Input, Badge, Modal } from "@/components/ui";
+import { Card, Button, Input, Badge, Dialog, Modal } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
 import {
   Plus,
@@ -162,20 +163,22 @@ export default function WorkerAccountsPage() {
   const totalJobs = accounts.reduce((sum, a) => sum + a.jobsCompleted, 0);
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight flex items-center gap-3">
-            <span className="p-2.5 bg-brand-primary/10 rounded-xl">
-              <Smartphone className="w-7 h-7 text-brand-primary" />
-            </span>
-            บัญชี Social Media
-          </h1>
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
+          <VStack gap={2}>
+            <HStack gap={3} align="center" className="text-3xl font-bold text-brand-text-dark tracking-tight">
+              <span className="p-2.5 bg-brand-primary/10 rounded-xl">
+                <Smartphone className="w-7 h-7 text-brand-primary" />
+              </span>
+              บัญชี Social Media
+            </HStack>
           <p className="text-brand-text-light mt-2 text-lg">
             จัดการบัญชีที่ใช้จองงาน • {accounts.length} บัญชี ({verifiedCount} ยืนยันแล้ว)
           </p>
-        </div>
+          </VStack>
+        </HStack>
         <Button 
           onClick={() => setShowAddModal(true)} 
           size="lg"
@@ -184,9 +187,8 @@ export default function WorkerAccountsPage() {
         >
           เพิ่มบัญชี
         </Button>
-      </div>
 
-      {/* Platform Stats */}
+        {/* Platform Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {(Object.keys(platformConfig) as Platform[]).map((platform) => {
           const count = accounts.filter((a) => a.platform === platform).length;
@@ -426,7 +428,8 @@ export default function WorkerAccountsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }
 

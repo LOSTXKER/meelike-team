@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Input, Select, Badge } from "@/components/ui";
+import { Card, Button, Input, Select, Badge, Tabs, RadioGroup } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { PlatformIcon, ServiceTypeIcon } from "@/components/seller";
 import { 
@@ -328,16 +329,17 @@ export default function NewServicePage() {
   // ============================================
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="เพิ่มบริการใหม่"
-        description="เลือกประเภทบริการที่คุณต้องการเพิ่ม"
-        icon={Package}
-        action={
-          selectedMode && (
-            <Button 
-              variant="outline" 
-              onClick={() => {
+    <Container size="xl">
+      <Section spacing="md">
+        <PageHeader
+          title="เพิ่มบริการใหม่"
+          description="เลือกประเภทบริการที่คุณต้องการเพิ่ม"
+          icon={Package}
+          action={
+            selectedMode && (
+              <Button
+                variant="outline"
+                onClick={() => {
                 setSelectedMode(null);
                 // Reset states when changing mode
                 setManualRows([createEmptyManualRow()]);
@@ -472,7 +474,8 @@ export default function NewServicePage() {
           canSubmit={canSubmit}
         />
       )}
-    </div>
+      </Section>
+    </Container>
   );
 }
 

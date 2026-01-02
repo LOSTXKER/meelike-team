@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Badge, Button, Avatar, Progress, Skeleton } from "@/components/ui";
-import { PageHeader, PlatformIcon } from "@/components/shared";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { PageHeader, PlatformIcon, StatCard } from "@/components/shared";
 import { useWorkerTeams } from "@/lib/api/hooks";
 import type { Platform } from "@/types";
 import {
@@ -106,22 +107,23 @@ export default function WorkerTeamDetailPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/work/teams">
-          <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </Link>
-        <PageHeader
-          title={team.name}
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack gap={4} align="center">
+          <Link href="/work/teams">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <PageHeader
+            title={team.name}
           description="โปรไฟล์ทีมและงานที่เปิดอยู่"
           icon={Users}
         />
-      </div>
+        </HStack>
 
-      {/* Team Info Card */}
+        {/* Team Info Card */}
       <Card variant="elevated" padding="lg" className="border-none shadow-xl shadow-brand-primary/10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -411,7 +413,8 @@ export default function WorkerTeamDetailPage() {
             ))}
           </div>
         </Card>
-      </div>
-    </div>
+        </div>
+      </Section>
+    </Container>
   );
 }

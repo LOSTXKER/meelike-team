@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Modal, Textarea, Skeleton } from "@/components/ui";
+import { Card, Badge, Button, Dialog, Textarea, Skeleton, Modal } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
 import { usePendingReviews, useWorkers, useSellerJobs, useSellerTeams } from "@/lib/api/hooks";
 import type { Platform } from "@/types";
@@ -118,21 +119,22 @@ export default function TeamReviewPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <PageHeader
-          title="รอตรวจสอบ"
-          description={`ตรวจสอบงานของทีม ${currentTeam?.name || ""}`}
-          icon={CheckCircle2}
-        />
-        
-        {pendingReviewJobs.length > 0 && (
-          <div className="flex items-center gap-4 bg-white p-2 pl-4 rounded-xl shadow-sm border border-brand-border/50">
-             <div className="text-right">
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col lg:flex-row gap-4">
+          <PageHeader
+            title="รอตรวจสอบ"
+            description={`ตรวจสอบงานของทีม ${currentTeam?.name || ""}`}
+            icon={CheckCircle2}
+          />
+
+          {pendingReviewJobs.length > 0 && (
+            <HStack gap={4} align="center" className="bg-white p-2 pl-4 rounded-xl shadow-sm border border-brand-border/50">
+              <div className="text-right">
                 <p className="text-xs text-brand-text-light font-medium">ยอดจ่ายรวม</p>
                 <p className="text-lg font-bold text-brand-success">฿{totalPayout.toLocaleString()}</p>
-             </div>
+              </div>
              <Button
                 size="sm"
                 onClick={() => {
@@ -146,9 +148,9 @@ export default function TeamReviewPage() {
                 <ThumbsUp className="w-4 h-4 mr-2" />
                 อนุมัติทั้งหมด ({pendingReviewJobs.length})
               </Button>
-          </div>
-        )}
-      </div>
+            </HStack>
+          )}
+        </HStack>
 
       {/* Quick Stats */}
       {pendingReviewJobs.length > 0 && (
@@ -442,6 +444,7 @@ export default function TeamReviewPage() {
           </div>
         )}
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }

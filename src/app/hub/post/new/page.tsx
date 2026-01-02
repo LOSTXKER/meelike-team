@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Card, Badge, Button, Input, Textarea, Select } from "@/components/ui";
+import { Card, Badge, Button, Input, Textarea, Select, Checkbox } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
@@ -186,16 +187,17 @@ function NewPostForm() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/hub">
-          <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
-          </button>
-        </Link>
-        <PageHeader title="สร้างโพสต์ใหม่" description="โพสต์ในตลาดกลาง MeeLike" icon={Sparkles} />
-      </div>
+    <Container size="md">
+      <Section spacing="md">
+        {/* Header */}
+        <HStack gap={4} align="center">
+          <Link href="/hub">
+            <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
+              <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
+            </button>
+          </Link>
+          <PageHeader title="สร้างโพสต์ใหม่" description="โพสต์ในตลาดกลาง MeeLike" icon={Sparkles} />
+        </HStack>
 
       {/* Post Type Selection */}
       {!postType ? (
@@ -538,7 +540,8 @@ function NewPostForm() {
           </Card>
         </>
       )}
-    </div>
+      </Section>
+    </Container>
   );
 }
 

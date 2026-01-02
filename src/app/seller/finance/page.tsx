@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Badge, Button, Input, Modal } from "@/components/ui";
+import { Card, Badge, Button, Input, Dialog, Tabs, Modal } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency } from "@/lib/utils";
@@ -157,22 +158,23 @@ export default function FinancePage() {
   const finalAmount = customAmount ? parseInt(customAmount) : topupAmount;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader
-          title="การเงิน"
-          description="จัดการยอดเงิน เติมเงิน และดูประวัติธุรกรรม"
-          icon={Wallet}
-        />
-        <Button
-          variant="outline"
-          className="bg-white"
-          leftIcon={<Download className="w-4 h-4" />}
-        >
-          ส่งออก CSV
-        </Button>
-      </div>
+    <Container size="xl">
+      <Section spacing="md" className="animate-fade-in pb-12">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
+          <PageHeader
+            title="การเงิน"
+            description="จัดการยอดเงิน เติมเงิน และดูประวัติธุรกรรม"
+            icon={Wallet}
+          />
+          <Button
+            variant="outline"
+            className="bg-white"
+            leftIcon={<Download className="w-4 h-4" />}
+          >
+            ส่งออก CSV
+          </Button>
+        </HStack>
 
       {/* Balance Card */}
       <Card className="p-6 bg-gradient-to-br from-brand-primary to-brand-primary/80 text-white border-none shadow-xl">
@@ -209,27 +211,17 @@ export default function FinancePage() {
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
               {/* Filter Tabs */}
-              <div className="flex gap-1 p-1 bg-white rounded-lg border border-brand-border/50">
-                {[
-                  { key: "all", label: "ทั้งหมด" },
-                  { key: "income", label: "รายรับ" },
-                  { key: "expense", label: "รายจ่าย" },
-                  { key: "topup", label: "เติมเงิน" },
-                ].map((f) => (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f.key as FilterType)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                      filter === f.key
-                        ? "bg-brand-primary text-white"
-                        : "text-brand-text-light hover:text-brand-text-dark"
-                    )}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                tabs={[
+                  { id: "all", label: "ทั้งหมด" },
+                  { id: "income", label: "รายรับ" },
+                  { id: "expense", label: "รายจ่าย" },
+                  { id: "topup", label: "เติมเงิน" },
+                ]}
+                activeTab={filter}
+                onChange={(id) => setFilter(id as FilterType)}
+                variant="pills"
+              />
 
               {/* Search */}
               <div className="relative flex-1 sm:w-48">
@@ -540,6 +532,7 @@ export default function FinancePage() {
           </div>
         )}
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }

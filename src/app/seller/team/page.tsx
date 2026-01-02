@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Modal, Progress } from "@/components/ui";
-import { PageHeader, StatsGrid, EmptyState } from "@/components/shared";
+import { Card, Button, Badge, Input, Dialog, Progress, Dropdown } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { PageHeader, StatsGrid, EmptyState, InfoCard } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { useSellerTeams } from "@/lib/api/hooks";
 import {
@@ -29,12 +31,14 @@ import {
   Trophy,
   Target,
   Zap,
+  ChevronRight,
 } from "lucide-react";
 
 type SortOption = "name" | "members" | "rating" | "jobs" | "earnings";
 type FilterOption = "all" | "active" | "inactive";
 
 export default function TeamCenterPage() {
+  const router = useRouter();
   const { data: teams, isLoading } = useSellerTeams();
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,29 +154,30 @@ export default function TeamCenterPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
-            Team Center
-          </h1>
-          <p className="text-brand-text-light mt-1">จัดการและติดตามผลงานทุกทีมในที่เดียว</p>
-        </div>
-        <Button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="rounded-full shadow-lg shadow-brand-primary/20"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          สร้างทีมใหม่
-        </Button>
-      </div>
+    <Container size="xl">
+      <div className="space-y-6 animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
+          <VStack gap={1}>
+            <HStack gap={3} align="center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-primary/70 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-brand-text-dark">Team Center</h1>
+            </HStack>
+            <p className="text-brand-text-light">จัดการและติดตามผลงานทุกทีมในที่เดียว</p>
+          </VStack>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="rounded-full shadow-lg shadow-brand-primary/20"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            สร้างทีมใหม่
+          </Button>
+        </HStack>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        {/* Overview Stats */}
+        <Grid cols={2} responsive={{ md: 3, lg: 6 }} gap={4}>
         <Card className="p-4 border-none shadow-md bg-gradient-to-br from-brand-primary/5 to-brand-primary/10">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-brand-primary/10">
@@ -244,9 +249,9 @@ export default function TeamCenterPage() {
             </div>
           </div>
         </Card>
-      </div>
+        </Grid>
 
-      {/* Best Performer Highlight */}
+        {/* Best Performer Highlight */}
       {bestTeam && (
         <Card className="p-4 border-none shadow-md bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 overflow-hidden relative">
           <div className="absolute -right-4 -top-4 opacity-10">
@@ -449,57 +454,57 @@ export default function TeamCenterPage() {
         />
       )}
 
-      {/* Create Team Modal */}
-      <Modal
-        isOpen={isCreateModalOpen}
+      <Dialog
+        open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="สร้างทีมใหม่"
         size="sm"
       >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
-              ชื่อทีม <span className="text-brand-error">*</span>
-            </label>
-            <Input
-              placeholder="เช่น TikTok Team"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-            />
-          </div>
+        <Dialog.Header>
+          <Dialog.Title>สร้างทีมใหม่</Dialog.Title>
+          <Dialog.Description>สร้างทีมเพื่อบริหารจัดการ Worker และงาน</Dialog.Description>
+        </Dialog.Header>
+        
+        <Dialog.Body>
+          <VStack gap={4}>
+            <div>
+              <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
+                ชื่อทีม <span className="text-brand-error">*</span>
+              </label>
+              <Input
+                placeholder="เช่น TikTok Team"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
-              คำอธิบาย
-            </label>
-            <textarea
-              className="w-full p-3 rounded-xl border border-brand-border/50 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none resize-none text-sm"
-              rows={2}
-              placeholder="ทีมเฉพาะทาง TikTok"
-              value={newTeamDescription}
-              onChange={(e) => setNewTeamDescription(e.target.value)}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(false)}
-              className="flex-1"
-              size="sm"
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              onClick={handleCreateTeam}
-              className="flex-1"
-              size="sm"
-            >
-              สร้างทีม
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-text-dark mb-1.5">
+                คำอธิบาย
+              </label>
+              <textarea
+                className="w-full p-3 rounded-xl border border-brand-border/50 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none resize-none text-sm"
+                rows={2}
+                placeholder="ทีมเฉพาะทาง TikTok"
+                value={newTeamDescription}
+                onChange={(e) => setNewTeamDescription(e.target.value)}
+              />
+            </div>
+          </VStack>
+        </Dialog.Body>
+        
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => setIsCreateModalOpen(false)}
+          >
+            ยกเลิก
+          </Button>
+          <Button onClick={handleCreateTeam}>
+            สร้างทีม
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
+      </div>
+    </Container>
   );
 }

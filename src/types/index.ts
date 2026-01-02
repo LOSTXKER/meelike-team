@@ -1,34 +1,8 @@
-// ===== STORE (NEW) =====
-export interface Store {
-  id: string;
-  ownerId: string;
-  name: string;
-  slug: string;
-  avatar?: string;
-  description?: string;
-  theme: StoreTheme;
-  customTheme?: StoreThemeConfig;
-  contactInfo: StoreContactInfo;
-  walletBalance: number;
-  subscription: SubscriptionPlan;
-  // Seller Rank (Platform Fee)
-  sellerRank: SellerRank;
-  platformFeePercent: number; // 9-12% based on rank
-  rollingAvgSpend: number; // 3-month rolling average spend
-  monthlySpendHistory: number[]; // Last 3 months spend
-  // Stats
-  status: 'active' | 'suspended' | 'deleted';
-  rating: number;
-  ratingCount: number;
-  totalOrders: number;
-  totalRevenue: number;
-  totalTeams: number;
-  totalAdmins: number;
-  createdAt: string;
-  updatedAt: string;
-}
+// ===== SHARED BASE TYPES =====
+export type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'business';
+export type SellerRank = 'bronze' | 'silver' | 'gold' | 'platinum';
 
-export interface StoreContactInfo {
+export interface ContactInfo {
   line?: string;
   facebook?: string;
   instagram?: string;
@@ -36,10 +10,50 @@ export interface StoreContactInfo {
   email?: string;
 }
 
-export type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'business';
-export type SellerRank = 'bronze' | 'silver' | 'gold' | 'platinum';
+// Base interface for common seller/store fields
+interface BaseSellerStore {
+  // Identity
+  id: string;
+  name: string;
+  slug: string;
+  avatar?: string;
+  description?: string;
+  
+  // Subscription & Rank
+  subscription: SubscriptionPlan;
+  sellerRank: SellerRank;
+  platformFeePercent: number; // 9-12% based on rank
+  rollingAvgSpend: number; // 3-month rolling average spend
+  
+  // Stats
+  rating: number;
+  ratingCount: number;
+  totalOrders: number;
+  totalRevenue: number;
+  
+  // Theme
+  theme: StoreTheme;
+  customTheme?: StoreThemeConfig;
+  
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+}
 
-// ===== STORE ROLES =====
+// ===== STORE (Multi-user store entity) =====
+export interface Store extends BaseSellerStore {
+  ownerId: string;
+  contactInfo: ContactInfo;
+  walletBalance: number;
+  monthlySpendHistory: number[]; // Last 3 months spend
+  status: 'active' | 'suspended' | 'deleted';
+  totalTeams: number;
+  totalAdmins: number;
+}
+
+// Store-related types
+export type StoreContactInfo = ContactInfo; // Alias for backward compatibility
+
 export type StoreRole = 'owner' | 'admin';
 
 export type StorePermission =
@@ -65,38 +79,37 @@ export interface StoreUser {
   createdAt: string;
 }
 
-// ===== SELLER =====
-export interface Seller {
-  id: string;
+// ===== SELLER (Individual seller profile) =====
+export interface Seller extends BaseSellerStore {
   userId: string;
   displayName: string;
-  storeName: string;
-  storeSlug: string;
-  avatar?: string;
+  
+  // Use 'name' from base as storeName
+  storeName: string; // Alias for 'name'
+  storeSlug: string; // Alias for 'slug'
+  
+  // Contact (individual fields for legacy support)
   bio?: string;
   lineId?: string;
   phone?: string;
   email?: string;
+  
+  // Subscription
   plan: SubscriptionPlan;
   planExpiresAt?: string;
-  // Seller Rank (Platform Fee)
-  sellerRank: SellerRank;
-  platformFeePercent: number;
-  rollingAvgSpend: number;
-  // Wallet & Stats
-  balance: number;
-  totalOrders: number;
-  totalRevenue: number;
+  
+  // Wallet & Stats (individual seller)
+  balance: number; // Equivalent to Store's walletBalance
   totalSpentOnWorkers: number;
-  rating: number;
-  ratingCount: number;
-  storeTheme: StoreTheme;
-  customTheme?: StoreThemeConfig;
+  
+  // Theme - inherited from base
+  storeTheme: StoreTheme; // Alias for 'theme'
+  
+  // Status
   isActive: boolean;
   isVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // Reference to store
+  
+  // Reference to store (for future multi-seller support)
   storeId?: string;
 }
 

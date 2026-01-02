@@ -1,8 +1,16 @@
 "use client";
 
-import { Input, Select, Textarea } from "@/components/ui";
+import { useState } from "react";
+import { 
+  FormField, 
+  FormInput, 
+  FormSelect, 
+  FormTextarea,
+  InlineError 
+} from "@/components/shared";
 import { VISIBILITY_OPTIONS } from "@/lib/constants/services";
-import type { StoreService } from "@/types";
+import { validateServiceForm } from "@/lib/types/validators";
+import type { StoreService, Platform, ServiceType, ServiceMode } from "@/types";
 
 interface ServiceFormProps {
   service?: StoreService | null;
@@ -10,132 +18,176 @@ interface ServiceFormProps {
 }
 
 export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const handleValidation = (e: React.FormEvent) => {
+    if (onSubmit) {
+      e.preventDefault();
+      const formData = new FormData(e.target as HTMLFormElement);
+      const data = {
+        name: formData.get("name") as string,
+        description: formData.get("description") as string,
+        category: formData.get("category") as Platform,
+        type: formData.get("type") as ServiceType,
+        serviceType: formData.get("serviceType") as ServiceMode,
+        costPrice: parseFloat(formData.get("costPrice") as string),
+        sellPrice: parseFloat(formData.get("sellPrice") as string),
+        minQuantity: parseInt(formData.get("minQuantity") as string),
+        maxQuantity: parseInt(formData.get("maxQuantity") as string),
+        estimatedTime: formData.get("estimatedTime") as string,
+      };
+
+      const validation = validateServiceForm(data);
+      if (!validation.valid) {
+        setErrors(validation.errors);
+        return;
+      }
+
+      setErrors([]);
+      onSubmit(data);
+    }
+  };
+
   return (
-    <div className="space-y-5">
+    <form className="space-y-5" onSubmit={handleValidation}>
+      {errors.length > 0 && (
+        <InlineError error={errors[0]} />
+      )}
+
       {/* Service Name */}
-      <Input
-        label="ชื่อบริการ"
-        name="name"
-        placeholder="เช่น ไลค์ Facebook (Bot)"
-        defaultValue={service?.name}
-        required
-      />
+      <FormField label="ชื่อบริการ" required>
+        <FormInput
+          name="name"
+          placeholder="เช่น ไลค์ Facebook (Bot)"
+          defaultValue={service?.name}
+        />
+      </FormField>
 
       {/* Description */}
-      <Textarea
-        label="รายละเอียด"
-        name="description"
-        placeholder="อธิบายบริการของคุณ..."
-        defaultValue={service?.description}
-        rows={3}
-      />
+      <FormField label="รายละเอียด">
+        <FormTextarea
+          name="description"
+          placeholder="อธิบายบริการของคุณ..."
+          defaultValue={service?.description}
+          rows={3}
+          maxCharacters={500}
+          showCharCount
+        />
+      </FormField>
 
       {/* Platform & Type Row */}
       <div className="grid grid-cols-2 gap-4">
-        <Select
-          label="แพลตฟอร์ม"
-          name="category"
-          options={[
-            { value: "facebook", label: "🔵 Facebook" },
-            { value: "instagram", label: "📸 Instagram" },
-            { value: "tiktok", label: "🎵 Tiktok" },
-            { value: "youtube", label: "▶️ YouTube" },
-          ]}
-          defaultValue={service?.category || "facebook"}
-        />
-        <Select
-          label="ประเภท"
-          name="type"
-          options={[
-            { value: "like", label: "Like" },
-            { value: "comment", label: "Comment" },
-            { value: "follow", label: "Follow" },
-            { value: "view", label: "View" },
-            { value: "share", label: "Share" },
-          ]}
-          defaultValue={service?.type || "like"}
-        />
+        <FormField label="แพลตฟอร์ม" required>
+          <FormSelect
+            name="category"
+            options={[
+              { value: "facebook", label: "🔵 Facebook" },
+              { value: "instagram", label: "📸 Instagram" },
+              { value: "tiktok", label: "🎵 Tiktok" },
+              { value: "youtube", label: "▶️ YouTube" },
+            ]}
+            defaultValue={service?.category || "facebook"}
+          />
+        </FormField>
+        <FormField label="ประเภท" required>
+          <FormSelect
+            name="type"
+            options={[
+              { value: "like", label: "Like" },
+              { value: "comment", label: "Comment" },
+              { value: "follow", label: "Follow" },
+              { value: "view", label: "View" },
+              { value: "share", label: "Share" },
+            ]}
+            defaultValue={service?.type || "like"}
+          />
+        </FormField>
       </div>
 
       {/* Service Mode */}
-      <Select
-        label="รูปแบบบริการ"
-        name="serviceType"
-        options={[
-          { value: "bot", label: "งานเว็บ (เร็ว ราคาถูก)" },
-          { value: "human", label: "งานกดมือ (คุณภาพสูง)" },
-        ]}
-        defaultValue={service?.serviceType || "bot"}
-      />
+      <FormField label="รูปแบบบริการ" required>
+        <FormSelect
+          name="serviceType"
+          options={[
+            { value: "bot", label: "งานเว็บ (เร็ว ราคาถูก)" },
+            { value: "human", label: "งานกดมือ (คุณภาพสูง)" },
+          ]}
+          defaultValue={service?.serviceType || "bot"}
+        />
+      </FormField>
 
       {/* Visibility */}
-      <div>
-        <label className="block text-sm font-medium text-brand-text-dark mb-2">
-          การแสดงผลในร้าน
-        </label>
-        <Select
+      <FormField 
+        label="การแสดงผลในร้าน"
+        description="บริการที่ซ่อนจะไม่แสดงในหน้าร้าน แต่ยังสามารถสร้าง Manual Order ได้"
+      >
+        <FormSelect
           name="showInStore"
           options={[
             { value: "true", label: "🌐 แสดงในร้าน - ลูกค้าเห็นในหน้าร้านสาธารณะ" },
             { value: "false", label: "👁️‍🗨️ ซ่อนจากร้าน - ไม่แสดงในหน้าร้าน" },
           ]}
           defaultValue={service?.showInStore !== false ? "true" : "false"}
-          className="w-full"
         />
-        <p className="text-xs text-brand-text-light mt-1.5">
-          บริการที่ซ่อนจะไม่แสดงในหน้าร้าน แต่ยังสามารถสร้าง Manual Order ได้
-        </p>
-      </div>
+      </FormField>
 
       {/* Pricing Row */}
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="ต้นทุน (บาท/หน่วย)"
-          name="costPrice"
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="0.08"
-          defaultValue={service?.costPrice}
-        />
-        <Input
-          label="ราคาขาย (บาท/หน่วย)"
-          name="sellPrice"
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="0.15"
-          defaultValue={service?.sellPrice}
-        />
+        <FormField label="ต้นทุน (บาท/หน่วย)" required>
+          <FormInput
+            name="costPrice"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.08"
+            defaultValue={service?.costPrice}
+          />
+        </FormField>
+        <FormField label="ราคาขาย (บาท/หน่วย)" required>
+          <FormInput
+            name="sellPrice"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.15"
+            defaultValue={service?.sellPrice}
+          />
+        </FormField>
       </div>
 
       {/* Quantity Row */}
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="จำนวนขั้นต่ำ"
-          name="minQuantity"
-          type="number"
-          min="1"
-          placeholder="100"
-          defaultValue={service?.minQuantity}
-        />
-        <Input
-          label="จำนวนสูงสุด"
-          name="maxQuantity"
-          type="number"
-          min="1"
-          placeholder="10000"
-          defaultValue={service?.maxQuantity}
-        />
+        <FormField label="จำนวนขั้นต่ำ" required>
+          <FormInput
+            name="minQuantity"
+            type="number"
+            min="1"
+            placeholder="100"
+            defaultValue={service?.minQuantity}
+          />
+        </FormField>
+        <FormField label="จำนวนสูงสุด" required>
+          <FormInput
+            name="maxQuantity"
+            type="number"
+            min="1"
+            placeholder="10000"
+            defaultValue={service?.maxQuantity}
+          />
+        </FormField>
       </div>
 
       {/* Estimated Time */}
-      <Input
+      <FormField 
         label="เวลาส่งมอบ"
-        name="estimatedTime"
-        placeholder="เช่น 24-48 ชั่วโมง, 1-3 วัน"
-        defaultValue={service?.estimatedTime}
-      />
-    </div>
+        description="เช่น 24-48 ชั่วโมง, 1-3 วัน"
+      >
+        <FormInput
+          name="estimatedTime"
+          placeholder="เช่น 24-48 ชั่วโมง, 1-3 วัน"
+          defaultValue={service?.estimatedTime}
+        />
+      </FormField>
+    </form>
   );
 }

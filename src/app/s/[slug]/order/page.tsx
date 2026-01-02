@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Card, Button, Input, Textarea, Select, Badge, Skeleton } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { formatCurrency } from "@/lib/utils";
 import { api } from "@/lib/api";
 import type { Seller, StoreService } from "@/types";
@@ -203,8 +204,9 @@ function OrderForm() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <Container size="lg">
+        <Section spacing="md">
+          <form onSubmit={handleSubmit} className="space-y-6">
           {/* Cart Items */}
           <div>
             <h2 className="text-lg font-semibold text-brand-text-dark mb-4 flex items-center gap-2">
@@ -504,8 +506,9 @@ function OrderForm() {
           >
             ยืนยันสั่งซื้อ {formatCurrency(calculateTotal())}
           </Button>
-        </form>
-      </div>
+          </form>
+        </Section>
+      </Container>
     </div>
   );
 }

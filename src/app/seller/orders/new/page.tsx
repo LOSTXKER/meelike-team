@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Input, Select, Textarea } from "@/components/ui";
+import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import { useSellerServices } from "@/lib/api/hooks";
 import type { Platform, ServiceMode } from "@/types";
@@ -68,7 +69,7 @@ export default function NewOrderPage() {
       return;
     }
 
-    const service = mockServices.find((s) => s.id === selectedService);
+    const service = mockServices.find((s: { id: string }) => s.id === selectedService);
     if (!service) return;
 
     const qty = parseInt(quantity);
@@ -130,29 +131,30 @@ export default function NewOrderPage() {
     }, 1000);
   };
 
-  const selectedServiceData = mockServices?.find((s) => s.id === selectedService);
+  const selectedServiceData = mockServices?.find((s: { id: string }) => s.id === selectedService);
 
   if (isLoading) {
     return <div className="p-8 text-center text-brand-text-light">กำลังโหลด...</div>;
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/seller/orders">
-          <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </Link>
-        <PageHeader
-          title="สร้างออเดอร์ใหม่"
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in pb-12">
+        {/* Header */}
+        <HStack gap={4} align="center">
+          <Link href="/seller/orders">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <PageHeader
+            title="สร้างออเดอร์ใหม่"
           description="สร้างออเดอร์แบบ Manual สำหรับลูกค้าที่สั่งซื้อผ่านแชท"
           icon={ShoppingCart}
         />
-      </div>
+        </HStack>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-8">
           {/* Customer Info */}
@@ -221,7 +223,7 @@ export default function NewOrderPage() {
                   onChange={(e) => setSelectedService(e.target.value)}
                   options={[
                     { value: "", label: "-- เลือกบริการ --" },
-                    ...(mockServices || []).map((s) => ({
+                    ...(mockServices || []).map((s: { id: string; name: string; sellPrice: number }) => ({
                       value: s.id,
                       label: `${s.name} (฿${s.sellPrice}/หน่วย)`,
                     })),
@@ -462,8 +464,9 @@ export default function NewOrderPage() {
             </Card>
           </div>
         </div>
-      </div>
-    </div>
+        </div>
+      </Section>
+    </Container>
   );
 }
 

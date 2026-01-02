@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Modal } from "@/components/ui";
+import { Card, Button, Badge, Input, Dialog, Modal } from "@/components/ui";
+import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import {
   Key,
@@ -98,24 +99,25 @@ export default function ApiKeyPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <Container size="xl">
+      <Section spacing="lg" className="animate-fade-in">
+        {/* Header */}
+        <HStack justify="between" align="center">
           <PageHeader
             title="API Keys"
             description="จัดการ API Keys สำหรับเชื่อมต่อระบบจากภายนอก"
             icon={Key}
           />
-        <Button 
-          onClick={() => setShowCreateModal(true)} 
+          <Button
+            onClick={() => setShowCreateModal(true)}
           className="shadow-lg shadow-brand-primary/20 rounded-xl"
         >
           <Plus className="w-4 h-4 mr-2" />
           สร้าง API Key
         </Button>
-      </div>
+        </HStack>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: API List */}
         <div className="lg:col-span-2 space-y-6">
@@ -353,7 +355,8 @@ export default function ApiKeyPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </Section>
+    </Container>
   );
 }
 
