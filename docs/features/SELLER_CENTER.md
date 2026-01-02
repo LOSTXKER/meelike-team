@@ -215,14 +215,39 @@ URL: `meelike.me/s/[slug]`
 
 ### Subscription (`/seller/settings/subscription`)
 
+#### Seller Plans
+
+| แพ็กเกจ | ราคา/เดือน | ทีม | Bot API | Advanced Features |
+|---------|-----------|-----|---------|-------------------|
+| 🆓 Free | ฿0 | 2 ทีม | MeeLike | - |
+| 🌱 Basic | ฿49 | 5 ทีม | MeeLike | - |
+| ⭐ Pro | ฿99 | 20 ทีม | MeeLike + เจ้าอื่น | Export, Webhook, White Label |
+| 🏢 Business | ฿399 | ไม่จำกัด | MeeLike + เจ้าอื่น | + Custom Domain, Priority Support |
+
+#### Platform Fee (Rank-based)
+
+| Seller Rank | ยอดจ้าง (Rolling 3 เดือน) | Fee |
+|-------------|--------------------------|-----|
+| 🥉 Bronze | < ฿20K | 12% |
+| 🥈 Silver | ฿20K - ฿50K | 11% |
+| 🥇 Gold | ฿50K - ฿150K | 10% |
+| 💎 Platinum | > ฿150K | 9% |
+
+> 💡 **Subscription = ปลดล็อค Features** | **Platform Fee = ตาม Rank (ยอดใช้งาน)**
+
+#### Subscription Page Features
+
 - แพ็กเกจปัจจุบัน
+- Seller Rank ปัจจุบัน + Progress
 - Upgrade/Downgrade
 - Billing History
 
 ### API Settings (`/seller/settings/api`)
 
+> ⚠️ ต้องใช้แพ็กเกจ **Pro** ขึ้นไปเพื่อใช้ Bot API เจ้าอื่น
+
 - API Keys
-- Webhook URL
+- Webhook URL (Pro+)
 - IP Whitelist
 
 ---

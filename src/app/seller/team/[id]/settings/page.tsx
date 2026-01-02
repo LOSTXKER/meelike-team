@@ -193,8 +193,8 @@ export default function TeamSettingsPage() {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <span className="font-medium text-brand-text-dark">แสดงในหน้ารับสมัคร (Hub)</span>
-                <p className="text-sm text-brand-text-light">Worker สามารถค้นหาและสมัครเข้าทีมได้จาก Hub</p>
+                <span className="font-medium text-brand-text-dark">แสดงในตลาดกลาง</span>
+                <p className="text-sm text-brand-text-light">Worker สามารถค้นหาและสมัครเข้าทีมได้จากตลาดกลาง</p>
               </div>
             </div>
             <div 

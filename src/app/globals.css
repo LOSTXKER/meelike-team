@@ -385,3 +385,12 @@ body {
 .stats-grid-5 {
   @apply grid grid-cols-2 lg:grid-cols-5 gap-4;
 }
+
+/* Scrollbar Hide */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

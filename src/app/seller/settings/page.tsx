@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Button, Input, Badge } from "@/components/ui";
+import { Card, Button, Input, Badge, Select } from "@/components/ui";
 import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import {
@@ -16,11 +16,13 @@ import {
   Bell,
   Shield,
   CreditCard,
-  ClipboardList,
   CheckCircle2,
   ChevronRight,
   LogOut,
-  Image as ImageIcon
+  Wallet,
+  Building2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 
 export default function SellerSettingsPage() {
@@ -37,8 +39,20 @@ export default function SellerSettingsPage() {
     confirmPassword: "",
   });
 
+  const [bankData, setBankData] = useState({
+    bank: "kbank",
+    accountNumber: "xxx-x-xxxxx-x",
+    accountName: "นายจอห์น ดู",
+    promptpay: "0801234567",
+    isVerified: true,
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleBankChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setBankData({ ...bankData, [e.target.name]: e.target.value });
   };
 
   const handleSave = () => {
@@ -46,12 +60,22 @@ export default function SellerSettingsPage() {
     alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
   };
 
+  const bankOptions = [
+    { value: "kbank", label: "กสิกรไทย (KBANK)" },
+    { value: "scb", label: "ไทยพาณิชย์ (SCB)" },
+    { value: "ktb", label: "กรุงไทย (KTB)" },
+    { value: "bbl", label: "กรุงเทพ (BBL)" },
+    { value: "ttb", label: "ทีทีบี (ttb)" },
+    { value: "gsb", label: "ออมสิน (GSB)" },
+    { value: "bay", label: "กรุงศรี (BAY)" },
+  ];
+
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
       <PageHeader
-        title="ตั้งค่าโปรไฟล์"
-        description="จัดการข้อมูลส่วนตัว ความปลอดภัย และการตั้งค่าบัญชีของคุณ"
+        title="ตั้งค่าบัญชี"
+        description="จัดการข้อมูลส่วนตัว บัญชีรับเงิน ความปลอดภัย และการตั้งค่าบัญชีของคุณ"
         icon={User}
       />
 
@@ -132,6 +156,21 @@ export default function SellerSettingsPage() {
                    <ChevronRight className="w-5 h-5 text-brand-text-light group-hover:text-brand-primary transition-colors" />
                 </div>
              </Link>
+             
+             <Link href="/seller/store">
+                <div className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-brand-border/50 hover:border-brand-primary/50 hover:shadow-md transition-all group cursor-pointer">
+                   <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center text-brand-primary group-hover:scale-110 transition-transform">
+                         <Store className="w-5 h-5" />
+                      </div>
+                      <div>
+                         <p className="font-bold text-brand-text-dark">จัดการร้านค้า</p>
+                         <p className="text-xs text-brand-text-light">ตกแต่งร้าน ธีม และบริการ</p>
+                      </div>
+                   </div>
+                   <ChevronRight className="w-5 h-5 text-brand-text-light group-hover:text-brand-primary transition-colors" />
+                </div>
+             </Link>
           </div>
         </div>
 
@@ -151,11 +190,11 @@ export default function SellerSettingsPage() {
             <div className="grid gap-6">
               <div className="grid sm:grid-cols-2 gap-6">
                  <Input
-                   label="ชื่อร้าน / ชื่อที่แสดง"
+                   label="ชื่อที่แสดง"
                    name="displayName"
                    value={formData.displayName}
                    onChange={handleChange}
-                   leftIcon={<Store className="w-4 h-4" />}
+                   leftIcon={<User className="w-4 h-4" />}
                    className="bg-brand-bg/30 border-brand-border/50 focus:bg-white transition-all"
                  />
                  <Input
@@ -185,6 +224,100 @@ export default function SellerSettingsPage() {
                   leftIcon={<Phone className="w-4 h-4" />}
                   className="bg-brand-bg/30 border-brand-border/50 focus:bg-white transition-all"
                 />
+              </div>
+            </div>
+          </Card>
+
+          {/* Payment / Banking Settings */}
+          <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 p-6 sm:p-8">
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="font-bold text-lg text-brand-text-dark flex items-center gap-2">
+                 <div className="p-2 bg-green-100 rounded-lg text-green-600">
+                    <Wallet className="w-5 h-5" />
+                 </div>
+                 บัญชีรับเงิน
+               </h2>
+               {bankData.isVerified ? (
+                 <Badge variant="success" size="sm">
+                   <CheckCircle className="w-3 h-3 mr-1" />
+                   ยืนยันแล้ว
+                 </Badge>
+               ) : (
+                 <Badge variant="warning" size="sm">
+                   <AlertCircle className="w-3 h-3 mr-1" />
+                   รอยืนยัน
+                 </Badge>
+               )}
+            </div>
+            
+            {/* Current Bank Account */}
+            {bankData.isVerified && (
+              <div className="p-4 bg-green-50 rounded-xl border border-green-100 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-green-500 rounded-xl">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-brand-text-dark">
+                      {bankOptions.find(b => b.value === bankData.bank)?.label}
+                    </p>
+                    <p className="text-sm text-brand-text-light">
+                      {bankData.accountNumber} • {bankData.accountName}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="text-sm font-medium">ใช้งานอยู่</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="grid gap-6">
+              <div className="grid sm:grid-cols-2 gap-6">
+                <Select
+                  label="ธนาคาร"
+                  name="bank"
+                  options={bankOptions}
+                  value={bankData.bank}
+                  onChange={handleBankChange}
+                />
+                <Input
+                  label="เลขที่บัญชี"
+                  name="accountNumber"
+                  value={bankData.accountNumber}
+                  onChange={handleBankChange}
+                  placeholder="xxx-x-xxxxx-x"
+                  leftIcon={<CreditCard className="w-4 h-4" />}
+                  className="bg-brand-bg/30 border-brand-border/50 focus:bg-white transition-all"
+                />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-6">
+                <Input
+                  label="ชื่อบัญชี"
+                  name="accountName"
+                  value={bankData.accountName}
+                  onChange={handleBankChange}
+                  placeholder="ระบุชื่อบัญชีภาษาไทย"
+                  className="bg-brand-bg/30 border-brand-border/50 focus:bg-white transition-all"
+                />
+                <Input
+                  label="PromptPay (เบอร์โทร/เลขบัตร ปชช.)"
+                  name="promptpay"
+                  value={bankData.promptpay}
+                  onChange={handleBankChange}
+                  placeholder="เบอร์โทร หรือ เลขบัตร ปชช."
+                  className="bg-brand-bg/30 border-brand-border/50 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+              <div className="flex items-start gap-2 text-amber-700">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <p className="text-xs">
+                  บัญชีนี้จะใช้สำหรับรับเงินจากลูกค้าและการถอนเงินจากระบบ กรุณาตรวจสอบข้อมูลให้ถูกต้อง
+                </p>
               </div>
             </div>
           </Card>

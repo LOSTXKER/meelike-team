@@ -155,7 +155,7 @@ function NewPostForm() {
 
     // Mock submit
     setTimeout(() => {
-      alert("โพสต์สำเร็จ! โพสต์ของคุณจะแสดงใน Hub แล้ว");
+      alert("โพสต์สำเร็จ! โพสต์ของคุณจะแสดงในตลาดกลางแล้ว");
       router.push("/hub");
     }, 1000);
   };
@@ -194,7 +194,7 @@ function NewPostForm() {
             <ArrowLeft className="w-5 h-5 text-brand-text-dark" />
           </button>
         </Link>
-        <PageHeader title="สร้างโพสต์ใหม่" description="โพสต์ใน MeeLike Hub" icon={Sparkles} />
+        <PageHeader title="สร้างโพสต์ใหม่" description="โพสต์ในตลาดกลาง MeeLike" icon={Sparkles} />
       </div>
 
       {/* Post Type Selection */}

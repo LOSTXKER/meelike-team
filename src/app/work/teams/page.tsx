@@ -138,11 +138,11 @@ export default function WorkerTeamsPage() {
               อยากได้งานเพิ่ม?
             </h3>
             <p className="text-brand-text-light mb-4 text-sm leading-relaxed">
-              ไปที่ Hub ตลาดกลาง เพื่อค้นหาทีมใหม่ที่เปิดรับสมาชิก หรือดูประกาศหางานจาก Seller โดยตรง
+              ไปที่ตลาดกลาง เพื่อค้นหาทีมใหม่ที่เปิดรับสมาชิก หรือดูประกาศหางานจาก Seller โดยตรง
             </p>
             <Link href="/hub" className="inline-block">
               <Button size="sm" className="shadow-md shadow-brand-primary/20" leftIcon={<Sparkles className="w-4 h-4" />}>
-                ไปที่ Hub
+                ไปที่ตลาดกลาง
               </Button>
             </Link>
           </div>

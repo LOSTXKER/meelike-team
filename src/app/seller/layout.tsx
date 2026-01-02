@@ -4,11 +4,11 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { useRequireAuth } from "@/lib/hooks";
-import { SELLER_NAV, isNavGroup } from "@/lib/constants/navigation";
+import { SELLER_NAV, USER_MENU_ITEMS, isNavGroup } from "@/lib/constants/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge, Button, Skeleton } from "@/components/ui";
-import { Award, Menu, X, Bell, Search, LogOut, ChevronDown } from "lucide-react";
+import { Award, Menu, X, Bell, Search, LogOut, ChevronDown, Wallet, Plus } from "lucide-react";
 
 export default function SellerLayout({
   children,
@@ -104,6 +104,27 @@ export default function SellerLayout({
               />
             </div>
 
+            {/* Wallet Balance - Prominent Display */}
+            <Link href="/seller/finance">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-brand-primary/10 to-brand-accent/10 hover:from-brand-primary/20 hover:to-brand-accent/20 border border-brand-primary/20 hover:border-brand-primary/40 rounded-xl transition-all cursor-pointer group">
+                <div className="p-1.5 bg-brand-primary/20 rounded-lg group-hover:bg-brand-primary/30 transition-colors">
+                  <Wallet className="w-4 h-4 text-brand-primary" />
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-xs text-brand-text-light leading-none">ยอดเงิน</p>
+                  <p className="text-sm font-bold text-brand-primary leading-tight">
+                    {formatCurrency(seller?.balance || 0)}
+                  </p>
+                </div>
+                <span className="sm:hidden text-sm font-bold text-brand-primary">
+                  {formatCurrency(seller?.balance || 0)}
+                </span>
+                <div className="p-1 bg-brand-primary rounded-md group-hover:scale-110 transition-transform">
+                  <Plus className="w-3 h-3 text-white" />
+                </div>
+              </div>
+            </Link>
+
             {/* Notifications */}
             <button className="relative p-2 hover:bg-brand-bg rounded-lg transition-colors">
               <Bell className="w-5 h-5 text-brand-text-light" />
@@ -136,6 +157,7 @@ export default function SellerLayout({
                     onClick={() => setShowUserMenu(false)}
                   />
                   <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-brand-border/50 z-50 overflow-hidden animate-fade-in">
+                    {/* User Info */}
                     <div className="p-4 border-b border-brand-border/30">
                       <div className="flex items-center gap-3">
                         <Avatar src={seller?.avatar} fallback={seller?.displayName} size="md" />
@@ -150,13 +172,39 @@ export default function SellerLayout({
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Settings Menu Items */}
+                    <div className="p-2 border-b border-brand-border/30">
+                      {USER_MENU_ITEMS.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setShowUserMenu(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                              isActive 
+                                ? "bg-brand-primary/10 text-brand-primary" 
+                                : "hover:bg-brand-bg text-brand-text-dark"
+                            )}
+                          >
+                            <Icon className="w-4 h-4" />
+                            <span className="font-medium text-sm">{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Logout */}
                     <div className="p-2">
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-brand-error/5 text-brand-error transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-error/5 text-brand-error transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span className="font-medium">ออกจากระบบ</span>
+                        <span className="font-medium text-sm">ออกจากระบบ</span>
                       </button>
                     </div>
                   </div>
@@ -173,9 +221,11 @@ export default function SellerLayout({
             {SELLER_NAV.map((item) => {
               if (isNavGroup(item)) {
                 // Group with dropdown
+                const GroupIcon = item.icon;
                 return (
                   <div key={item.label} className="relative group/nav">
                     <button className="flex items-center gap-2 px-4 py-3.5 font-medium text-sm text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50 transition-all whitespace-nowrap group-hover/nav:text-brand-text-dark">
+                      <GroupIcon className="w-4 h-4" />
                       <span>{item.label}</span>
                       <ChevronDown className="w-3 h-3 transition-transform group-hover/nav:rotate-180" />
                     </button>
@@ -214,6 +264,20 @@ export default function SellerLayout({
               const isActive = pathname === item.href;
               const Icon = item.icon;
 
+              // Special button (ตลาด)
+              if (item.isSpecial) {
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-2 px-4 py-2 ml-2 font-medium text-sm bg-brand-primary text-white rounded-full hover:bg-brand-primary/90 transition-all shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -240,36 +304,50 @@ export default function SellerLayout({
             })}
           </nav>
 
-          {/* Mobile Horizontal Scroll Tabs */}
+          {/* Mobile Horizontal Scroll Tabs - แสดงเฉพาะเมนูหลักๆ */}
           <nav className="max-w-7xl mx-auto lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
             {SELLER_NAV.map((item) => {
+              // Mobile: แสดง dropdown เป็นลิงก์ไปหน้าแรกของกลุ่มนั้น
               if (isNavGroup(item)) {
-                return item.items.map((subItem) => {
-                  const SubIcon = subItem.icon;
-                  const isActive = pathname === subItem.href;
-                  return (
-                    <Link
-                      key={subItem.href}
-                      href={subItem.href}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative whitespace-nowrap shrink-0",
-                        isActive
-                          ? "text-brand-primary"
-                          : "text-brand-text-light hover:text-brand-text-dark"
-                      )}
-                    >
-                      <SubIcon className="w-4 h-4" />
-                      <span>{subItem.label}</span>
-                      {isActive && (
-                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
-                      )}
-                    </Link>
-                  );
-                });
+                const GroupIcon = item.icon;
+                const firstItem = item.items[0];
+                const isActive = item.items.some(i => pathname === i.href);
+                return (
+                  <Link
+                    key={item.label}
+                    href={firstItem.href}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative whitespace-nowrap shrink-0",
+                      isActive
+                        ? "text-brand-primary"
+                        : "text-brand-text-light hover:text-brand-text-dark"
+                    )}
+                  >
+                    <GroupIcon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                    {isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
+                    )}
+                  </Link>
+                );
               }
 
               const isActive = pathname === item.href;
               const Icon = item.icon;
+
+              // Special button (ตลาด)
+              if (item.isSpecial) {
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-1.5 px-3 py-1.5 ml-1 font-medium text-xs bg-brand-primary text-white rounded-full hover:bg-brand-primary/90 transition-all shadow-sm whitespace-nowrap shrink-0"
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              }
 
               return (
                 <Link
@@ -284,6 +362,11 @@ export default function SellerLayout({
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
+                  {item.badge && (
+                    <Badge variant="error" size="sm" className="ml-1">
+                      {item.badge}
+                    </Badge>
+                  )}
                   {isActive && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
                   )}
@@ -324,9 +407,11 @@ export default function SellerLayout({
             <nav className="p-4 space-y-1">
               {SELLER_NAV.map((item) => {
                 if (isNavGroup(item)) {
+                  const GroupIcon = item.icon;
                   return (
                     <div key={item.label} className="space-y-1">
-                      <p className="px-3 py-2 text-xs font-semibold text-brand-text-light uppercase tracking-wider">
+                      <p className="px-3 py-2 text-xs font-semibold text-brand-text-light uppercase tracking-wider flex items-center gap-2">
+                        <GroupIcon className="w-4 h-4" />
                         {item.label}
                       </p>
                       {item.items.map((subItem) => {

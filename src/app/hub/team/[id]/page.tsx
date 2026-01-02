@@ -142,7 +142,7 @@ export default function TeamProfilePage() {
         <h1 className="text-2xl font-bold text-brand-text-dark mb-2">ไม่พบทีมนี้</h1>
         <p className="text-brand-text-light mb-6">ทีมอาจถูกลบหรือไม่มีอยู่ในระบบ</p>
         <Link href="/hub">
-          <Button>กลับไปหน้า Hub</Button>
+          <Button>กลับไปตลาดกลาง</Button>
         </Link>
       </div>
     );

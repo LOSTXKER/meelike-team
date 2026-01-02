@@ -1,281 +1,545 @@
 "use client";
 
-import Link from "next/link";
-import { Card, Badge, Button } from "@/components/ui";
-import { PageHeader } from "@/components/shared";
+import { useState } from "react";
+import { Card, Badge, Button, Input, Modal } from "@/components/ui";
+import { PageHeader, EmptyState } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
+import { formatCurrency } from "@/lib/utils";
 import {
   Wallet,
-  TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
-  CreditCard,
-  History,
-  RefreshCw,
   Plus,
+  Search,
+  Calendar,
+  History,
+  QrCode,
+  Building2,
+  Copy,
+  CheckCircle2,
+  Upload,
+  Download,
+  ShieldCheck,
+  Clock,
   ChevronRight,
-  Landmark,
-  Coins,
-  Receipt,
-  Download
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const transactions = [
+// Mock transactions data
+const allTransactions = [
   {
     id: "txn-1",
-    type: "income",
+    type: "income" as const,
+    category: "order",
     title: "รายได้จากออเดอร์ ORD-2024-001",
+    description: "ไลค์ Facebook 1,000 + เม้น 50",
     amount: 385,
     date: "2024-12-30T14:30:00",
-    status: "completed",
-    desc: "ลูกค้า: @somchai_shop"
   },
   {
     id: "txn-2",
-    type: "expense",
+    type: "expense" as const,
+    category: "payout",
     title: "จ่ายค่าจ้าง Worker @นุ่น",
+    description: "งาน JOB-001 - ไลค์ Facebook 30",
     amount: -50,
     date: "2024-12-30T12:00:00",
-    status: "completed",
-    desc: "งาน: Like Facebook 500"
   },
   {
     id: "txn-3",
-    type: "topup",
+    type: "topup" as const,
+    category: "topup",
     title: "เติมเงินผ่าน PromptPay",
+    description: "Ref: PP202412290915",
     amount: 500,
     date: "2024-12-29T09:15:00",
-    status: "completed",
-    desc: "Ref: 12345678"
   },
   {
     id: "txn-4",
-    type: "income",
+    type: "income" as const,
+    category: "order",
     title: "รายได้จากออเดอร์ ORD-2024-002",
+    description: "Follow Instagram 200",
     amount: 150,
     date: "2024-12-28T16:45:00",
-    status: "completed",
-    desc: "ลูกค้า: @beauty_queen"
   },
   {
     id: "txn-5",
-    type: "expense",
+    type: "expense" as const,
+    category: "api",
     title: "ค่า MeeLike API (Bot)",
+    description: "ไลค์ Facebook Bot 1,000",
     amount: -80,
     date: "2024-12-28T10:00:00",
-    status: "completed",
-    desc: "Service: Instagram Follower"
+  },
+  {
+    id: "txn-6",
+    type: "expense" as const,
+    category: "payout",
+    title: "จ่ายค่าจ้าง Worker @มิ้นท์",
+    description: "งาน JOB-002 - เม้น 50",
+    amount: -75,
+    date: "2024-12-27T18:00:00",
+  },
+  {
+    id: "txn-7",
+    type: "income" as const,
+    category: "order",
+    title: "รายได้จากออเดอร์ ORD-2024-003",
+    description: "View TikTok 5,000",
+    amount: 400,
+    date: "2024-12-27T11:30:00",
+  },
+  {
+    id: "txn-8",
+    type: "topup" as const,
+    category: "topup",
+    title: "เติมเงินผ่านโอนเงิน",
+    description: "Ref: KBANK202412251000",
+    amount: 1000,
+    date: "2024-12-25T10:00:00",
   },
 ];
+
+const TOPUP_AMOUNTS = [100, 300, 500, 1000, 2000, 5000];
+
+const BANK_INFO = {
+  bank: "ธนาคารกสิกรไทย",
+  accountNumber: "123-4-56789-0",
+  accountName: "บริษัท มีไลค์ จำกัด",
+  promptpay: "080-xxx-xxxx",
+};
+
+type FilterType = "all" | "income" | "expense" | "topup";
 
 export default function FinancePage() {
   const { user } = useAuthStore();
   const balance = user?.seller?.balance || 2450;
 
-  const stats = {
-    totalIncome: 28500,
-    totalExpense: 12350,
-    pendingPayout: 1250,
+  // Topup Modal State
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
+  const [topupAmount, setTopupAmount] = useState<number>(500);
+  const [customAmount, setCustomAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"promptpay" | "bank">("promptpay");
+  const [topupStep, setTopupStep] = useState<"amount" | "payment" | "confirm">("amount");
+  const [copied, setCopied] = useState(false);
+
+  // Transaction Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState<FilterType>("all");
+
+  // Filter transactions
+  const filteredTransactions = allTransactions.filter((txn) => {
+    const matchSearch =
+      txn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      txn.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchFilter = filter === "all" || txn.type === filter;
+    return matchSearch && matchFilter;
+  });
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      {/* Header */}
-      <PageHeader
-        title="การเงิน"
-        description="ตรวจสอบยอดเงินคงเหลือ รายรับ รายจ่าย และประวัติธุรกรรม"
-        icon={Wallet}
-        action={
-          <div className="flex gap-2">
-            <Link href="/seller/finance/history">
-              <Button variant="outline" className="bg-white hover:bg-brand-bg text-brand-text-dark border-brand-border/50 shadow-sm rounded-xl">
-                 <History className="w-4 h-4 mr-2" />
-                 ประวัติธุรกรรม
-              </Button>
-            </Link>
-            <Link href="/seller/finance/topup">
-              <Button leftIcon={<Plus className="w-4 h-4" />} className="rounded-xl shadow-lg shadow-brand-primary/20">เติมเงินเข้าระบบ</Button>
-            </Link>
-          </div>
-        }
-      />
+  const handleTopupSubmit = () => {
+    setTopupStep("confirm");
+  };
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Balance Card */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] text-white overflow-hidden relative border-none shadow-xl shadow-brand-primary/20 h-auto">
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
-            
-            <div className="relative p-8 space-y-8">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <p className="text-[#E8DED5] text-sm font-medium flex items-center gap-2">
-                    <Wallet className="w-4 h-4" /> ยอดเงินคงเหลือ
-                  </p>
-                  <p className="text-5xl font-bold tracking-tight">
-                    ฿{balance.toLocaleString()}
-                  </p>
-                </div>
-                <button className="p-2.5 bg-white/10 rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm border border-white/10">
-                  <RefreshCw className="w-5 h-5" />
-                </button>
+  const resetTopup = () => {
+    setTopupStep("amount");
+    setTopupAmount(500);
+    setCustomAmount("");
+    setIsTopupModalOpen(false);
+  };
+
+  const finalAmount = customAmount ? parseInt(customAmount) : topupAmount;
+
+  return (
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <PageHeader
+          title="การเงิน"
+          description="จัดการยอดเงิน เติมเงิน และดูประวัติธุรกรรม"
+          icon={Wallet}
+        />
+        <Button
+          variant="outline"
+          className="bg-white"
+          leftIcon={<Download className="w-4 h-4" />}
+        >
+          ส่งออก CSV
+        </Button>
+      </div>
+
+      {/* Balance Card */}
+      <Card className="p-6 bg-gradient-to-br from-brand-primary to-brand-primary/80 text-white border-none shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-white/20 rounded-2xl">
+              <Wallet className="w-10 h-10" />
+            </div>
+            <div>
+              <p className="text-white/80 text-sm">ยอดเงินคงเหลือ</p>
+              <p className="text-4xl font-bold">{formatCurrency(balance)}</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setIsTopupModalOpen(true)}
+            className="bg-white text-brand-primary hover:bg-white/90 shadow-lg"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            เติมเงิน
+          </Button>
+        </div>
+      </Card>
+
+      {/* Transaction History */}
+      <Card className="border-none shadow-lg overflow-hidden">
+        {/* Filter Bar */}
+        <div className="p-4 border-b border-brand-border/30 bg-brand-bg/30">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2">
+              <History className="w-5 h-5 text-brand-primary" />
+              <h2 className="font-bold text-brand-text-dark">ประวัติธุรกรรม</h2>
+              <Badge variant="default" size="sm">{allTransactions.length} รายการ</Badge>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Filter Tabs */}
+              <div className="flex gap-1 p-1 bg-white rounded-lg border border-brand-border/50">
+                {[
+                  { key: "all", label: "ทั้งหมด" },
+                  { key: "income", label: "รายรับ" },
+                  { key: "expense", label: "รายจ่าย" },
+                  { key: "topup", label: "เติมเงิน" },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilter(f.key as FilterType)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                      filter === f.key
+                        ? "bg-brand-primary text-white"
+                        : "text-brand-text-light hover:text-brand-text-dark"
+                    )}
+                  >
+                    {f.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-white/10">
-                <div className="flex items-center justify-between p-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/5">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-500/20 rounded-lg">
-                        <TrendingUp className="w-4 h-4 text-green-300" />
-                      </div>
-                      <span className="text-[#E8DED5] text-sm">รายรับเดือนนี้</span>
-                   </div>
-                   <span className="font-bold text-lg">฿{stats.totalIncome.toLocaleString()}</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/5">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-red-500/20 rounded-lg">
-                        <TrendingDown className="w-4 h-4 text-red-300" />
-                      </div>
-                      <span className="text-[#E8DED5] text-sm">รายจ่ายเดือนนี้</span>
-                   </div>
-                   <span className="font-bold text-lg">฿{stats.totalExpense.toLocaleString()}</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/5">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-orange-500/20 rounded-lg">
-                        <History className="w-4 h-4 text-orange-300" />
-                      </div>
-                      <span className="text-[#E8DED5] text-sm">รอจ่ายให้ทีม</span>
-                   </div>
-                   <span className="font-bold text-lg text-orange-200">฿{stats.pendingPayout.toLocaleString()}</span>
-                </div>
+              {/* Search */}
+              <div className="relative flex-1 sm:w-48">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
+                <input
+                  type="text"
+                  placeholder="ค้นหา..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-brand-border/50 text-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none"
+                />
               </div>
             </div>
-          </Card>
-
-          {/* Quick Menu */}
-          <div className="grid grid-cols-2 gap-3">
-              <Link href="/seller/finance/topup" className="contents">
-                <button className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-brand-border/50 rounded-xl hover:shadow-md hover:border-brand-primary/30 transition-all group">
-                   <div className="w-10 h-10 rounded-full bg-brand-primary/5 flex items-center justify-center group-hover:bg-brand-primary/10 transition-colors">
-                      <Plus className="w-5 h-5 text-brand-primary" />
-                   </div>
-                   <span className="text-sm font-medium text-brand-text-dark">เติมเงิน</span>
-                </button>
-              </Link>
-              <Link href="/seller/team/payouts" className="contents">
-                <button className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-brand-border/50 rounded-xl hover:shadow-md hover:border-brand-primary/30 transition-all group">
-                   <div className="w-10 h-10 rounded-full bg-brand-warning/10 flex items-center justify-center group-hover:bg-brand-warning/20 transition-colors">
-                      <Coins className="w-5 h-5 text-brand-warning" />
-                   </div>
-                   <span className="text-sm font-medium text-brand-text-dark">จ่ายทีม</span>
-                </button>
-              </Link>
-              <Link href="/seller/finance/history" className="contents">
-                <button className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-brand-border/50 rounded-xl hover:shadow-md hover:border-brand-primary/30 transition-all group">
-                   <div className="w-10 h-10 rounded-full bg-brand-info/10 flex items-center justify-center group-hover:bg-brand-info/20 transition-colors">
-                      <Receipt className="w-5 h-5 text-brand-info" />
-                   </div>
-                   <span className="text-sm font-medium text-brand-text-dark">ใบเสร็จ</span>
-                </button>
-              </Link>
-              <button className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-brand-border/50 rounded-xl hover:shadow-md hover:border-brand-primary/30 transition-all group">
-                 <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                    <Landmark className="w-5 h-5 text-purple-600" />
-                 </div>
-                 <span className="text-sm font-medium text-brand-text-dark">บัญชี</span>
-              </button>
           </div>
         </div>
 
-        {/* Right Column: Recent Transactions */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between p-1">
-             <h2 className="font-bold text-lg text-brand-text-dark flex items-center gap-2">
-                <History className="w-5 h-5 text-brand-primary" />
-                ธุรกรรมล่าสุด
-             </h2>
-             <Link href="/seller/finance/history" className="text-sm text-brand-primary hover:underline flex items-center gap-1">
-                ดูทั้งหมด <ChevronRight className="w-4 h-4" />
-             </Link>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
-             <div className="divide-y divide-brand-border/30">
-                {transactions.map((txn) => (
+        {/* Transaction List */}
+        <div className="divide-y divide-brand-border/30">
+          {filteredTransactions.length === 0 ? (
+            <EmptyState
+              icon={History}
+              title="ไม่พบรายการธุรกรรม"
+              description="ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+              className="py-12"
+            />
+          ) : (
+            filteredTransactions.map((txn) => (
+              <div
+                key={txn.id}
+                className="p-4 flex items-center justify-between gap-4 hover:bg-brand-bg/30 transition-colors"
+              >
+                <div className="flex items-center gap-4">
                   <div
-                    key={txn.id}
-                    className="p-5 flex items-center justify-between hover:bg-brand-bg/30 transition-colors group cursor-pointer"
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                      txn.type === "income"
+                        ? "bg-green-100 text-green-600"
+                        : txn.type === "topup"
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-red-100 text-red-600"
+                    )}
                   >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-sm ${
-                          txn.type === "income"
-                            ? "bg-brand-success/5 border-brand-success/20 text-brand-success"
-                            : txn.type === "topup"
-                            ? "bg-brand-info/5 border-brand-info/20 text-brand-info"
-                            : "bg-brand-error/5 border-brand-error/20 text-brand-error"
-                        }`}
-                      >
-                        {txn.type === "income" ? (
-                          <ArrowDownRight className="w-6 h-6" />
-                        ) : txn.type === "topup" ? (
-                          <Plus className="w-6 h-6" />
-                        ) : (
-                          <ArrowUpRight className="w-6 h-6" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-bold text-brand-text-dark text-base group-hover:text-brand-primary transition-colors">
-                          {txn.title}
-                        </p>
-                        <p className="text-xs text-brand-text-light mt-1 flex items-center gap-2">
-                          <span className="bg-brand-bg px-2 py-0.5 rounded text-brand-text-dark/70 font-medium">{txn.desc}</span>
-                          <span>•</span>
-                          <span>{new Date(txn.date).toLocaleDateString("th-TH", {
-                            day: "numeric",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}</span>
-                        </p>
-                      </div>
+                    {txn.type === "income" ? (
+                      <ArrowDownRight className="w-5 h-5" />
+                    ) : txn.type === "topup" ? (
+                      <Plus className="w-5 h-5" />
+                    ) : (
+                      <ArrowUpRight className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-brand-text-dark text-sm">{txn.title}</p>
+                    <p className="text-xs text-brand-text-light">{txn.description}</p>
+                    <p className="text-xs text-brand-text-light mt-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(txn.date).toLocaleDateString("th-TH", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <p
+                    className={cn(
+                      "text-lg font-bold",
+                      txn.amount > 0 ? "text-green-600" : "text-red-600"
+                    )}
+                  >
+                    {txn.amount > 0 ? "+" : ""}
+                    {formatCurrency(Math.abs(txn.amount))}
+                  </p>
+                  <Badge
+                    variant={
+                      txn.category === "order"
+                        ? "success"
+                        : txn.category === "payout"
+                        ? "warning"
+                        : txn.category === "topup"
+                        ? "info"
+                        : "default"
+                    }
+                    size="sm"
+                  >
+                    {txn.category === "order"
+                      ? "ออเดอร์"
+                      : txn.category === "payout"
+                      ? "จ่ายทีม"
+                      : txn.category === "topup"
+                      ? "เติมเงิน"
+                      : "API"}
+                  </Badge>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+
+      {/* Topup Modal */}
+      <Modal
+        isOpen={isTopupModalOpen}
+        onClose={resetTopup}
+        title={
+          topupStep === "amount"
+            ? "เติมเงินเข้าระบบ"
+            : topupStep === "payment"
+            ? "ชำระเงิน"
+            : "กำลังตรวจสอบ"
+        }
+        size="md"
+      >
+        {/* Step 1: Select Amount */}
+        {topupStep === "amount" && (
+          <div className="space-y-6">
+            <div className="text-center p-4 bg-brand-bg/50 rounded-xl">
+              <p className="text-sm text-brand-text-light">ยอดเงินปัจจุบัน</p>
+              <p className="text-2xl font-bold text-brand-primary">{formatCurrency(balance)}</p>
+            </div>
+
+            <div>
+              <p className="font-medium text-brand-text-dark mb-3">เลือกจำนวนเงิน</p>
+              <div className="grid grid-cols-3 gap-2">
+                {TOPUP_AMOUNTS.map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => {
+                      setTopupAmount(amt);
+                      setCustomAmount("");
+                    }}
+                    className={cn(
+                      "p-3 rounded-xl border transition-all text-center",
+                      topupAmount === amt && !customAmount
+                        ? "border-brand-primary bg-brand-primary text-white"
+                        : "border-brand-border/50 hover:border-brand-primary/50"
+                    )}
+                  >
+                    <span className="font-bold">{formatCurrency(amt)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-brand-text-light mb-2">หรือระบุจำนวนเอง</p>
+              <Input
+                type="number"
+                placeholder="ระบุจำนวนเงิน (฿50 - ฿100,000)"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                leftIcon={<span className="text-brand-text-light font-bold">฿</span>}
+              />
+            </div>
+
+            <Button
+              onClick={() => setTopupStep("payment")}
+              disabled={!finalAmount || finalAmount < 50}
+              className="w-full"
+            >
+              ดำเนินการต่อ <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
+
+        {/* Step 2: Payment */}
+        {topupStep === "payment" && (
+          <div className="space-y-6">
+            {/* Amount Summary */}
+            <div className="text-center p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
+              <p className="text-sm text-brand-text-light">จำนวนที่ต้องชำระ</p>
+              <p className="text-3xl font-bold text-brand-primary">{formatCurrency(finalAmount)}</p>
+            </div>
+
+            {/* Payment Method Selection */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setPaymentMethod("promptpay")}
+                className={cn(
+                  "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
+                  paymentMethod === "promptpay"
+                    ? "border-brand-primary bg-brand-primary/5"
+                    : "border-brand-border/50 hover:border-brand-primary/50"
+                )}
+              >
+                <QrCode className={cn("w-8 h-8", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-light")} />
+                <span className={cn("font-medium", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-dark")}>
+                  PromptPay
+                </span>
+              </button>
+              <button
+                onClick={() => setPaymentMethod("bank")}
+                className={cn(
+                  "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
+                  paymentMethod === "bank"
+                    ? "border-brand-primary bg-brand-primary/5"
+                    : "border-brand-border/50 hover:border-brand-primary/50"
+                )}
+              >
+                <Building2 className={cn("w-8 h-8", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-light")} />
+                <span className={cn("font-medium", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-dark")}>
+                  โอนเงิน
+                </span>
+              </button>
+            </div>
+
+            {/* Payment Details */}
+            <div className="bg-brand-bg/50 rounded-xl p-4">
+              {paymentMethod === "promptpay" ? (
+                <div className="text-center space-y-3">
+                  <div className="bg-white p-4 rounded-xl inline-block">
+                    <QrCode className="w-32 h-32 text-brand-text-dark mx-auto" />
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="font-mono text-lg font-bold">{BANK_INFO.promptpay}</span>
+                    <button
+                      onClick={() => handleCopy(BANK_INFO.promptpay)}
+                      className="p-1.5 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
+                    >
+                      {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                    <div className="w-10 h-10 bg-[#00A950] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      K
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-bold text-lg ${
-                          txn.amount > 0 ? "text-brand-success" : "text-brand-error"
-                        }`}
-                      >
-                        {txn.amount > 0 ? "+" : ""}฿{Math.abs(txn.amount).toLocaleString()}
-                      </p>
-                      <Badge
-                        variant={txn.status === "completed" ? "success" : "warning"}
-                        size="sm"
-                        className="mt-1"
-                      >
-                        {txn.status === "completed" ? "สำเร็จ" : "รอดำเนินการ"}
-                      </Badge>
+                    <div>
+                      <p className="text-xs text-brand-text-light">{BANK_INFO.bank}</p>
+                      <p className="font-medium text-brand-text-dark">{BANK_INFO.accountName}</p>
                     </div>
                   </div>
-                ))}
-             </div>
-             
-             {/* Footer Actions */}
-             <div className="p-4 bg-brand-bg/30 border-t border-brand-border/30 flex justify-center">
-                <Button variant="ghost" size="sm" className="text-brand-text-light hover:text-brand-primary">
-                   โหลดเพิ่ม...
-                </Button>
-             </div>
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                    <div>
+                      <p className="text-xs text-brand-text-light">เลขที่บัญชี</p>
+                      <p className="font-mono font-bold text-brand-text-dark">{BANK_INFO.accountNumber}</p>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(BANK_INFO.accountNumber.replace(/-/g, ""))}
+                      className="p-2 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
+                    >
+                      {copied ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Upload Slip */}
+            <div className="border-2 border-dashed border-brand-border rounded-xl p-6 text-center hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all cursor-pointer">
+              <Upload className="w-8 h-8 text-brand-text-light mx-auto mb-2" />
+              <p className="font-medium text-brand-text-dark">อัพโหลดหลักฐานการโอน</p>
+              <p className="text-xs text-brand-text-light">JPG, PNG ไม่เกิน 5MB</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setTopupStep("amount")} className="flex-1">
+                ย้อนกลับ
+              </Button>
+              <Button onClick={handleTopupSubmit} className="flex-1">
+                แจ้งชำระเงิน
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+
+        {/* Step 3: Confirmation */}
+        {topupStep === "confirm" && (
+          <div className="text-center space-y-6 py-4">
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+              <Clock className="w-10 h-10 text-amber-500" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-brand-text-dark mb-2">กำลังตรวจสอบยอดเงิน</h3>
+              <p className="text-brand-text-light">
+                ระบบได้รับข้อมูลแล้ว เจ้าหน้าที่จะตรวจสอบและปรับยอดเงินให้ภายใน{" "}
+                <span className="text-brand-primary font-bold">5-15 นาที</span>
+              </p>
+            </div>
+
+            <div className="bg-brand-bg/50 rounded-xl p-4">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-brand-text-light">จำนวนเงิน</span>
+                <span className="font-bold text-brand-text-dark">{formatCurrency(finalAmount)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-text-light">สถานะ</span>
+                <Badge variant="warning">รอตรวจสอบ</Badge>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl text-left">
+              <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-brand-text-light">
+                การชำระเงินของคุณปลอดภัย 100% หากมีปัญหาสามารถติดต่อ Support ได้ตลอด 24 ชม.
+              </p>
+            </div>
+
+            <Button onClick={resetTopup} className="w-full">
+              เสร็จสิ้น
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
-

@@ -11,11 +11,19 @@ export interface Store {
   contactInfo: StoreContactInfo;
   walletBalance: number;
   subscription: SubscriptionPlan;
+  // Seller Rank (Platform Fee)
+  sellerRank: SellerRank;
+  platformFeePercent: number; // 9-12% based on rank
+  rollingAvgSpend: number; // 3-month rolling average spend
+  monthlySpendHistory: number[]; // Last 3 months spend
+  // Stats
   status: 'active' | 'suspended' | 'deleted';
   rating: number;
   ratingCount: number;
   totalOrders: number;
   totalRevenue: number;
+  totalTeams: number;
+  totalAdmins: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,7 +36,8 @@ export interface StoreContactInfo {
   email?: string;
 }
 
-export type SubscriptionPlan = 'free' | 'starter' | 'pro' | 'business';
+export type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'business';
+export type SellerRank = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 // ===== STORE ROLES =====
 export type StoreRole = 'owner' | 'admin';
@@ -70,9 +79,15 @@ export interface Seller {
   email?: string;
   plan: SubscriptionPlan;
   planExpiresAt?: string;
+  // Seller Rank (Platform Fee)
+  sellerRank: SellerRank;
+  platformFeePercent: number;
+  rollingAvgSpend: number;
+  // Wallet & Stats
   balance: number;
   totalOrders: number;
   totalRevenue: number;
+  totalSpentOnWorkers: number;
   rating: number;
   ratingCount: number;
   storeTheme: StoreTheme;
@@ -245,6 +260,7 @@ export interface StoreService {
   meelikeServiceId?: string;
   estimatedTime?: string;
   isActive: boolean;
+  showInStore: boolean; // true = แสดงในร้าน, false = บริการลับ
   orderCount: number;
   createdAt: string;
   updatedAt: string;
@@ -637,6 +653,74 @@ export interface WorkerJob {
   submittedAt?: string;
   completedAt?: string;
   earnings?: number;
+}
+
+// ===== MEELIKE API =====
+// บริการจาก MeeLike API (https://api-docs.meelike-th.com/)
+export interface MeeLikeService {
+  service: string;      // Service ID จาก MeeLike
+  name: string;         // ชื่อบริการ
+  type: string;         // ประเภท เช่น "Facebook Likes"
+  category: string;     // หมวดหมู่ เช่น "Facebook"
+  rate: string;         // ราคาต่อ 1000 หน่วย (บาท)
+  min: string;          // จำนวนขั้นต่ำ
+  max: string;          // จำนวนสูงสุด
+  refill: boolean;      // รองรับ Refill หรือไม่
+  cancel: boolean;      // ยกเลิกได้หรือไม่
+  description?: string; // รายละเอียดเพิ่มเติม
+  dripfeed?: boolean;   // รองรับ Drip-feed หรือไม่
+  averageTime?: string; // เวลาเฉลี่ยในการส่งมอบ
+}
+
+// Request สำหรับ MeeLike API
+export interface MeeLikeAPIRequest {
+  key: string;
+  action: "services" | "add" | "status" | "statuses" | "refill" | "refills" | "refill_status" | "refill_statuses" | "cancel" | "balance";
+}
+
+export interface MeeLikeAddOrderRequest extends MeeLikeAPIRequest {
+  action: "add";
+  service: string;
+  link: string;
+  quantity: string;
+  runs?: string;
+  interval?: string;
+}
+
+export interface MeeLikeOrderStatusRequest extends MeeLikeAPIRequest {
+  action: "status";
+  order: string;
+}
+
+// Response จาก MeeLike API
+export interface MeeLikeAddOrderResponse {
+  order: string;        // Order ID
+}
+
+export interface MeeLikeOrderStatus {
+  charge: string;       // ค่าใช้จ่าย
+  start_count: string;  // จำนวนเริ่มต้น
+  status: "Pending" | "In progress" | "Completed" | "Partial" | "Canceled" | "Processing";
+  remains: string;      // จำนวนที่เหลือ
+  currency: string;     // สกุลเงิน
+}
+
+export interface MeeLikeBalanceResponse {
+  balance: string;      // ยอดเงินคงเหลือ
+  currency: string;     // สกุลเงิน
+}
+
+// Seller's MeeLike Config
+export interface SellerMeeLikeConfig {
+  id: string;
+  sellerId: string;
+  apiKey: string;
+  apiKeyMasked: string; // แสดงเฉพาะ 4 ตัวท้าย
+  isConnected: boolean;
+  balance?: number;
+  lastSyncAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 

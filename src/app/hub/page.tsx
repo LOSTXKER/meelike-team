@@ -73,7 +73,7 @@ export default function HubPage() {
         <div className="relative z-10 text-center max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
             <Sparkles className="w-4 h-4 text-[#D4A373]" />
-            <span className="text-white/90 text-xs font-medium uppercase tracking-wider">MeeLike Hub Center</span>
+            <span className="text-white/90 text-xs font-medium uppercase tracking-wider">MeeLike ตลาดกลาง</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight leading-tight">
             ตลาดกลางเชื่อมต่อ<br/>

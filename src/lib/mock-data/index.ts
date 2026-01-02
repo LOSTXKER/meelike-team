@@ -71,3 +71,12 @@ export type {
   OutsourceJob,
   WorkerJob,
 } from "@/types";
+
+// MeeLike API domain
+export {
+  mockMeeLikeServices,
+  getMeeLikeServicesByCategory,
+  searchMeeLikeServices,
+  getMeeLikeRatePerUnit,
+  meeLikeCategories,
+} from "./meelike";

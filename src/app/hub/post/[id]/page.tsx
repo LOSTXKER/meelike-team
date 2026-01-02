@@ -96,7 +96,7 @@ export default function HubPostDetailPage() {
         <h1 className="text-2xl font-bold text-brand-text-dark mb-2">ไม่พบโพสต์นี้</h1>
         <p className="text-brand-text-light mb-6">โพสต์อาจถูกลบหรือหมดอายุแล้ว</p>
         <Link href="/hub">
-          <Button>กลับไปหน้า Hub</Button>
+          <Button>กลับไปตลาดกลาง</Button>
         </Link>
       </div>
     );

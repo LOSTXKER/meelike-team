@@ -88,10 +88,10 @@
 
 ### ระดับ Store
 
-| Role | คำอธิบาย | จำนวน |
-|------|----------|-------|
+| Role | คำอธิบาย | จำนวน (ตามแพ็กเกจ) |
+|------|----------|-------------------|
 | **Owner** | เจ้าของร้าน | 1 คน |
-| **Store Admin** | ผู้ดูแลร้าน | ไม่จำกัด |
+| **Store Admin** | ผู้ดูแลร้าน | Free: 1 / Basic: 2 / Pro: 5 / Business: ไม่จำกัด |
 
 ### ระดับ Team
 
@@ -289,9 +289,23 @@
 
 | Setting | คำอธิบาย | ใครแก้ได้ |
 |---------|----------|-----------|
-| แพ็กเกจปัจจุบัน | Free/Pro/Business | Owner |
+| แพ็กเกจปัจจุบัน | Free / Basic (฿49) / Pro (฿99) / Business (฿399) | Owner |
+| Seller Rank | Bronze / Silver / Gold / Platinum (ตาม Rolling 3 เดือน) | Auto |
+| Platform Fee | 9-12% ตาม Rank | Auto |
 | Upgrade/Downgrade | เปลี่ยนแพ็กเกจ | Owner |
 | Billing History | ประวัติการชำระ | Owner |
+
+##### Plan Limits
+
+| Feature | Free | Basic (฿49) | Pro (฿99) | Business (฿399) |
+|---------|------|-------------|-----------|-----------------|
+| ทีม | 2 | 5 | 20 | ไม่จำกัด |
+| Store Admin | 1 | 2 | 5 | ไม่จำกัด |
+| Bot API | MeeLike | MeeLike | + เจ้าอื่น | + เจ้าอื่น |
+| Export Data | ❌ | ❌ | ✅ | ✅ |
+| Webhook | ❌ | ❌ | ✅ | ✅ |
+| White Label | ❌ | ❌ | ✅ | ✅ |
+| Custom Domain | ❌ | ❌ | ❌ | ✅ |
 
 #### API Settings (`/seller/settings/api`)
 
@@ -526,6 +540,9 @@ interface AssistantConfig {
 ### Store & Team Interfaces
 
 ```typescript
+type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'business';
+type SellerRank = 'bronze' | 'silver' | 'gold' | 'platinum';
+
 interface Store {
   id: string;
   ownerId: string;
@@ -537,8 +554,27 @@ interface Store {
   contactInfo: ContactInfo;
   walletBalance: number;
   subscription: SubscriptionPlan;
+  sellerRank: SellerRank;
+  platformFeePercent: number; // 9-12% based on rank
+  rollingAvgSpend: number; // 3-month rolling average
   createdAt: Date;
 }
+
+// Plan limits
+const PLAN_LIMITS = {
+  free: { teams: 2, admins: 1, externalApi: false, webhook: false, whiteLabel: false, customDomain: false },
+  basic: { teams: 5, admins: 2, externalApi: false, webhook: false, whiteLabel: false, customDomain: false },
+  pro: { teams: 20, admins: 5, externalApi: true, webhook: true, whiteLabel: true, customDomain: false },
+  business: { teams: Infinity, admins: Infinity, externalApi: true, webhook: true, whiteLabel: true, customDomain: true },
+};
+
+// Rank thresholds (rolling 3-month average)
+const RANK_THRESHOLDS = {
+  bronze: { max: 20000, fee: 0.12 },
+  silver: { max: 50000, fee: 0.11 },
+  gold: { max: 150000, fee: 0.10 },
+  platinum: { max: Infinity, fee: 0.09 },
+};
 
 interface Team {
   id: string;

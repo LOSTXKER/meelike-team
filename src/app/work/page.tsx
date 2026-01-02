@@ -311,10 +311,10 @@ export default function WorkerDashboard() {
               <EmptyState
                 icon={PlayCircle}
                 title="ไม่มีงานที่กำลังทำ"
-                description="ไปที่ Hub ตลาดกลางเพื่อค้นหางานใหม่ๆ"
+                description="ไปที่ตลาดกลางเพื่อค้นหางานใหม่ๆ"
                 action={
                   <Link href="/hub">
-                    <Button variant="outline">ไปที่ Hub</Button>
+                    <Button variant="outline">ไปที่ตลาดกลาง</Button>
                   </Link>
                 }
               />

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Card, Button, Badge, Input, Modal } from "@/components/ui";
 import { PageHeader } from "@/components/shared";
 import {
-  ArrowLeft,
   Key,
   Copy,
   Eye,
@@ -102,18 +101,11 @@ export default function ApiKeyPage() {
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/seller/settings">
-            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
           <PageHeader
             title="API Keys"
             description="จัดการ API Keys สำหรับเชื่อมต่อระบบจากภายนอก"
             icon={Key}
           />
-        </div>
         <Button 
           onClick={() => setShowCreateModal(true)} 
           className="shadow-lg shadow-brand-primary/20 rounded-xl"

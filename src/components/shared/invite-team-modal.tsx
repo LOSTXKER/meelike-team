@@ -91,7 +91,7 @@ export function InviteTeamModal({ isOpen, onClose, team }: InviteTeamModalProps)
           />
           <FormCheckbox
             label="แสดงในหน้าค้นหาทีม"
-            description="ให้ทีมของคุณปรากฏในหน้า Hub รับสมัคร"
+            description="ให้ทีมของคุณปรากฏในหน้าตลาดกลาง"
             checked={isRecruiting}
             onChange={setIsRecruiting}
           />

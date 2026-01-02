@@ -67,7 +67,7 @@ export const mockTeams: Team[] = [
     ],
     inviteCode: "JOHN-VIP-2024",
     requireApproval: true,
-    isPublic: false, // ไม่แสดงใน Hub
+    isPublic: false, // ไม่แสดงในตลาดกลาง
     isRecruiting: false, // เชิญเท่านั้น
     recruitingMessage: "",
     memberCount: 12,

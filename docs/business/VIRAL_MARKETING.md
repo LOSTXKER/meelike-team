@@ -207,11 +207,12 @@
 
 ### Seller Acquisition
 
-#### Strategy 1: Free Trial
+#### Strategy 1: Free Plan + Low-cost Entry
 
-- Free Plan ใช้ได้จริง
-- ไม่ต้องใส่บัตรเครดิต
-- ลองใช้ก่อน อัพเกรดทีหลัง
+- Free Plan ใช้ได้จริง (2 ทีม + MeeLike API)
+- Basic Plan แค่ ฿49/เดือน
+- Pro Plan คุ้มสุด ฿99/เดือน (20 ทีม + API เจ้าอื่น + White Label)
+- Platform Fee ลดตาม Rank (12% → 9%)
 
 #### Strategy 2: Migration Tool
 

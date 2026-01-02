@@ -20,7 +20,7 @@ export function ServiceTypeBadge({ type, size = "sm", showIcon = true }: Service
           ? <Bot className="w-3 h-3 mr-1" /> 
           : <Users className="w-3 h-3 mr-1" />
       )}
-      {isBot ? "Bot" : "คนจริง"}
+      {isBot ? "งานเว็บ" : "งานกดมือ"}
     </Badge>
   );
 }

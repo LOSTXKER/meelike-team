@@ -52,7 +52,7 @@ export default function HubLayout({
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-bold text-brand-text-dark text-lg">MeeLike</span>
-                <span className="text-xs font-medium text-brand-primary tracking-wider uppercase">Hub</span>
+                <span className="text-xs font-medium text-brand-primary tracking-wider uppercase">ตลาดกลาง</span>
               </div>
             </Link>
 
@@ -165,7 +165,7 @@ export default function HubLayout({
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <span className="font-medium text-brand-text-dark">
-                MeeLike Hub
+                MeeLike ตลาดกลาง
               </span>
               <span className="text-brand-text-light text-sm">
                 - ตลาดกลางเชื่อมต่อแม่ทีมกับลูกทีม
