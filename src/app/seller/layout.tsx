@@ -8,8 +8,9 @@ import { SELLER_NAV, USER_MENU_ITEMS, isNavGroup } from "@/lib/constants/navigat
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge, Button, Skeleton } from "@/components/ui";
-import { ErrorBoundary } from "@/components/shared";
-import { Award, Menu, X, Bell, Search, LogOut, ChevronDown, Wallet, Plus } from "lucide-react";
+import { ErrorBoundary, Breadcrumb, DevTools } from "@/components/shared";
+import { SellerBottomNav } from "@/components/seller";
+import { Award, Menu, X, Bell, LogOut, ChevronDown, Wallet, Plus, Search, Command } from "lucide-react";
 
 export default function SellerLayout({
   children,
@@ -25,13 +26,13 @@ export default function SellerLayout({
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   const handleLogout = () => {
     router.push("/login");
   };
 
   // Check if we're inside Team Level (has team ID in path)
-  // Pattern: /seller/team/[id] or /seller/team/[id]/*
   const isInTeamLevel = /^\/seller\/team\/[^/]+/.test(pathname);
 
   // If inside Team Level, just render children (Team Layout will handle its own header)
@@ -53,11 +54,6 @@ export default function SellerLayout({
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-10 w-10 rounded-full" />
         </div>
-        <div className="h-14 bg-white border-b border-brand-border/50 px-6 flex items-center gap-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-8 w-24 rounded-lg" />
-          ))}
-        </div>
         <main className="p-6">
           <Skeleton className="h-64 w-full rounded-xl" />
         </main>
@@ -67,87 +63,72 @@ export default function SellerLayout({
 
   return (
     <div className="min-h-screen bg-brand-bg">
-      {/* Top Header */}
+      {/* ============================================ */}
+      {/* TOP HEADER - Simplified & Clean */}
+      {/* ============================================ */}
       <header className="sticky top-0 z-50 bg-white border-b border-brand-border/50 shadow-sm">
-        <div className="max-w-7xl mx-auto h-16 px-4 lg:px-6 flex items-center justify-between">
-          {/* Left: Logo + Mobile Menu */}
-          <div className="flex items-center gap-4">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              className="lg:hidden p-2 hover:bg-brand-bg rounded-lg transition-colors"
-            >
-              <Menu className="w-5 h-5 text-brand-text-light" />
-            </button>
-
-            {/* Logo */}
-            <Link href="/seller">
-              <div className="flex items-center gap-2 cursor-pointer">
-                <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold">
-                  M
-                </div>
-                <span className="font-bold text-lg text-brand-text-dark hidden sm:inline">
-                  MeeLike Seller
-                </span>
+        <div className="max-w-7xl mx-auto h-14 px-4 lg:px-6 flex items-center justify-between gap-4">
+          {/* Left: Logo */}
+          <div className="flex items-center gap-3">
+            <Link href="/seller" className="flex items-center gap-2.5 shrink-0">
+              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                M
               </div>
+              <span className="font-bold text-lg text-brand-text-dark hidden sm:inline">
+                MeeLike
+              </span>
             </Link>
           </div>
 
-          {/* Right: Search + Notifications + User */}
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-brand-bg rounded-lg border border-brand-border/50 w-64">
-              <Search className="w-4 h-4 text-brand-text-light" />
-              <input
-                type="text"
-                placeholder="ค้นหา..."
-                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-brand-text-light"
-              />
-            </div>
+          {/* Center: Search Bar (Desktop Only) - Clickable to open modal */}
+          <button
+            onClick={() => setShowSearch(true)}
+            className="hidden md:flex items-center gap-2 px-3 py-2 bg-brand-bg/80 hover:bg-brand-bg rounded-xl border border-brand-border/50 text-brand-text-light text-sm transition-colors w-64 lg:w-80"
+          >
+            <Search className="w-4 h-4" />
+            <span className="flex-1 text-left">ค้นหา...</span>
+            <kbd className="hidden lg:flex items-center gap-0.5 px-1.5 py-0.5 bg-white rounded text-xs border border-brand-border/50">
+              <Command className="w-3 h-3" />K
+            </kbd>
+          </button>
 
-            {/* Wallet Balance - Prominent Display */}
-            <Link href="/seller/finance">
-              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-brand-primary/10 to-brand-accent/10 hover:from-brand-primary/20 hover:to-brand-accent/20 border border-brand-primary/20 hover:border-brand-primary/40 rounded-xl transition-all cursor-pointer group">
-                <div className="p-1.5 bg-brand-primary/20 rounded-lg group-hover:bg-brand-primary/30 transition-colors">
-                  <Wallet className="w-4 h-4 text-brand-primary" />
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-xs text-brand-text-light leading-none">ยอดเงิน</p>
-                  <p className="text-sm font-bold text-brand-primary leading-tight">
-                    {formatCurrency(seller?.balance || 0)}
-                  </p>
-                </div>
-                <span className="sm:hidden text-sm font-bold text-brand-primary">
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2">
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => setShowSearch(true)}
+              className="md:hidden p-2.5 hover:bg-brand-bg rounded-xl transition-colors"
+            >
+              <Search className="w-5 h-5 text-brand-text-light" />
+            </button>
+
+            {/* Wallet Balance - Compact */}
+            <Link href="/seller/finance" className="hidden sm:block">
+              <div className="flex items-center gap-2 px-3 py-2 bg-brand-success/10 hover:bg-brand-success/15 rounded-xl transition-colors group">
+                <Wallet className="w-4 h-4 text-brand-success" />
+                <span className="text-sm font-bold text-brand-success">
                   {formatCurrency(seller?.balance || 0)}
                 </span>
-                <div className="p-1 bg-brand-primary rounded-md group-hover:scale-110 transition-transform">
-                  <Plus className="w-3 h-3 text-white" />
-                </div>
               </div>
             </Link>
 
             {/* Notifications */}
-            <button className="relative p-2 hover:bg-brand-bg rounded-lg transition-colors">
+            <button className="relative p-2.5 hover:bg-brand-bg rounded-xl transition-colors">
               <Bell className="w-5 h-5 text-brand-text-light" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-brand-error rounded-full" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-error rounded-full" />
             </button>
 
             {/* User Menu */}
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 p-1 pr-3 hover:bg-brand-bg rounded-lg transition-colors"
+                className="flex items-center gap-2 p-1.5 pr-2 hover:bg-brand-bg rounded-xl transition-colors"
               >
                 <Avatar src={seller?.avatar} fallback={seller?.displayName} size="sm" />
-                <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-brand-text-dark leading-tight">
-                    {seller?.displayName}
-                  </p>
-                  <p className="text-xs text-brand-text-light">
-                    {formatCurrency(seller?.balance || 0)}
-                  </p>
-                </div>
-                <ChevronDown className="w-4 h-4 text-brand-text-light hidden sm:block" />
+                <ChevronDown className={cn(
+                  "w-4 h-4 text-brand-text-light transition-transform hidden sm:block",
+                  showUserMenu && "rotate-180"
+                )} />
               </button>
 
               {/* User Dropdown */}
@@ -159,23 +140,39 @@ export default function SellerLayout({
                   />
                   <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-brand-border/50 z-50 overflow-hidden animate-fade-in">
                     {/* User Info */}
-                    <div className="p-4 border-b border-brand-border/30">
+                    <div className="p-4 border-b border-brand-border/30 bg-brand-bg/30">
                       <div className="flex items-center gap-3">
                         <Avatar src={seller?.avatar} fallback={seller?.displayName} size="md" />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-brand-text-dark truncate">
+                          <p className="font-semibold text-brand-text-dark truncate">
                             {seller?.displayName}
                           </p>
-                          <Badge variant="info" size="sm" className="mt-1">
-                            <Award className="w-3 h-3 mr-1" />
-                            {seller?.plan ? seller.plan.charAt(0).toUpperCase() + seller.plan.slice(1) : "Free"}
-                          </Badge>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="info" size="sm">
+                              <Award className="w-3 h-3 mr-1" />
+                              {seller?.plan ? seller.plan.charAt(0).toUpperCase() + seller.plan.slice(1) : "Free"}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
+                      {/* Mobile Wallet Display */}
+                      <Link 
+                        href="/seller/finance"
+                        onClick={() => setShowUserMenu(false)}
+                        className="sm:hidden flex items-center justify-between mt-3 p-2.5 bg-brand-success/10 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Wallet className="w-4 h-4 text-brand-success" />
+                          <span className="text-sm text-brand-text-dark">ยอดเงิน</span>
+                        </div>
+                        <span className="text-sm font-bold text-brand-success">
+                          {formatCurrency(seller?.balance || 0)}
+                        </span>
+                      </Link>
                     </div>
                     
-                    {/* Settings Menu Items */}
-                    <div className="p-2 border-b border-brand-border/30">
+                    {/* Menu Items */}
+                    <div className="p-2">
                       {USER_MENU_ITEMS.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
@@ -199,7 +196,7 @@ export default function SellerLayout({
                     </div>
                     
                     {/* Logout */}
-                    <div className="p-2">
+                    <div className="p-2 border-t border-brand-border/30">
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-error/5 text-brand-error transition-colors"
@@ -214,23 +211,24 @@ export default function SellerLayout({
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Horizontal Navigation */}
-        <div className="border-t border-brand-border/30 bg-white">
-          {/* Desktop Tabs */}
-          <nav className="max-w-7xl mx-auto hidden lg:flex items-center gap-1 px-6">
+      {/* ============================================ */}
+      {/* SECONDARY NAVIGATION - Tabs */}
+      {/* ============================================ */}
+      <nav className="sticky top-14 z-40 bg-white border-b border-brand-border/30 hidden lg:block">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center gap-1">
             {SELLER_NAV.map((item) => {
               if (isNavGroup(item)) {
-                // Group with dropdown
                 const GroupIcon = item.icon;
                 return (
                   <div key={item.label} className="relative group/nav">
-                    <button className="flex items-center gap-2 px-4 py-3.5 font-medium text-sm text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50 transition-all whitespace-nowrap group-hover/nav:text-brand-text-dark">
+                    <button className="flex items-center gap-2 px-4 py-3 font-medium text-sm text-brand-text-light hover:text-brand-text-dark transition-colors">
                       <GroupIcon className="w-4 h-4" />
                       <span>{item.label}</span>
                       <ChevronDown className="w-3 h-3 transition-transform group-hover/nav:rotate-180" />
                     </button>
-                    {/* Dropdown */}
                     <div className="absolute top-full left-0 pt-1 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-150 z-[100]">
                       <div className="w-48 bg-white rounded-xl shadow-xl border border-brand-border/50 py-1">
                         {item.items.map((subItem) => {
@@ -261,17 +259,16 @@ export default function SellerLayout({
                 );
               }
 
-              // Single item
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || 
+                (item.href !== "/seller" && pathname.startsWith(item.href + "/"));
               const Icon = item.icon;
 
-              // Special button (ตลาด)
               if (item.isSpecial) {
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex items-center gap-2 px-4 py-2 ml-2 font-medium text-sm bg-brand-primary text-white rounded-full hover:bg-brand-primary/90 transition-all shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                    className="flex items-center gap-2 px-4 py-2 ml-auto font-medium text-sm bg-brand-primary text-white rounded-full hover:bg-brand-primary/90 transition-all shadow-md hover:shadow-lg"
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
@@ -284,78 +281,7 @@ export default function SellerLayout({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-3.5 font-medium text-sm transition-all relative whitespace-nowrap",
-                    isActive
-                      ? "text-brand-primary"
-                      : "text-brand-text-light hover:text-brand-text-dark hover:bg-brand-bg/50"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <Badge variant="error" size="sm" className="ml-1">
-                      {item.badge}
-                    </Badge>
-                  )}
-                  {isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Mobile Horizontal Scroll Tabs - แสดงเฉพาะเมนูหลักๆ */}
-          <nav className="max-w-7xl mx-auto lg:hidden flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
-            {SELLER_NAV.map((item) => {
-              // Mobile: แสดง dropdown เป็นลิงก์ไปหน้าแรกของกลุ่มนั้น
-              if (isNavGroup(item)) {
-                const GroupIcon = item.icon;
-                const firstItem = item.items[0];
-                const isActive = item.items.some(i => pathname === i.href);
-                return (
-                  <Link
-                    key={item.label}
-                    href={firstItem.href}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative whitespace-nowrap shrink-0",
-                      isActive
-                        ? "text-brand-primary"
-                        : "text-brand-text-light hover:text-brand-text-dark"
-                    )}
-                  >
-                    <GroupIcon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
-                    )}
-                  </Link>
-                );
-              }
-
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-
-              // Special button (ตลาด)
-              if (item.isSpecial) {
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-1.5 px-3 py-1.5 ml-1 font-medium text-xs bg-brand-primary text-white rounded-full hover:bg-brand-primary/90 transition-all shadow-sm whitespace-nowrap shrink-0"
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              }
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative whitespace-nowrap shrink-0",
+                    "flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative",
                     isActive
                       ? "text-brand-primary"
                       : "text-brand-text-light hover:text-brand-text-dark"
@@ -369,16 +295,25 @@ export default function SellerLayout({
                     </Badge>
                   )}
                   {isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
+                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-brand-primary rounded-full" />
                   )}
                 </Link>
               );
             })}
-          </nav>
+          </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* ============================================ */}
+      {/* BREADCRUMB - Below navigation */}
+      {/* ============================================ */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 pt-4">
+        <Breadcrumb />
+      </div>
+
+      {/* ============================================ */}
+      {/* MOBILE SIDEBAR */}
+      {/* ============================================ */}
       {mobileSidebarOpen && (
         <>
           <div
@@ -386,8 +321,8 @@ export default function SellerLayout({
             onClick={() => setMobileSidebarOpen(false)}
           />
           <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white z-50 lg:hidden shadow-xl animate-slide-in-left">
-            <div className="h-16 px-4 flex items-center justify-between border-b border-brand-border/50">
-              <Link href="/seller">
+            <div className="h-14 px-4 flex items-center justify-between border-b border-brand-border/50">
+              <Link href="/seller" onClick={() => setMobileSidebarOpen(false)}>
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold">
                     M
@@ -405,7 +340,7 @@ export default function SellerLayout({
               </button>
             </div>
 
-            <nav className="p-4 space-y-1">
+            <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-8rem)]">
               {SELLER_NAV.map((item) => {
                 if (isNavGroup(item)) {
                   const GroupIcon = item.icon;
@@ -448,7 +383,8 @@ export default function SellerLayout({
                   );
                 }
 
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || 
+                  (item.href !== "/seller" && pathname.startsWith(item.href + "/"));
                 const Icon = item.icon;
 
                 return (
@@ -479,7 +415,7 @@ export default function SellerLayout({
               })}
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-brand-border/50">
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-brand-border/50 bg-white">
               <Button
                 variant="outline"
                 className="w-full text-brand-error border-brand-error/20 hover:bg-brand-error/5"
@@ -493,12 +429,55 @@ export default function SellerLayout({
         </>
       )}
 
-      {/* Main Content - Centered */}
-      <main className="max-w-7xl mx-auto p-4 lg:p-6 min-h-[calc(100vh-8rem)]">
+      {/* ============================================ */}
+      {/* SEARCH MODAL */}
+      {/* ============================================ */}
+      {showSearch && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-[60]"
+            onClick={() => setShowSearch(false)}
+          />
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-lg mx-auto px-4 z-[70]">
+            <div className="bg-white rounded-2xl shadow-2xl border border-brand-border/50 overflow-hidden">
+              <div className="flex items-center gap-3 p-4 border-b border-brand-border/30">
+                <Search className="w-5 h-5 text-brand-text-light" />
+                <input
+                  type="text"
+                  placeholder="ค้นหาออเดอร์, บริการ, ทีม..."
+                  className="flex-1 bg-transparent border-none outline-none text-brand-text-dark placeholder:text-brand-text-light"
+                  autoFocus
+                />
+                <kbd className="px-2 py-1 bg-brand-bg rounded text-xs text-brand-text-light border border-brand-border/50">
+                  ESC
+                </kbd>
+              </div>
+              <div className="p-4 text-center text-sm text-brand-text-light">
+                พิมพ์เพื่อค้นหา...
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================ */}
+      {/* MAIN CONTENT */}
+      {/* ============================================ */}
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 pb-24 lg:pb-6 min-h-[calc(100vh-8rem)]">
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
       </main>
+
+      {/* ============================================ */}
+      {/* MOBILE BOTTOM NAVIGATION */}
+      {/* ============================================ */}
+      <SellerBottomNav />
+
+      {/* ============================================ */}
+      {/* DEV TOOLS - Development Only */}
+      {/* ============================================ */}
+      {process.env.NODE_ENV === "development" && <DevTools />}
     </div>
   );
 }

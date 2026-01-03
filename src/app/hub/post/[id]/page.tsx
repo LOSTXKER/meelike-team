@@ -8,7 +8,7 @@ import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, StatCard } from "@/components/shared";
 import { useHubPosts } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
-import { getLevelColor } from "@/lib/mock-data/helpers";
+import { getLevelColor } from "@/lib/utils";
 import type { Platform } from "@/types";
 import {
   ArrowLeft,

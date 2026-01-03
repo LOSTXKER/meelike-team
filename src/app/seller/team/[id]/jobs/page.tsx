@@ -3,11 +3,10 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Badge, Button, Input, Progress } from "@/components/ui";
-import { Container, Section, HStack } from "@/components/layout";
-import { PageHeader, PlatformIcon, EmptyState, StatsGrid, FilterTabs, PageSkeleton, getJobStats, type JobFilterStatus } from "@/components/shared";
+import { Card, Badge, Button, Input, Progress, Skeleton } from "@/components/ui";
+import { PlatformIcon, EmptyState, FilterTabs, Breadcrumb, type JobFilterStatus } from "@/components/shared";
 import { useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
-import { TEAM_JOB_STATUSES, getJobStatusLabel, getJobStatusVariant, type TeamJobStatus } from "@/lib/constants/statuses";
+import { getJobStatusLabel, getJobStatusVariant, type TeamJobStatus } from "@/lib/constants/statuses";
 import type { Platform } from "@/types";
 import {
   ClipboardList,
@@ -20,6 +19,9 @@ import {
   Package,
   Star,
   Plus,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
 } from "lucide-react";
 
 export default function TeamJobsPage() {
@@ -62,43 +64,114 @@ export default function TeamJobsPage() {
   };
 
   if (isLoading) {
-    return <PageSkeleton variant="list" statsCount={5} className="max-w-7xl mx-auto" />;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <div className="grid grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
   }
 
   return (
-    <Container size="xl">
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <PageHeader
-            title="งานทั้งหมด"
-            description={`จัดการงานของทีม ${currentTeam?.name || ""}`}
-            icon={ClipboardList}
-          />
+    <div className="space-y-6 animate-fade-in">
+      {/* Breadcrumb */}
+      <Breadcrumb />
 
-          <HStack gap={3} className="flex-wrap">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+            <ClipboardList className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-brand-text-dark">งานทั้งหมด</h1>
+            <p className="text-sm text-brand-text-light">จัดการงานของทีม {currentTeam?.name || ""}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {stats.pendingReview > 0 && (
             <Link href={`/seller/team/${teamId}/review`}>
               <Button
-                variant="secondary"
-                leftIcon={<CheckCircle2 className="w-4 h-4" />}
-                className="bg-[#FEF7E0] text-[#B06000] border-[#FEEFC3] hover:bg-[#FEEFC3]"
+                variant="outline"
+                size="sm"
+                leftIcon={<AlertCircle className="w-4 h-4" />}
+                className="border-amber-200 text-amber-600 hover:bg-amber-50"
               >
                 รอตรวจสอบ ({stats.pendingReview})
               </Button>
             </Link>
-            <Link href={`/seller/team/${teamId}/jobs/new`}>
-            <Button 
-              leftIcon={<Plus className="w-4 h-4" />}
-              className="shadow-lg shadow-brand-primary/20"
-            >
+          )}
+          <Link href={`/seller/team/${teamId}/jobs/new`}>
+            <Button leftIcon={<Plus className="w-4 h-4" />}>
               สร้างงานใหม่
             </Button>
           </Link>
-          </HStack>
         </div>
+      </div>
 
-        {/* Stats Cards */}
-      <StatsGrid stats={getJobStats(stats)} columns={5} />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <ClipboardList className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.total}</p>
+              <p className="text-xs text-brand-text-light">ทั้งหมด</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-gray-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.pending}</p>
+              <p className="text-xs text-brand-text-light">รอจอง</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.inProgress}</p>
+              <p className="text-xs text-brand-text-light">กำลังทำ</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.pendingReview}</p>
+              <p className="text-xs text-brand-text-light">รอตรวจ</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.completed}</p>
+              <p className="text-xs text-brand-text-light">เสร็จ</p>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       {/* Filter & Search */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
@@ -125,127 +198,120 @@ export default function TeamJobsPage() {
         </div>
       </div>
 
-      {/* Jobs List */}
+      {/* Jobs Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
-        <div className="divide-y divide-brand-border/50">
-          {filteredJobs.length === 0 ? (
-            <EmptyState icon={ClipboardList} title="ไม่พบงานที่ค้นหา" className="py-12" />
-          ) : (
-            filteredJobs.map((job) => {
-              const progress = (job.completedQuantity / job.quantity) * 100;
-              
-              return (
-                <Link
-                  key={job.id}
-                  href={`/seller/team/${teamId}/jobs/${job.id}`}
-                  className="block p-6 hover:bg-brand-bg/30 transition-colors group cursor-pointer"
-                >
-                  <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
-                    <div className="flex items-start gap-5 flex-1">
-                      <div className="p-3 bg-white rounded-xl shadow-sm border border-brand-border/20">
-                         <PlatformIcon platform={job.platform as Platform} size="lg" />
-                      </div>
-                      <div className="space-y-3 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-bold text-lg text-brand-text-dark group-hover:text-brand-primary transition-colors">
-                            {job.serviceName}
-                          </p>
-                          <Badge
-                            variant={getJobStatusVariant(job.status as TeamJobStatus)}
-                            size="sm"
-                            className="shadow-none border-none"
-                          >
-                            {getJobStatusLabel(job.status as TeamJobStatus)}
-                          </Badge>
+        {filteredJobs.length === 0 ? (
+          <EmptyState icon={ClipboardList} title="ไม่พบงานที่ค้นหา" className="py-12" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-brand-bg/30 border-b border-brand-border/30">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">งาน</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">ออเดอร์</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">Worker</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">ความคืบหน้า</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">รายได้</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">สถานะ</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-brand-text-light uppercase tracking-wider">วันที่</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border/30">
+                {filteredJobs.map((job) => {
+                  const progress = (job.completedQuantity / job.quantity) * 100;
+                  
+                  return (
+                    <tr 
+                      key={job.id} 
+                      className="hover:bg-brand-bg/30 transition-colors cursor-pointer group"
+                      onClick={() => window.location.href = `/seller/team/${teamId}/jobs/${job.id}`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm border border-brand-border/20">
+                            <PlatformIcon platform={job.platform as Platform} size="sm" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-brand-text-dark group-hover:text-brand-primary transition-colors">
+                              {job.serviceName}
+                            </p>
+                            <p className="text-xs text-brand-text-light">
+                              เป้าหมาย {job.quantity.toLocaleString()}
+                            </p>
+                          </div>
                         </div>
-                        
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-brand-text-light">
-                          <span className="flex items-center gap-1.5 bg-brand-bg/50 px-2 py-1 rounded-lg">
-                            <Package className="w-4 h-4" />
-                            <span className="font-medium text-brand-text-dark">{job.orderNumber}</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Target className="w-4 h-4" />
-                            เป้าหมาย <b className="text-brand-text-dark">{job.quantity.toLocaleString()}</b>
-                          </span>
-                          <span className="flex items-center gap-1.5 text-brand-success bg-brand-success/5 px-2 py-1 rounded-lg">
-                            <span className="font-bold">฿{job.totalPayout}</span>
-                            <span className="text-xs opacity-80">รายได้</span>
-                          </span>
-                        </div>
-
-                        {/* Worker Info */}
-                        {job.assignedWorker && (
-                          <div className="flex items-center gap-3 p-2 bg-brand-bg/20 rounded-xl border border-brand-border/30 w-fit">
-                            <div className="w-6 h-6 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary">
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-text-dark bg-brand-bg/50 px-2 py-1 rounded-lg">
+                          <Package className="w-3.5 h-3.5" />
+                          {job.orderNumber}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {job.assignedWorker ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary">
                               {job.assignedWorker.displayName.charAt(0)}
                             </div>
-                            <span className="text-sm font-medium text-brand-text-dark">
-                              @{job.assignedWorker.displayName}
-                            </span>
-                            <div className="w-px h-3 bg-brand-border/50"></div>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
-                              <span className="text-xs font-bold text-brand-text-dark">{job.assignedWorker.rating}</span>
+                            <div>
+                              <p className="text-sm font-medium text-brand-text-dark">
+                                @{job.assignedWorker.displayName}
+                              </p>
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
+                                <span className="text-xs text-brand-text-light">{job.assignedWorker.rating}</span>
+                              </div>
                             </div>
                           </div>
+                        ) : (
+                          <span className="text-sm text-brand-text-light">-</span>
                         )}
-
-                        {/* Progress */}
-                        {(job.status === "in_progress" || job.status === "pending_review") && (
-                          <div className="max-w-md w-full space-y-2 bg-white p-3 rounded-xl border border-brand-border/20 shadow-sm">
+                      </td>
+                      <td className="px-6 py-4">
+                        {(job.status === "in_progress" || job.status === "pending_review") ? (
+                          <div className="w-32 space-y-1">
                             <div className="flex justify-between text-xs">
-                              <span className="text-brand-text-light font-medium">ความคืบหน้า</span>
-                              <span className="font-bold text-brand-primary">
-                                {job.completedQuantity.toLocaleString()} <span className="text-brand-text-light font-normal">/ {job.quantity.toLocaleString()}</span>
+                              <span className="text-brand-text-light">{Math.round(progress)}%</span>
+                              <span className="text-brand-text-dark font-medium">
+                                {job.completedQuantity.toLocaleString()}/{job.quantity.toLocaleString()}
                               </span>
                             </div>
-                            <Progress value={progress} className="h-2" />
+                            <Progress value={progress} size="sm" className="h-1.5" />
                           </div>
+                        ) : (
+                          <span className="text-sm text-brand-text-light">-</span>
                         )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-4 lg:gap-2">
-                      <p className="text-xs text-brand-text-light flex items-center gap-1 bg-brand-bg/30 px-2 py-1 rounded-lg">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(job.createdAt).toLocaleDateString("th-TH", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric"
-                        })}
-                      </p>
-                      
-                      {job.status === "pending_review" && (
-                        <Button 
-                          size="sm" 
-                          className="shadow-lg shadow-brand-primary/20 rounded-xl"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.location.href = `/seller/team/${teamId}/review`;
-                          }}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-base font-bold text-brand-success">
+                          ฿{job.totalPayout}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge
+                          variant={getJobStatusVariant(job.status as TeamJobStatus)}
+                          size="sm"
                         >
-                          ตรวจสอบงาน
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      )}
-                      
-                      {job.status === "pending" && (
-                        <div className="px-3 py-1.5 rounded-lg bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3] text-xs font-medium flex items-center gap-1.5 animate-pulse">
-                          <Clock className="w-3 h-3" />
-                          รอ Worker จอง
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })
-          )}
-        </div>
+                          {getJobStatusLabel(job.status as TeamJobStatus)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <p className="text-xs text-brand-text-light">
+                          {new Date(job.createdAt).toLocaleDateString("th-TH", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric"
+                          })}
+                        </p>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-      </div>
-    </Container>
+    </div>
   );
 }

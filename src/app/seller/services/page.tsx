@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button, Modal, Select } from "@/components/ui";
+import { Button, Modal, Select, Badge, Card } from "@/components/ui";
 import { 
   PageHeader, 
   ServiceTypeBadge,
   AsyncBoundary,
   GenericDataTable,
+  EmptyState,
   type Column
 } from "@/components/shared";
 import { 
@@ -32,7 +33,6 @@ import {
   Edit2,
   Trash2,
   Package,
-  Filter,
   Search,
   Bot,
   Users,
@@ -106,8 +106,6 @@ export default function ServicesPage() {
       value === "all" || service.serviceType === value,
     platform: (service: StoreService, value: any) => 
       value === "all" || service.category === value,
-    serviceType: (service: StoreService, value: any) => 
-      value === "all" || service.type === value,
     search: (service: StoreService, value: any) => 
       !value || 
       service.name.toLowerCase().includes(value.toLowerCase()) || 
@@ -117,7 +115,6 @@ export default function ServicesPage() {
   const { filteredItems, setFilter, filters } = useFilters(services, filterConfig, {
     serviceMode: "all",
     platform: "all",
-    serviceType: "all",
     search: ""
   });
 
@@ -142,6 +139,7 @@ export default function ServicesPage() {
   // Stats
   const botCount = services.filter(s => s.serviceType === "bot").length;
   const humanCount = services.filter(s => s.serviceType === "human").length;
+  const activeCount = services.filter(s => s.isActive).length;
 
   // Handlers
   const toggleService = async (id: string) => {
@@ -169,7 +167,6 @@ export default function ServicesPage() {
           await api.seller.bulkUpdateServices(ids, { showInStore: false });
           break;
         case "toggle":
-          // For toggle, we need to get current state and toggle each
           const servicesToToggle = services.filter(s => selectedIds.has(s.id));
           for (const service of servicesToToggle) {
             await api.seller.updateService(service.id, { isActive: !service.isActive });
@@ -254,14 +251,6 @@ export default function ServicesPage() {
       )
     },
     {
-      key: "estimatedTime",
-      label: "เวลาส่งมอบ",
-      align: "center",
-      render: (_, service) => (
-        service.estimatedTime || <span className="text-brand-text-light italic text-sm">ไม่ระบุ</span>
-      )
-    },
-    {
       key: "showInStore",
       label: "แสดงในร้าน",
       align: "center",
@@ -270,7 +259,7 @@ export default function ServicesPage() {
           value={service.showInStore ? "true" : "false"} 
           onChange={(e) => updateShowInStore(service.id, e.target.value === "true")}
           options={VISIBILITY_OPTIONS} 
-          className="min-w-[160px] text-sm" 
+          className="min-w-[140px] text-sm" 
         />
       )
     },
@@ -294,7 +283,7 @@ export default function ServicesPage() {
     },
     {
       key: "id",
-      label: "จัดการ",
+      label: "",
       align: "center",
       render: (_, service) => (
         <div className="flex items-center justify-center gap-1">
@@ -323,41 +312,37 @@ export default function ServicesPage() {
   ];
 
   return (
-    <AsyncBoundary
-      isLoading={isLoading}
-      error={error}
-      onRetry={refetch}
-      isEmpty={services.length === 0}
-    >
-      <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-24">
-        {/* Header */}
-        <PageHeader
-          title="จัดการบริการ"
-          description="ตั้งค่าบริการงานเว็บและงานกดมือที่คุณต้องการเปิดขายในร้าน"
-          icon={Package}
-          action={
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => exportServicesToCSV(sortedItems)} 
-                leftIcon={<Download className="w-4 h-4" />}
-              >
-                Export
+    <div className="space-y-6 animate-fade-in pb-24">
+      {/* Header - Always visible */}
+      <PageHeader
+        title="จัดการบริการ"
+        description="ตั้งค่าบริการที่คุณต้องการเปิดขายในร้าน"
+        icon={Package}
+        action={
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => exportServicesToCSV(sortedItems)} 
+              leftIcon={<Download className="w-4 h-4" />}
+            >
+              Export
+            </Button>
+            <Link href="/seller/services/new">
+              <Button leftIcon={<Plus className="w-4 h-4" />}>
+                เพิ่มบริการ
               </Button>
-              <Link href="/seller/services/new">
-                <Button leftIcon={<Plus className="w-4 h-4" />}>
-                  เพิ่มบริการใหม่
-                </Button>
-              </Link>
-            </div>
-          }
-        />
+            </Link>
+          </div>
+        }
+      />
 
-        {/* Filters */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
-          <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar">
-            {/* Service Mode Tabs */}
-            <div className="flex gap-1 p-1.5 bg-brand-bg/50 rounded-xl border border-brand-border/30 min-w-max">
+      {/* Filter Bar - Always visible */}
+      <Card className="p-4 border-none shadow-sm">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          {/* Left: Service Mode Tabs + Stats */}
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Service Mode Toggle */}
+            <div className="flex gap-1 p-1 bg-brand-bg rounded-xl">
               {[
                 { value: "all" as const, label: "ทั้งหมด", icon: LayoutGrid, count: services.length },
                 { value: "bot" as const, label: "งานเว็บ", icon: Bot, count: botCount },
@@ -366,7 +351,7 @@ export default function ServicesPage() {
                 <button
                   key={item.value}
                   onClick={() => setFilter("serviceMode", item.value)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     filters.serviceMode === item.value
                       ? "bg-white text-brand-text-dark shadow-sm"
                       : "text-brand-text-light hover:text-brand-text-dark"
@@ -374,42 +359,38 @@ export default function ServicesPage() {
                 >
                   <item.icon className={`w-4 h-4 ${filters.serviceMode === item.value ? "text-brand-primary" : ""}`} />
                   {item.label}
-                  <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${
                     filters.serviceMode === item.value ? "bg-brand-primary/10 text-brand-primary" : "bg-brand-bg text-brand-text-light"
-                  }`}>{item.count}</span>
+                  }`}>
+                    {item.count}
+                  </span>
                 </button>
               ))}
             </div>
 
-            <div className="hidden sm:block w-px h-8 bg-brand-border/50" />
-
             {/* Platform Filter */}
-            <div className="min-w-[170px] relative">
-              <Select
-                options={[
-                  { value: "all", label: "ทุกแพลตฟอร์ม" },
-                  ...Object.entries(PLATFORM_CONFIGS).map(([value, config]) => ({ value, label: config.label })),
-                ]}
-                value={filters.platform as string}
-                onChange={(e) => setFilter("platform", e.target.value)}
-                className="w-full pl-9"
-              />
-              <Filter className="w-4 h-4 text-brand-text-light absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-
-            {/* Service Type Filter */}
             <Select
               options={[
-                { value: "all", label: "ทุกประเภท" },
-                ...Object.entries(SERVICE_TYPE_CONFIGS).map(([value, config]) => ({ value, label: config.labelTh })),
+                { value: "all", label: "ทุกแพลตฟอร์ม" },
+                ...Object.entries(PLATFORM_CONFIGS).map(([value, config]) => ({ value, label: config.label })),
               ]}
-              value={filters.serviceType as string}
-              onChange={(e) => setFilter("serviceType", e.target.value)}
-              className="min-w-[140px]"
+              value={filters.platform as string}
+              onChange={(e) => setFilter("platform", e.target.value)}
+              className="min-w-[160px]"
             />
+
+            {/* Quick Stats */}
+            <div className="hidden lg:flex items-center gap-3 pl-4 border-l border-brand-border/50">
+              <Badge variant="success" size="sm">
+                {activeCount} เปิดใช้งาน
+              </Badge>
+              <Badge variant="default" size="sm">
+                {services.length - activeCount} ปิดใช้งาน
+              </Badge>
+            </div>
           </div>
 
-          {/* Search */}
+          {/* Right: Search */}
           <div className="w-full lg:w-auto lg:min-w-[280px]">
             <div className="relative">
               <Search className="w-4 h-4 text-brand-text-light absolute left-3 top-1/2 -translate-y-1/2" />
@@ -418,14 +399,38 @@ export default function ServicesPage() {
                 placeholder="ค้นหาบริการ..." 
                 value={filters.search as string || ""}
                 onChange={(e) => setFilter("search", e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-brand-border/50 bg-brand-bg/50 focus:bg-white focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/10 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none text-sm"
               />
             </div>
           </div>
         </div>
+      </Card>
 
+      {/* Services Content - Loading/Empty/Data states */}
+      <AsyncBoundary
+        isLoading={isLoading}
+        error={error}
+        onRetry={refetch}
+        isEmpty={services.length === 0}
+        emptyFallback={
+          <Card className="border-none shadow-md p-12">
+            <EmptyState
+              icon={Package}
+              title="ยังไม่มีบริการ"
+              description="เพิ่มบริการแรกของคุณได้เลย"
+              action={
+                <Link href="/seller/services/new">
+                  <Button leftIcon={<Plus className="w-4 h-4" />}>
+                    เพิ่มบริการแรก
+                  </Button>
+                </Link>
+              }
+            />
+          </Card>
+        }
+      >
         {/* Services Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
+        <Card className="border-none shadow-md overflow-hidden">
           <GenericDataTable
             data={sortedItems}
             columns={columns}
@@ -441,44 +446,44 @@ export default function ServicesPage() {
               !service.isActive ? "opacity-60 bg-gray-50/50" : ""
             }
           />
-        </div>
+        </Card>
+      </AsyncBoundary>
 
-        {/* Bulk Actions */}
-        <BulkActionsBar selectedCount={selectedCount} onAction={handleBulkAction} onClear={clearSelection} />
+      {/* Bulk Actions */}
+      <BulkActionsBar selectedCount={selectedCount} onAction={handleBulkAction} onClear={clearSelection} />
 
-        {/* Edit Service Modal */}
-        <Modal 
-          isOpen={isEditModalOpen} 
-          onClose={() => { setIsEditModalOpen(false); setEditingService(null); }}
-          title="แก้ไขบริการ" 
-          size="lg"
-        >
-          <div className="space-y-4" key={editingService?.id || "edit"}>
-            <ServiceForm 
-              service={editingService}
-              onSubmit={async (data) => {
-                if (!editingService) return;
-                
-                try {
-                  await api.seller.updateService(editingService.id, data);
-                  await refetch();
-                  setIsEditModalOpen(false);
-                  setEditingService(null);
-                  alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
-                } catch (error) {
-                  console.error("Error updating service:", error);
-                  alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
-                }
-              }}
-            />
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsEditModalOpen(false); setEditingService(null); }}>
-                ยกเลิก
-              </Button>
-            </div>
+      {/* Edit Service Modal */}
+      <Modal 
+        isOpen={isEditModalOpen} 
+        onClose={() => { setIsEditModalOpen(false); setEditingService(null); }}
+        title="แก้ไขบริการ" 
+        size="lg"
+      >
+        <div className="space-y-4" key={editingService?.id || "edit"}>
+          <ServiceForm 
+            service={editingService}
+            onSubmit={async (data) => {
+              if (!editingService) return;
+              
+              try {
+                await api.seller.updateService(editingService.id, data);
+                await refetch();
+                setIsEditModalOpen(false);
+                setEditingService(null);
+                alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
+              } catch (error) {
+                console.error("Error updating service:", error);
+                alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+              }
+            }}
+          />
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsEditModalOpen(false); setEditingService(null); }}>
+              ยกเลิก
+            </Button>
           </div>
-        </Modal>
-      </div>
-    </AsyncBoundary>
+        </div>
+      </Modal>
+    </div>
   );
 }

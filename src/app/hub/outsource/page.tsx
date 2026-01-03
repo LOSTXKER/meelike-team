@@ -7,7 +7,7 @@ import { Container, Section } from "@/components/layout";
 import { PageHeader, PlatformIcon, FilterBar, StatsGrid } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import { useOutsourceJobs } from "@/lib/api/hooks";
-import { getJobTypeLabel } from "@/lib/mock-data/helpers";
+import { getJobTypeLabel } from "@/lib/utils";
 import type { Platform } from "@/types";
 import {
   Briefcase,
@@ -94,7 +94,7 @@ export default function OutsourcePage() {
     },
     {
       label: "เสนอราคาทั้งหมด",
-      value: outsourceJobs?.reduce((sum, j) => sum + j.bids, 0) || 0,
+      value: outsourceJobs?.reduce((sum, j) => sum + j.bidsCount, 0) || 0,
       icon: MessageCircle,
       iconColor: "text-brand-info",
       iconBgColor: "bg-brand-info/10",
@@ -207,7 +207,7 @@ export default function OutsourcePage() {
                       ฿{job.budget.toLocaleString()}
                     </p>
                     <p className="text-xs text-brand-text-light">
-                      (฿{job.pricePerUnit}/{getJobTypeLabel(job.jobType)})
+                      (฿{job.suggestedPricePerUnit}/{getJobTypeLabel(job.jobType)})
                     </p>
                   </div>
                 </div>
@@ -274,7 +274,7 @@ export default function OutsourcePage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <MessageCircle className="w-4 h-4" />
-                      {job.bids} เสนอราคา
+                      {job.bidsCount} เสนอราคา
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />

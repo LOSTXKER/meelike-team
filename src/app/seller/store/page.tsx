@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { Card, Button, Input, Textarea, Badge, Avatar, Select, Tabs, Switch } from "@/components/ui";
-import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
-import { PageHeader } from "@/components/shared";
+import { HStack } from "@/components/layout";
 import { formatCurrency } from "@/lib/utils";
 import type { StoreTheme, StoreService } from "@/types";
 import { useSellerServices } from "@/lib/api/hooks";
@@ -151,9 +150,9 @@ export default function StorePage() {
   const [activeSettingSection, setActiveSettingSection] = useState<SettingSection>("info");
   
   const [storeData, setStoreData] = useState({
-    storeName: seller?.storeName || "JohnBoost Shop",
-    storeSlug: seller?.storeSlug || "johnboost",
-    bio: seller?.bio || "บริการปั้มยอด Social Media ครบวงจร คุณภาพสูง ราคาถูก",
+    storeName: seller?.storeName || seller?.displayName || "ร้านของฉัน",
+    storeSlug: seller?.storeSlug || seller?.slug || "my-store",
+    bio: seller?.bio || seller?.description || "บริการ Social Media Marketing คุณภาพสูง",
   });
 
   const [selectedTheme, setSelectedTheme] = useState<StoreTheme>(
@@ -207,16 +206,16 @@ export default function StorePage() {
   const activeServices = services.filter((s: StoreService) => s.isActive);
   const publicServices = services.filter((s: StoreService) => s.isActive && s.showInStore);
 
-  // Mock store performance
+  // Store performance stats (from seed data)
   const storeStats = {
-    totalSales: 285000,
-    monthlyOrders: 156,
-    rating: 4.9,
-    ratingCount: 89,
-    visitors: 1250,
-    conversionRate: 12.5,
-    responseRate: 98,
-    avgDeliveryTime: "2.5 ชม.",
+    totalSales: seller?.totalRevenue || 0,
+    monthlyOrders: seller?.totalOrders || 0,
+    rating: seller?.rating || 0,
+    ratingCount: seller?.ratingCount || 0,
+    visitors: 1250, // TODO: Implement analytics tracking
+    conversionRate: 12.5, // TODO: Calculate from analytics
+    responseRate: 98, // TODO: Calculate from orders
+    avgDeliveryTime: "2.5 ชม.", // TODO: Calculate from completed orders
   };
 
   // Group services by platform
@@ -236,33 +235,38 @@ export default function StorePage() {
   };
 
   return (
-    <Container size="xl">
-      <Section spacing="md" className="animate-fade-in pb-12">
-        {/* Page Header */}
-        <PageHeader
-          title="จัดการร้านค้า"
-          description="ตกแต่งร้าน จัดบริการ ดูรีวิว และตั้งค่าร้านของคุณ"
-          icon={Store}
-          action={
-            <HStack gap={3}>
-              <a href={`/s/${storeData.storeSlug}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" leftIcon={<Eye className="w-4 h-4" />}>
-                  ดูหน้าร้าน
-                </Button>
-              </a>
-              <Button
-                onClick={handleSave}
-                isLoading={isSaving}
-                leftIcon={<Save className="w-4 h-4" />}
-              >
-                บันทึก
-              </Button>
-            </HStack>
-          }
-        />
+    <div className="space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <Store className="w-5 h-5 text-brand-primary" />
+            </div>
+            จัดการร้านค้า
+          </h1>
+          <p className="text-brand-text-light text-sm mt-1 ml-[52px]">
+            ตกแต่งร้าน จัดบริการ ดูรีวิว และตั้งค่าร้านของคุณ
+          </p>
+        </div>
+        <HStack gap={3}>
+          <a href={`/s/${storeData.storeSlug}`} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" leftIcon={<Eye className="w-4 h-4" />}>
+              ดูหน้าร้าน
+            </Button>
+          </a>
+          <Button
+            onClick={handleSave}
+            isLoading={isSaving}
+            leftIcon={<Save className="w-4 h-4" />}
+          >
+            บันทึก
+          </Button>
+        </HStack>
+      </div>
 
-        {/* Tabs Navigation */}
-        <Tabs
+      {/* Tabs Navigation */}
+      <Tabs
           tabs={tabs.map(tab => ({
             id: tab.id,
             label: tab.label,
@@ -1252,8 +1256,7 @@ export default function StorePage() {
             </div>
           </div>
         )}
-        </div>
-      </Section>
-    </Container>
+      </div>
+    </div>
   );
 }

@@ -8,7 +8,7 @@ import { Container, Section } from "@/components/layout";
 import { PageHeader, PlatformIcon, FilterBar, StatsGridCompact } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import { useFindTeamPosts } from "@/lib/api/hooks";
-import { getLevelColor } from "@/lib/mock-data/helpers";
+import { getLevelColor } from "@/lib/utils";
 import type { Platform } from "@/types";
 import {
   Search,

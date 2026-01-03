@@ -1,7 +1,62 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { AuthUser } from "@/types";
-import { mockSeller, mockWorkers } from "./mock-data";
+import type { AuthUser, Seller, Worker } from "@/types";
+import { getStorage, setStorage, STORAGE_KEYS } from "./storage";
+import { generateId } from "./utils/helpers";
+
+// ===== HELPER: Create default data on first login =====
+
+function createDefaultSeller(userId: string, email: string): Seller {
+  return {
+    id: `seller-${generateId()}`,
+    userId,
+    displayName: email.split("@")[0],
+    name: email.split("@")[0],
+    slug: email.split("@")[0].toLowerCase(),
+    subscription: "free",
+    theme: "meelike",
+    storeName: "My Store",
+    storeSlug: `store-${generateId()}`,
+    plan: "free",
+    sellerRank: "bronze",
+    platformFeePercent: 15,
+    rollingAvgSpend: 0,
+    totalSpentOnWorkers: 0,
+    balance: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    rating: 0,
+    ratingCount: 0,
+    storeTheme: "meelike",
+    isActive: true,
+    isVerified: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function createDefaultWorker(userId: string, email: string): Worker {
+  const now = new Date().toISOString();
+  return {
+    id: `worker-${generateId()}`,
+    userId,
+    displayName: email.split("@")[0],
+    level: "bronze",
+    rating: 0,
+    ratingCount: 0,
+    totalJobs: 0,
+    totalJobsCompleted: 0,
+    totalEarned: 0,
+    completionRate: 100,
+    availableBalance: 0,
+    pendingBalance: 0,
+    isActive: true,
+    isBanned: false,
+    teamIds: [],
+    createdAt: now,
+    lastActiveAt: now,
+  };
+}
 
 // ===== AUTH STORE =====
 
@@ -40,16 +95,59 @@ export const useAuthStore = create<AuthState>()(
           await new Promise((resolve) => setTimeout(resolve, 500));
           
           if (role === "seller") {
+            // Get sellers from storage (including seeded data)
+            const sellers = getStorage<Seller[]>(STORAGE_KEYS.SELLERS, []);
+            
+            // Try to find existing seller (from seed data or previous login)
+            // Priority: 1) match by email name, 2) use first seller if exists, 3) create new
+            let seller = sellers.find(s => 
+              s.name === email.split("@")[0] || 
+              s.displayName === email.split("@")[0]
+            );
+            
+            // If no match by name, use first seller from seed data
+            if (!seller && sellers.length > 0) {
+              seller = sellers[0];
+            }
+            
+            // If still no seller, create new one
+            if (!seller) {
+              const userId = `user-${generateId()}`;
+              seller = createDefaultSeller(userId, email);
+              sellers.push(seller);
+              setStorage(STORAGE_KEYS.SELLERS, sellers);
+            }
+            
             const user: AuthUser = {
-              id: mockSeller.userId,
+              id: seller.userId,
               email,
               role: "seller",
-              seller: mockSeller,
+              seller,
             };
             set({ user, isLoading: false });
             return true;
           } else {
-            const worker = mockWorkers[0];
+            // Get workers from storage (including seeded data)
+            const workers = getStorage<Worker[]>(STORAGE_KEYS.WORKERS, []);
+            
+            // Try to find existing worker
+            let worker = workers.find(w => 
+              w.displayName === email.split("@")[0]
+            );
+            
+            // If no match, use first worker from seed data
+            if (!worker && workers.length > 0) {
+              worker = workers[0];
+            }
+            
+            // If still no worker, create new one
+            if (!worker) {
+              const userId = `user-${generateId()}`;
+              worker = createDefaultWorker(userId, email);
+              workers.push(worker);
+              setStorage(STORAGE_KEYS.WORKERS, workers);
+            }
+            
             const user: AuthUser = {
               id: worker.userId,
               email,

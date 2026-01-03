@@ -77,6 +77,91 @@
   --color-brand-error: var(--brand-error);
   --color-brand-info: var(--brand-info);
   
+  /* Override Tailwind Colors with Brand Colors */
+  /* Primary/Blue -> Brand Primary */
+  --color-blue-50: color-mix(in srgb, var(--brand-primary) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--brand-primary) 10%, white);
+  --color-blue-200: color-mix(in srgb, var(--brand-primary) 20%, white);
+  --color-blue-300: color-mix(in srgb, var(--brand-primary) 40%, white);
+  --color-blue-400: color-mix(in srgb, var(--brand-primary) 60%, white);
+  --color-blue-500: var(--brand-primary);
+  --color-blue-600: var(--brand-primary);
+  --color-blue-700: color-mix(in srgb, var(--brand-primary) 80%, black);
+  --color-blue-800: color-mix(in srgb, var(--brand-primary) 60%, black);
+  --color-blue-900: color-mix(in srgb, var(--brand-primary) 40%, black);
+  
+  /* Success/Emerald -> Brand Success */
+  --color-emerald-50: color-mix(in srgb, var(--brand-success) 5%, white);
+  --color-emerald-100: color-mix(in srgb, var(--brand-success) 10%, white);
+  --color-emerald-200: color-mix(in srgb, var(--brand-success) 20%, white);
+  --color-emerald-300: color-mix(in srgb, var(--brand-success) 40%, white);
+  --color-emerald-400: color-mix(in srgb, var(--brand-success) 60%, white);
+  --color-emerald-500: var(--brand-success);
+  --color-emerald-600: var(--brand-success);
+  --color-emerald-700: color-mix(in srgb, var(--brand-success) 80%, black);
+  --color-emerald-800: color-mix(in srgb, var(--brand-success) 60%, black);
+  --color-emerald-900: color-mix(in srgb, var(--brand-success) 40%, black);
+  
+  /* Green -> Brand Success (same as emerald) */
+  --color-green-50: color-mix(in srgb, var(--brand-success) 5%, white);
+  --color-green-100: color-mix(in srgb, var(--brand-success) 10%, white);
+  --color-green-200: color-mix(in srgb, var(--brand-success) 20%, white);
+  --color-green-300: color-mix(in srgb, var(--brand-success) 40%, white);
+  --color-green-400: color-mix(in srgb, var(--brand-success) 60%, white);
+  --color-green-500: var(--brand-success);
+  --color-green-600: var(--brand-success);
+  --color-green-700: color-mix(in srgb, var(--brand-success) 80%, black);
+  --color-green-800: color-mix(in srgb, var(--brand-success) 60%, black);
+  --color-green-900: color-mix(in srgb, var(--brand-success) 40%, black);
+  
+  /* Warning/Amber -> Brand Warning */
+  --color-amber-50: color-mix(in srgb, var(--brand-warning) 5%, white);
+  --color-amber-100: color-mix(in srgb, var(--brand-warning) 10%, white);
+  --color-amber-200: color-mix(in srgb, var(--brand-warning) 20%, white);
+  --color-amber-300: color-mix(in srgb, var(--brand-warning) 40%, white);
+  --color-amber-400: color-mix(in srgb, var(--brand-warning) 60%, white);
+  --color-amber-500: var(--brand-warning);
+  --color-amber-600: var(--brand-warning);
+  --color-amber-700: color-mix(in srgb, var(--brand-warning) 80%, black);
+  --color-amber-800: color-mix(in srgb, var(--brand-warning) 60%, black);
+  --color-amber-900: color-mix(in srgb, var(--brand-warning) 40%, black);
+  
+  /* Yellow -> Brand Warning (same as amber) */
+  --color-yellow-50: color-mix(in srgb, var(--brand-warning) 5%, white);
+  --color-yellow-100: color-mix(in srgb, var(--brand-warning) 10%, white);
+  --color-yellow-200: color-mix(in srgb, var(--brand-warning) 20%, white);
+  --color-yellow-300: color-mix(in srgb, var(--brand-warning) 40%, white);
+  --color-yellow-400: color-mix(in srgb, var(--brand-warning) 60%, white);
+  --color-yellow-500: var(--brand-warning);
+  --color-yellow-600: var(--brand-warning);
+  --color-yellow-700: color-mix(in srgb, var(--brand-warning) 80%, black);
+  --color-yellow-800: color-mix(in srgb, var(--brand-warning) 60%, black);
+  --color-yellow-900: color-mix(in srgb, var(--brand-warning) 40%, black);
+  
+  /* Error/Red -> Brand Error */
+  --color-red-50: color-mix(in srgb, var(--brand-error) 5%, white);
+  --color-red-100: color-mix(in srgb, var(--brand-error) 10%, white);
+  --color-red-200: color-mix(in srgb, var(--brand-error) 20%, white);
+  --color-red-300: color-mix(in srgb, var(--brand-error) 40%, white);
+  --color-red-400: color-mix(in srgb, var(--brand-error) 60%, white);
+  --color-red-500: var(--brand-error);
+  --color-red-600: var(--brand-error);
+  --color-red-700: color-mix(in srgb, var(--brand-error) 80%, black);
+  --color-red-800: color-mix(in srgb, var(--brand-error) 60%, black);
+  --color-red-900: color-mix(in srgb, var(--brand-error) 40%, black);
+  
+  /* Accent/Purple -> Brand Accent */
+  --color-purple-50: color-mix(in srgb, var(--brand-accent) 5%, white);
+  --color-purple-100: color-mix(in srgb, var(--brand-accent) 10%, white);
+  --color-purple-200: color-mix(in srgb, var(--brand-accent) 20%, white);
+  --color-purple-300: color-mix(in srgb, var(--brand-accent) 40%, white);
+  --color-purple-400: color-mix(in srgb, var(--brand-accent) 60%, white);
+  --color-purple-500: var(--brand-accent);
+  --color-purple-600: var(--brand-accent);
+  --color-purple-700: color-mix(in srgb, var(--brand-accent) 80%, black);
+  --color-purple-800: color-mix(in srgb, var(--brand-accent) 60%, black);
+  --color-purple-900: color-mix(in srgb, var(--brand-accent) 40%, black);
+  
   /* Fonts */
   --font-sans: 'Sarabun', sans-serif;
 }
@@ -200,6 +285,11 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
@@ -237,6 +327,10 @@ body {
 
 .animate-slide-in-down {
   animation: slideInDown 300ms ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 200ms ease-out;
 }
 
 .animate-scale-in {
@@ -434,3 +528,348 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ==========================================
+   Mobile Optimization Utilities
+   ========================================== */
+
+/* Safe area for bottom navigation */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Touch target sizes (min 44px for accessibility) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.touch-target-sm {
+  min-height: 36px;
+  min-width: 36px;
+}
+
+/* Mobile-first responsive containers */
+.mobile-container {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Active state for touch devices */
+@media (hover: none) {
+  .touch-active:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: all 100ms ease;
+  }
+}
+
+/* Prevent text selection on buttons for mobile */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better input styling on mobile */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+/* Mobile card styles */
+.mobile-card {
+  @apply bg-white rounded-xl p-4 shadow-sm border border-brand-border/50 active:bg-brand-bg/50 transition-colors;
+}
+
+/* Sticky elements on mobile */
+.sticky-mobile {
+  @apply sticky top-0 z-30 bg-white border-b border-brand-border/30;
+}
+
+/* Mobile bottom sheet animation */
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-sheet-up {
+  animation: slideUpSheet 300ms ease-out;
+}
+
+/* Pull to refresh indicator placeholder */
+.ptr-indicator {
+  @apply h-12 flex items-center justify-center text-brand-text-light;
+}
+
+/* Mobile floating action button */
+.mobile-fab {
+  @apply fixed bottom-20 right-4 w-14 h-14 bg-brand-primary text-white rounded-full shadow-lg shadow-brand-primary/30 flex items-center justify-center z-30;
+  @apply hover:bg-brand-primary/90 active:scale-95 transition-all;
+}
+
+/* Mobile swipe actions (placeholder for future use) */
+.swipe-container {
+  @apply overflow-x-auto snap-x snap-mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.swipe-container::-webkit-scrollbar {
+  display: none;
+}
+
+.swipe-item {
+  @apply snap-start shrink-0;
+}
+
+/* Responsive grid utilities */
+.grid-mobile-1 {
+  @apply grid grid-cols-1;
+}
+
+.grid-mobile-2 {
+  @apply grid grid-cols-2;
+}
+
+@media (min-width: 640px) {
+  .grid-mobile-1, .grid-mobile-2 {
+    display: block;
+  }
+}
+
+/* ==========================================
+   Visual Polish & Micro-interactions
+   ========================================== */
+
+/* Hover lift effect */
+.hover-lift {
+  @apply hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200;
+}
+
+/* Interactive card hover */
+.card-interactive-hover {
+  @apply hover:shadow-lg hover:border-brand-primary/30 transition-all duration-200;
+}
+
+/* Button press effect */
+.btn-press {
+  @apply active:scale-95 transition-transform duration-100;
+}
+
+/* Icon hover rotate */
+.icon-hover-rotate:hover svg {
+  transform: rotate(15deg);
+  transition: transform 200ms ease;
+}
+
+/* Text gradient */
+.text-gradient {
+  @apply bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent;
+}
+
+/* Skeleton loading shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--brand-bg) 25%,
+    var(--brand-secondary) 50%,
+    var(--brand-bg) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Focus ring styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:ring-offset-2;
+}
+
+/* Smooth transitions for all interactive elements */
+.transition-smooth {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Badge pulse animation */
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.badge-pulse {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* Count up animation */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: countUp 400ms ease-out;
+}
+
+/* Ripple effect (for touch feedback) */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: all 500ms ease-out;
+}
+
+.ripple:active::after {
+  transform: translate(-50%, -50%) scale(2);
+  opacity: 1;
+  transition: all 0ms;
+}
+
+/* Success checkmark animation */
+@keyframes checkmark {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.animate-checkmark {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkmark 500ms ease-out forwards;
+}
+
+/* Entrance animations */
+.animate-enter {
+  animation: fadeIn 300ms ease-out;
+}
+
+.animate-enter-left {
+  animation: slideInLeft 300ms ease-out;
+}
+
+.animate-enter-right {
+  animation: slideInRight 300ms ease-out;
+}
+
+.animate-enter-up {
+  animation: slideInUp 300ms ease-out;
+}
+
+/* Stagger animation for lists */
+.stagger-item {
+  animation: fadeIn 300ms ease-out both;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+.stagger-item:nth-child(7) { animation-delay: 300ms; }
+.stagger-item:nth-child(8) { animation-delay: 350ms; }
+
+/* Gradient backgrounds */
+.gradient-primary {
+  @apply bg-gradient-to-br from-brand-primary via-brand-primary/90 to-brand-accent/80;
+}
+
+.gradient-success {
+  @apply bg-gradient-to-br from-brand-success to-emerald-600;
+}
+
+.gradient-warning {
+  @apply bg-gradient-to-br from-brand-warning to-amber-600;
+}
+
+/* Glass effect */
+.glass {
+  @apply bg-white/80 backdrop-blur-md border border-white/50;
+}
+
+.glass-dark {
+  @apply bg-black/50 backdrop-blur-md border border-white/10 text-white;
+}
+
+/* ==========================================
+   Social Media & Special Colors
+   ========================================== */
+
+/* Facebook - Blue */
+.social-facebook {
+  color: #1877F2;
+}
+
+.bg-social-facebook {
+  background-color: #1877F2;
+}
+
+/* Instagram - Gradient Pink */
+.social-instagram {
+  color: #E4405F;
+}
+
+.bg-social-instagram {
+  background-color: #E4405F;
+}
+
+/* TikTok - Black/Gray */
+.social-tiktok {
+  color: #000000;
+}
+
+.bg-social-tiktok {
+  background-color: #000000;
+}
+
+/* YouTube - Red */
+.social-youtube {
+  color: #FF0000;
+}
+
+.bg-social-youtube {
+  background-color: #FF0000;
+}
+
+/* Line - Green */
+.social-line {
+  color: #00B900;
+}
+
+.bg-social-line {
+  background-color: #00B900;
+}
+
+/* Syntax Highlighting Colors (keep original) */
+.syntax-purple { color: #A855F7; }
+.syntax-green { color: #22C55E; }
+.syntax-orange { color: #FB923C; }
+.syntax-blue { color: #3B82F6; }
+
+/* Special UI Elements (keep original vibrant colors) */
+.ui-terminal-red { background-color: #EF4444; }
+.ui-terminal-yellow { background-color: #EAB308; }
+.ui-terminal-green { background-color: #22C55E; }

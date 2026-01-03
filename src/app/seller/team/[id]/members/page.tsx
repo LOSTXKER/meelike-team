@@ -2,18 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Badge, Button, Input, Dialog, Select, Dropdown, Modal } from "@/components/ui";
-import { Container, Section } from "@/components/layout";
+import { Card, Badge, Button, Input, Select, Modal, Skeleton } from "@/components/ui";
 import { 
-  PageHeader, 
   EmptyState, 
   InviteTeamModal, 
-  StatsGrid, 
-  getMemberRoleStats,
-  PageSkeleton,
   DataTable,
   renderRatingCell,
   renderCurrencyCell,
+  Breadcrumb,
   type DataTableColumn,
 } from "@/components/shared";
 import { useSellerTeams, useTeamMembersWithWorkers, type MemberWithWorker } from "@/lib/api/hooks";
@@ -24,14 +20,14 @@ import {
   Users,
   Search,
   Star,
-  CheckCircle,
   MoreVertical,
   UserPlus,
   Mail,
   Phone,
   Calendar,
-  Edit,
-  Trash2,
+  UserCheck,
+  Crown,
+  Briefcase,
 } from "lucide-react";
 
 export default function TeamMembersPage() {
@@ -157,31 +153,90 @@ export default function TeamMembersPage() {
   ], []);
 
   if (isLoadingTeams || isLoadingMembers) {
-    return <PageSkeleton variant="list" className="max-w-7xl mx-auto" />;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <div className="grid grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
   }
 
   return (
-    <Container size="xl">
-      <Section spacing="lg" className="animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <PageHeader
-            title="สมาชิกทีม"
-            description={`จัดการสมาชิกของทีม ${currentTeam?.name || ""}`}
-            icon={Users}
-          />
+    <div className="space-y-6 animate-fade-in">
+      {/* Breadcrumb */}
+      <Breadcrumb />
 
-          <Button
-            onClick={() => setShowInviteModal(true)}
-            leftIcon={<UserPlus className="w-4 h-4" />}
-            className="shadow-lg shadow-brand-primary/20"
-          >
-            เชิญสมาชิก
-          </Button>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+            <Users className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-brand-text-dark">สมาชิกทีม</h1>
+            <p className="text-sm text-brand-text-light">จัดการสมาชิกของทีม {currentTeam?.name || ""}</p>
+          </div>
         </div>
+        <Button
+          onClick={() => setShowInviteModal(true)}
+          leftIcon={<UserPlus className="w-4 h-4" />}
+        >
+          เชิญสมาชิก
+        </Button>
+      </div>
 
-        {/* Stats */}
-        <StatsGrid stats={getMemberRoleStats(stats)} columns={4} />
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.total}</p>
+              <p className="text-xs text-brand-text-light">สมาชิกทั้งหมด</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Crown className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.leads}</p>
+              <p className="text-xs text-brand-text-light">หัวหน้าทีม</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+              <UserCheck className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.assistants}</p>
+              <p className="text-xs text-brand-text-light">ผู้ช่วย</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <Briefcase className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{stats.workers}</p>
+              <p className="text-xs text-brand-text-light">Worker</p>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       {/* Filter & Search */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
@@ -362,7 +417,6 @@ export default function TeamMembersPage() {
           </div>
         )}
       </Modal>
-      </Section>
-    </Container>
+    </div>
   );
 }

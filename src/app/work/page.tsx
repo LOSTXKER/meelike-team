@@ -7,6 +7,7 @@ import { StatsGrid, EmptyState, DailyStreak, LevelBenefitsTable, StatCard } from
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats, useWorkerActiveJobs } from "@/lib/api/hooks";
+import type { WorkerJob } from "@/types";
 import {
   Wallet,
   TrendingUp,
@@ -274,12 +275,12 @@ export default function WorkerDashboard() {
               </div>
             ) : activeJobs && activeJobs.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-4">
-                {activeJobs.filter((job): job is NonNullable<typeof job> => job !== null).map((job) => {
-                  const title = 'serviceName' in job ? job.serviceName : job.title;
-                  const teamName = 'teamName' in job ? job.teamName : job.team;
-                  const amount = ('earnings' in job ? (job.earnings || 0) : ('payout' in job ? job.payout : 0)) as number;
-                  const progress = ('completedQuantity' in job ? job.completedQuantity : job.progress) as number;
-                  const total = ('quantity' in job ? job.quantity : job.total) as number;
+                {(activeJobs as WorkerJob[]).filter((job): job is WorkerJob => job !== null).map((job) => {
+                  const title = job.serviceName;
+                  const teamName = job.teamName;
+                  const amount = job.earnings || (job.quantity * job.pricePerUnit);
+                  const progress = job.completedQuantity;
+                  const total = job.quantity;
                   
                   return (
                   <Link href={`/work/jobs/${job.id}`} key={job.id}>

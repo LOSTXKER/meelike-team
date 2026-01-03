@@ -16,6 +16,8 @@ const STORAGE_KEYS = {
   TRANSACTIONS: "meelike_transactions",
   HUB_POSTS: "meelike_hub_posts", // Posts in the marketplace/hub
   TEAM_REVIEWS: "meelike_team_reviews", // Worker reviews of teams
+  OUTSOURCE_JOBS: "meelike_outsource_jobs", // Outsource jobs in Hub
+  OUTSOURCE_BIDS: "meelike_outsource_bids", // Bids on outsource jobs
 } as const;
 
 export function getStorage<T>(key: string, defaultValue: T): T {

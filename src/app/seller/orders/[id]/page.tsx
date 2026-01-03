@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Card, Badge, Button, Progress, Dialog, Input, Textarea, Select, Dropdown, Modal } from "@/components/ui";
-import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { HStack } from "@/components/layout";
 import { useSellerOrder, useSellerServices, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
 import {
@@ -34,7 +34,13 @@ import {
   Loader2,
   ChevronDown,
   Building2,
+  Split,
+  ArrowRightLeft,
+  Plus,
+  Briefcase,
+  Globe,
 } from "lucide-react";
+import type { OrderItemJob } from "@/types";
 
 type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
 
@@ -55,7 +61,10 @@ export default function OrderDetailPage() {
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [showConfirmPayment, setShowConfirmPayment] = useState(false);
   const [showSendBotModal, setShowSendBotModal] = useState(false);
+  const [showSplitJobModal, setShowSplitJobModal] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
+  const [selectedJobForReassign, setSelectedJobForReassign] = useState<OrderItemJob | null>(null);
   
   // Track which items have been dispatched
   const [sentItems, setSentItems] = useState<Record<number, { sent: boolean; loading: boolean }>>({});
@@ -63,6 +72,24 @@ export default function OrderDetailPage() {
   // Job creation form
   const [jobQuantity, setJobQuantity] = useState("");
   const [jobPayRate, setJobPayRate] = useState("");
+  
+  // Split job form
+  const [splitQuantity, setSplitQuantity] = useState("");
+  const [splitPayRate, setSplitPayRate] = useState("");
+  const [splitTeamId, setSplitTeamId] = useState("");
+  
+  // Reassign job form
+  const [reassignTeamId, setReassignTeamId] = useState("");
+  const [reassignReason, setReassignReason] = useState("");
+
+  // Post to Hub form
+  const [showPostToHubModal, setShowPostToHubModal] = useState(false);
+  const [hubQuantity, setHubQuantity] = useState("");
+  const [hubSuggestedPrice, setHubSuggestedPrice] = useState("");
+  const [hubDeadline, setHubDeadline] = useState("");
+  const [hubDescription, setHubDescription] = useState("");
+  const [hubIsUrgent, setHubIsUrgent] = useState(false);
+  const [isPostingToHub, setIsPostingToHub] = useState(false);
 
   // Use API hooks
   const { data: orderData, isLoading: isLoadingOrder, refetch } = useSellerOrder(orderId);
@@ -199,18 +226,146 @@ export default function OrderDetailPage() {
     setSelectedTeamId("");
   };
 
+  // Handle split job to multiple teams
+  const handleSplitJob = async () => {
+    if (selectedItem === null || !order) return;
+    
+    if (!splitQuantity || !splitPayRate || !splitTeamId) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+    
+    const item = order.items[selectedItem];
+    const selectedTeam = teams?.find((t) => t.id === splitTeamId);
+    
+    try {
+      await api.seller.splitJobToTeams(
+        orderId,
+        item.id,
+        [{ teamId: splitTeamId, quantity: parseInt(splitQuantity), payRate: parseFloat(splitPayRate) }]
+      );
+      
+      await refetch();
+      setShowSplitJobModal(false);
+      setSplitQuantity("");
+      setSplitPayRate("");
+      setSplitTeamId("");
+      setSelectedItem(null);
+      
+      alert(`แบ่งงานไปทีม "${selectedTeam?.name}" เรียบร้อย!`);
+    } catch (error: any) {
+      console.error("Error splitting job:", error);
+      alert(error.message || "เกิดข้อผิดพลาดในการแบ่งงาน");
+    }
+  };
+
+  // Handle reassign job to another team
+  const handleReassignJob = async () => {
+    if (!selectedJobForReassign || !reassignTeamId) {
+      alert("กรุณาเลือกทีมปลายทาง");
+      return;
+    }
+    
+    const selectedTeam = teams?.find((t) => t.id === reassignTeamId);
+    
+    try {
+      await api.seller.reassignJob(selectedJobForReassign.jobId, {
+        toTeamId: reassignTeamId,
+        reason: reassignReason || undefined,
+      });
+      
+      await refetch();
+      setShowReassignModal(false);
+      setSelectedJobForReassign(null);
+      setReassignTeamId("");
+      setReassignReason("");
+      
+      alert(`โยนงานไปทีม "${selectedTeam?.name}" เรียบร้อย!`);
+    } catch (error: any) {
+      console.error("Error reassigning job:", error);
+      alert(error.message || "เกิดข้อผิดพลาดในการโยนงาน");
+    }
+  };
+
+  // Get remaining quantity for split
+  const getRemainingQuantityForSplit = (itemIndex: number) => {
+    const item = order.items[itemIndex];
+    const assignedQuantity = item.jobs?.reduce((sum: number, j: OrderItemJob) => sum + j.quantity, 0) || 0;
+    return item.quantity - assignedQuantity;
+  };
+
+  // Get remaining quantity for Hub posting (excluding completed and assigned)
+  const getRemainingQuantityForHub = (itemIndex: number) => {
+    const item = order.items[itemIndex];
+    const assignedQuantity = item.jobs?.reduce((sum: number, j: OrderItemJob) => 
+      j.status !== "cancelled" ? sum + j.quantity : sum, 0) || 0;
+    return item.quantity - item.completedQuantity - assignedQuantity;
+  };
+
+  // Handle post to Hub
+  const handlePostToHub = async () => {
+    if (selectedItem === null || !order) return;
+
+    if (!hubQuantity || !hubSuggestedPrice || !hubDeadline) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+
+    const item = order.items[selectedItem];
+    const qty = parseInt(hubQuantity);
+    const maxQty = getRemainingQuantityForHub(selectedItem);
+
+    if (qty > maxQty) {
+      alert(`จำนวนที่โพสต์ (${qty}) เกินจำนวนที่เหลือ (${maxQty})`);
+      return;
+    }
+
+    setIsPostingToHub(true);
+
+    try {
+      await api.hub.postOutsourceFromOrder({
+        orderId: order.id,
+        orderItemId: item.id,
+        quantity: qty,
+        suggestedPricePerUnit: parseFloat(hubSuggestedPrice),
+        deadline: hubDeadline,
+        description: hubDescription || undefined,
+        isUrgent: hubIsUrgent,
+      });
+
+      await refetch();
+      setShowPostToHubModal(false);
+      resetHubForm();
+
+      alert("โพสต์ลง Hub เรียบร้อย! รอทีมอื่นมา bid");
+    } catch (error: any) {
+      console.error("Error posting to Hub:", error);
+      alert(error.message || "เกิดข้อผิดพลาดในการโพสต์");
+    } finally {
+      setIsPostingToHub(false);
+    }
+  };
+
+  const resetHubForm = () => {
+    setSelectedItem(null);
+    setHubQuantity("");
+    setHubSuggestedPrice("");
+    setHubDeadline("");
+    setHubDescription("");
+    setHubIsUrgent(false);
+  };
+
   return (
-    <Container size="xl">
-      <Section spacing="lg" className="animate-fade-in pb-12">
-        {/* Header */}
-        <HStack justify="between" align="center">
-          <HStack gap={4} align="center">
-            <Link href="/seller/orders">
-              <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            </Link>
-            <VStack gap={0}>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/seller/orders">
+            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+          <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-brand-text-dark">
                 {order.orderNumber}
@@ -230,10 +385,10 @@ export default function OrderDetailPage() {
                 minute: "2-digit",
               })}
             </p>
-            </VStack>
-          </HStack>
+          </div>
+        </div>
 
-          <div className="flex gap-3">
+        <div className="flex gap-3">
           {order.status === "pending" && (
             <Button onClick={() => setShowConfirmPayment(true)} className="shadow-lg shadow-brand-primary/20 rounded-xl">
               <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -246,10 +401,10 @@ export default function OrderDetailPage() {
               อัปเดตสถานะ
             </Button>
           )}
-          </div>
-        </HStack>
+        </div>
+      </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Order Items */}
@@ -262,9 +417,11 @@ export default function OrderDetailPage() {
             </h2>
 
             <div className="space-y-6">
-              {order.items.map((item: { serviceId: string; completedQuantity: number; quantity: number; status: string; serviceName: string; platform: string; type: string; serviceType: string; targetUrl: string; unitPrice: number; subtotal: number; progress: number }, index: number) => {
+              {order.items.map((item: { id: string; serviceId: string; completedQuantity: number; quantity: number; status: string; serviceName: string; platform: string; type: string; serviceType: string; targetUrl: string; unitPrice: number; subtotal: number; progress: number; jobs?: OrderItemJob[] }, index: number) => {
                 const service = getServiceInfo(item.serviceId);
                 const progress = (item.completedQuantity / item.quantity) * 100;
+                const hasJobs = item.jobs && item.jobs.length > 0;
+                const remainingQuantity = getRemainingQuantityForSplit(index);
 
                 return (
                   <div
@@ -358,6 +515,108 @@ export default function OrderDetailPage() {
                       </div>
                       <Progress value={progress} className="h-2.5" />
                     </div>
+
+                    {/* Jobs List (for human services with multiple jobs) */}
+                    {hasJobs && service?.serviceType === "human" && (
+                      <div className="space-y-3 p-4 bg-white rounded-xl border border-brand-border/20 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4 text-brand-primary" />
+                            <span className="text-sm font-medium text-brand-text-dark">
+                              งานที่มอบหมาย ({item.jobs!.length})
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            {remainingQuantity > 0 && order.status === "processing" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedItem(index);
+                                    setSplitQuantity(remainingQuantity.toString());
+                                    setShowSplitJobModal(true);
+                                  }}
+                                  className="text-xs h-7"
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  แบ่งงานเพิ่ม
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedItem(index);
+                                    setHubQuantity(getRemainingQuantityForHub(index).toString());
+                                    setShowPostToHubModal(true);
+                                  }}
+                                  className="text-xs h-7 text-brand-accent border-brand-accent/30 hover:bg-brand-accent/5"
+                                >
+                                  <Globe className="w-3 h-3 mr-1" />
+                                  โพสต์ลง Hub
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {item.jobs!.map((job) => (
+                            <div
+                              key={job.jobId}
+                              className="flex items-center justify-between p-3 bg-brand-bg/50 rounded-lg border border-brand-border/30"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+                                  <Users className="w-4 h-4 text-brand-primary" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-brand-text-dark">
+                                    {job.teamName}
+                                  </p>
+                                  <p className="text-xs text-brand-text-light">
+                                    {job.completedQuantity}/{job.quantity} หน่วย
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant={
+                                    job.status === "completed" ? "success" :
+                                    job.status === "cancelled" ? "error" :
+                                    job.status === "in_progress" || job.status === "pending_review" ? "info" :
+                                    "warning"
+                                  }
+                                  size="sm"
+                                >
+                                  {job.status === "completed" ? "เสร็จสิ้น" :
+                                   job.status === "cancelled" ? "ยกเลิก" :
+                                   job.status === "in_progress" ? "กำลังทำ" :
+                                   job.status === "pending_review" ? "รอตรวจ" :
+                                   "รอรับงาน"}
+                                </Badge>
+                                {job.status !== "completed" && job.status !== "cancelled" && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedJobForReassign(job);
+                                      setReassignTeamId("");
+                                      setReassignReason("");
+                                      setShowReassignModal(true);
+                                    }}
+                                    className="text-xs h-7 px-2 text-brand-text-light hover:text-brand-primary"
+                                    title="โยนงานไปทีมอื่น"
+                                  >
+                                    <ArrowRightLeft className="w-3 h-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Actions - Manual dispatch */}
                     {order.status === "processing" && (
@@ -902,8 +1161,360 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </Modal>
-      </Section>
-    </Container>
+
+      {/* Split Job Modal */}
+      <Modal
+        isOpen={showSplitJobModal}
+        onClose={() => {
+          setShowSplitJobModal(false);
+          setSelectedItem(null);
+          setSplitQuantity("");
+          setSplitPayRate("");
+          setSplitTeamId("");
+        }}
+        title="แบ่งงานไปทีมอื่น"
+      >
+        <div className="space-y-4">
+          {selectedItem !== null && (
+            <>
+              <div className="p-4 bg-brand-bg rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-accent to-brand-primary flex items-center justify-center">
+                    <Split className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text-dark">
+                      {getServiceInfo(order.items[selectedItem].serviceId)?.name}
+                    </p>
+                    <p className="text-xs text-brand-text-light">แบ่งงานเพิ่มไปทีมอื่น</p>
+                  </div>
+                </div>
+                <div className="p-2 bg-white rounded-lg text-sm">
+                  <p className="text-brand-text-light text-xs">จำนวนที่ยังไม่ได้มอบหมาย</p>
+                  <p className="font-bold text-brand-text-dark">
+                    {getRemainingQuantityForSplit(selectedItem).toLocaleString()} หน่วย
+                  </p>
+                </div>
+              </div>
+
+              {/* Team Selection */}
+              <div>
+                <label className="block text-sm font-bold text-brand-text-dark mb-2">
+                  เลือกทีมปลายทาง *
+                </label>
+                <div className="relative">
+                  <select
+                    value={splitTeamId}
+                    onChange={(e) => setSplitTeamId(e.target.value)}
+                    className="w-full p-3 pl-10 rounded-xl border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer font-medium"
+                  >
+                    <option value="">-- เลือกทีม --</option>
+                    {teamOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="จำนวนที่แบ่ง *"
+                  type="number"
+                  placeholder="100"
+                  value={splitQuantity}
+                  onChange={(e) => setSplitQuantity(e.target.value)}
+                  max={getRemainingQuantityForSplit(selectedItem)}
+                />
+                <Input
+                  label="ค่าจ้างต่อหน่วย (฿) *"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.15"
+                  value={splitPayRate}
+                  onChange={(e) => setSplitPayRate(e.target.value)}
+                />
+              </div>
+
+              {splitQuantity && splitPayRate && (
+                <div className="p-3 bg-brand-success/10 border border-brand-success/30 rounded-xl">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-text-light">ค่าจ้างรวม</span>
+                    <span className="font-bold text-brand-success">
+                      ฿{(parseFloat(splitQuantity || "0") * parseFloat(splitPayRate || "0")).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSplitJobModal(false);
+                setSelectedItem(null);
+                setSplitQuantity("");
+                setSplitPayRate("");
+                setSplitTeamId("");
+              }}
+            >
+              ยกเลิก
+            </Button>
+            <Button 
+              onClick={handleSplitJob}
+              disabled={!splitQuantity || !splitPayRate || !splitTeamId}
+              className="shadow-md shadow-brand-primary/20"
+            >
+              <Split className="w-4 h-4 mr-2" />
+              แบ่งงาน
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Reassign Job Modal */}
+      <Modal
+        isOpen={showReassignModal}
+        onClose={() => {
+          setShowReassignModal(false);
+          setSelectedJobForReassign(null);
+          setReassignTeamId("");
+          setReassignReason("");
+        }}
+        title="โยนงานไปทีมอื่น"
+      >
+        <div className="space-y-4">
+          {selectedJobForReassign && (
+            <>
+              <div className="p-4 bg-brand-bg rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-warning to-brand-accent flex items-center justify-center">
+                    <ArrowRightLeft className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text-dark">
+                      โยนงานจากทีม "{selectedJobForReassign.teamName}"
+                    </p>
+                    <p className="text-xs text-brand-text-light">
+                      {selectedJobForReassign.quantity - selectedJobForReassign.completedQuantity} หน่วยที่เหลือจะถูกโยนไปทีมใหม่
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 bg-white rounded-lg text-sm">
+                    <p className="text-brand-text-light text-xs">จำนวนทั้งหมด</p>
+                    <p className="font-bold text-brand-text-dark">{selectedJobForReassign.quantity} หน่วย</p>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg text-sm">
+                    <p className="text-brand-text-light text-xs">ทำเสร็จแล้ว</p>
+                    <p className="font-bold text-brand-success">{selectedJobForReassign.completedQuantity} หน่วย</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-brand-warning/10 border border-brand-warning/30 rounded-xl">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-brand-warning mt-0.5 shrink-0" />
+                  <p className="text-sm text-brand-text-dark">
+                    งานเดิมจะถูกยกเลิก และสร้างงานใหม่ในทีมที่เลือก ส่วนที่ทำเสร็จแล้วจะยังคงอยู่
+                  </p>
+                </div>
+              </div>
+
+              {/* Team Selection */}
+              <div>
+                <label className="block text-sm font-bold text-brand-text-dark mb-2">
+                  เลือกทีมปลายทาง *
+                </label>
+                <div className="relative">
+                  <select
+                    value={reassignTeamId}
+                    onChange={(e) => setReassignTeamId(e.target.value)}
+                    className="w-full p-3 pl-10 rounded-xl border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer font-medium"
+                  >
+                    <option value="">-- เลือกทีม --</option>
+                    {teamOptions
+                      .filter(opt => opt.value !== selectedJobForReassign.teamId)
+                      .map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                  </select>
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light pointer-events-none" />
+                </div>
+              </div>
+
+              <Textarea
+                label="เหตุผล (ถ้ามี)"
+                placeholder="เช่น ทีมเดิมไม่ว่าง, ต้องการเปลี่ยนทีม..."
+                value={reassignReason}
+                onChange={(e) => setReassignReason(e.target.value)}
+                rows={2}
+              />
+            </>
+          )}
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowReassignModal(false);
+                setSelectedJobForReassign(null);
+                setReassignTeamId("");
+                setReassignReason("");
+              }}
+            >
+              ยกเลิก
+            </Button>
+            <Button 
+              onClick={handleReassignJob}
+              disabled={!reassignTeamId}
+              className="shadow-md shadow-brand-primary/20"
+            >
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              โยนงาน
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Post to Hub Modal */}
+      <Modal
+        isOpen={showPostToHubModal}
+        onClose={() => {
+          setShowPostToHubModal(false);
+          resetHubForm();
+        }}
+        title="โพสต์ลง Hub"
+      >
+        <div className="space-y-4">
+          {selectedItem !== null && (
+            <>
+              <div className="p-4 bg-gradient-to-br from-brand-accent/10 to-brand-primary/10 rounded-xl border border-brand-accent/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-accent to-brand-primary flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text-dark">
+                      {getServiceInfo(order.items[selectedItem].serviceId)?.name}
+                    </p>
+                    <p className="text-xs text-brand-text-light">โพสต์ไปตลาด Hub ให้ทีมอื่นมา bid</p>
+                  </div>
+                </div>
+                <div className="p-2 bg-white rounded-lg text-sm">
+                  <p className="text-brand-text-light text-xs">จำนวนที่สามารถโพสต์ได้</p>
+                  <p className="font-bold text-brand-text-dark">
+                    {getRemainingQuantityForHub(selectedItem).toLocaleString()} หน่วย
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3 bg-brand-info/10 border border-brand-info/20 rounded-xl">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-brand-info mt-0.5 shrink-0" />
+                  <div className="text-sm text-brand-text-dark">
+                    <p className="font-medium text-brand-info mb-1">วิธีการทำงาน</p>
+                    <ul className="text-xs text-brand-text-light space-y-1">
+                      <li>• งานจะถูกโพสต์ในตลาด Hub</li>
+                      <li>• ทีมอื่นๆ จะเห็นและส่ง bid เข้ามา</li>
+                      <li>• คุณเลือก bid ที่ต้องการแล้วมอบหมายงาน</li>
+                      <li>• ราคาที่ทีม bid = ต้นทุนใหม่ของคุณ</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="จำนวนที่โพสต์ *"
+                  type="number"
+                  placeholder="100"
+                  value={hubQuantity}
+                  onChange={(e) => setHubQuantity(e.target.value)}
+                  max={getRemainingQuantityForHub(selectedItem)}
+                />
+                <Input
+                  label="ราคาแนะนำ/หน่วย (฿) *"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.15"
+                  value={hubSuggestedPrice}
+                  onChange={(e) => setHubSuggestedPrice(e.target.value)}
+                />
+              </div>
+
+              <Input
+                label="กำหนดส่ง *"
+                type="date"
+                value={hubDeadline}
+                onChange={(e) => setHubDeadline(e.target.value)}
+              />
+
+              <Textarea
+                label="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                placeholder="เช่น ต้องการแอคคนจริง, ต้องแคปหลักฐาน..."
+                value={hubDescription}
+                onChange={(e) => setHubDescription(e.target.value)}
+                rows={2}
+              />
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hubIsUrgent}
+                  onChange={(e) => setHubIsUrgent(e.target.checked)}
+                  className="w-4 h-4 text-brand-warning rounded focus:ring-brand-warning"
+                />
+                <span className="text-sm text-brand-text-dark">
+                  🔥 งานด่วน (แสดงเป็น Urgent ใน Hub)
+                </span>
+              </label>
+
+              {hubQuantity && hubSuggestedPrice && (
+                <div className="p-3 bg-brand-warning/10 border border-brand-warning/30 rounded-xl">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-text-light">งบประมาณสูงสุด (ถ้า bid ตามราคาแนะนำ)</span>
+                    <span className="font-bold text-brand-warning">
+                      ฿{(parseFloat(hubQuantity || "0") * parseFloat(hubSuggestedPrice || "0")).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPostToHubModal(false);
+                resetHubForm();
+              }}
+              disabled={isPostingToHub}
+            >
+              ยกเลิก
+            </Button>
+            <Button 
+              onClick={handlePostToHub}
+              disabled={!hubQuantity || !hubSuggestedPrice || !hubDeadline || isPostingToHub}
+              isLoading={isPostingToHub}
+              className="shadow-md shadow-brand-accent/20 bg-gradient-to-r from-brand-accent to-brand-primary"
+            >
+              <Globe className="w-4 h-4 mr-2" />
+              โพสต์ลง Hub
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
   );
 }
 

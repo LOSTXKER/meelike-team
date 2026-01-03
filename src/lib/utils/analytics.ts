@@ -122,16 +122,18 @@ export function computeAnalytics(
   
   const totalCustomers = customerMap.size;
   const repeatCustomers = Array.from(customerMap.values()).filter(count => count > 1).length;
-  const repeatCustomerRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
-  
-  const avgOrderValue = completedOrders.length > 0 
-    ? totalRevenue / completedOrders.length 
+  const repeatCustomerRate = totalCustomers > 0 
+    ? Math.round((repeatCustomers / totalCustomers) * 100 * 100) / 100 
     : 0;
   
-  // Success rate
+  const avgOrderValue = completedOrders.length > 0 
+    ? Math.round(totalRevenue / completedOrders.length) 
+    : 0;
+  
+  // Success rate (rounded to 2 decimal places)
   const totalOrdersAll = orders.length;
   const successRate = totalOrdersAll > 0 
-    ? (completedOrders.length / totalOrdersAll) * 100 
+    ? Math.round((completedOrders.length / totalOrdersAll) * 100 * 100) / 100 
     : 100;
   
   // Revenue by day (last 7 days)

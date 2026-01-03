@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button } from "@/components/ui";
 import { PlatformIcon } from "@/components/shared";
-import type { Platform } from "@/types";
-import type { HubPost } from "@/lib/mock-data";
+import type { Platform, HubPost } from "@/types";
 import {
   Star,
   Clock,

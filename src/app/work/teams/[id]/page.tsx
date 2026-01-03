@@ -49,9 +49,9 @@ export default function WorkerTeamDetailPage() {
   const teamDetails = useMemo(() => {
     if (!team) return null;
     
-    // Calculate completion rate from team stats
+    // Calculate completion rate from team stats (rounded to 1 decimal)
     const completionRate = team.totalJobsCompleted > 0 
-      ? Math.min(98.5, (team.totalJobsCompleted / (team.totalJobsCompleted + 10)) * 100)
+      ? Math.round(Math.min(98.5, (team.totalJobsCompleted / (team.totalJobsCompleted + 10)) * 100) * 10) / 10
       : 95;
     
     return {

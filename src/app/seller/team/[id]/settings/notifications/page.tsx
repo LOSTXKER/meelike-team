@@ -1,0 +1,77 @@
+"use client";
+
+import { useState } from "react";
+import { Card, Button } from "@/components/ui";
+import { Bell, Save } from "lucide-react";
+
+export default function TeamNotificationsPage() {
+  const [notifyNewRequests, setNotifyNewRequests] = useState(true);
+  const [notifyPendingReview, setNotifyPendingReview] = useState(true);
+  const [dailySummary, setDailySummary] = useState(false);
+
+  const handleSave = () => {
+    alert("บันทึกการตั้งค่าเรียบร้อย!");
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Notifications */}
+      <Card variant="elevated" className="border-none shadow-md">
+        <div className="p-6 border-b border-brand-border/30 bg-brand-bg/30">
+          <h3 className="font-bold text-lg text-brand-text-dark flex items-center gap-2">
+            <Bell className="w-5 h-5 text-brand-warning" />
+            การแจ้งเตือน
+          </h3>
+          <p className="text-sm text-brand-text-light mt-1">ตั้งค่าการแจ้งเตือนสำหรับทีม</p>
+        </div>
+        <div className="p-6 space-y-5">
+          <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
+            <div>
+              <span className="font-medium text-brand-text-dark">แจ้งเตือนเมื่อมีคำขอเข้าร่วมใหม่</span>
+              <p className="text-sm text-brand-text-light">ได้รับการแจ้งเตือนเมื่อ Worker สมัครเข้าทีม</p>
+            </div>
+            <div 
+              onClick={() => setNotifyNewRequests(!notifyNewRequests)}
+              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notifyNewRequests ? "bg-brand-primary" : "bg-brand-border"}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notifyNewRequests ? "translate-x-7" : "translate-x-1"}`}></div>
+            </div>
+          </label>
+          
+          <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
+            <div>
+              <span className="font-medium text-brand-text-dark">แจ้งเตือนเมื่อมีงานรอตรวจสอบ</span>
+              <p className="text-sm text-brand-text-light">ได้รับการแจ้งเตือนเมื่อ Worker ส่งงาน</p>
+            </div>
+            <div 
+              onClick={() => setNotifyPendingReview(!notifyPendingReview)}
+              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notifyPendingReview ? "bg-brand-primary" : "bg-brand-border"}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notifyPendingReview ? "translate-x-7" : "translate-x-1"}`}></div>
+            </div>
+          </label>
+          
+          <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
+            <div>
+              <span className="font-medium text-brand-text-dark">สรุปรายวัน</span>
+              <p className="text-sm text-brand-text-light">รับสรุปผลงานของทีมทุกวัน</p>
+            </div>
+            <div 
+              onClick={() => setDailySummary(!dailySummary)}
+              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${dailySummary ? "bg-brand-primary" : "bg-brand-border"}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${dailySummary ? "translate-x-7" : "translate-x-1"}`}></div>
+            </div>
+          </label>
+        </div>
+      </Card>
+
+      {/* Save Button */}
+      <div className="flex justify-end pt-4">
+        <Button onClick={handleSave} leftIcon={<Save className="w-4 h-4" />}>
+          บันทึกการเปลี่ยนแปลง
+        </Button>
+      </div>
+    </div>
+  );
+}

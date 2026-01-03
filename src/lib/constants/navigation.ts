@@ -91,6 +91,13 @@ export const SELLER_NAV: NavConfig = [
     icon: Wallet,
   },
   
+  // === TERTIARY: ตั้งค่า ===
+  {
+    label: "ตั้งค่า",
+    href: "/seller/settings",
+    icon: Settings,
+  },
+  
   // === EXTERNAL: ตลาดกลาง (ปุ่มพิเศษ) ===
   {
     label: "ตลาด",
@@ -104,9 +111,7 @@ export const SELLER_NAV: NavConfig = [
 // USER MENU ITEMS (สำหรับ User Dropdown)
 // ============================================
 export const USER_MENU_ITEMS: NavItem[] = [
-  { label: "Subscription", href: "/seller/settings/subscription", icon: Crown },
-  { label: "API Keys", href: "/seller/settings/api", icon: Key },
-  { label: "ตั้งค่าบัญชี", href: "/seller/settings", icon: UserCircle },
+  { label: "ตั้งค่า", href: "/seller/settings", icon: Settings },
 ];
 
 // ============================================

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Input, Select, Textarea } from "@/components/ui";
-import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
-import { PageHeader, PlatformIcon, ServiceTypeBadge } from "@/components/shared";
-import { useSellerServices } from "@/lib/api/hooks";
+import { HStack } from "@/components/layout";
+import { PlatformIcon, ServiceTypeBadge } from "@/components/shared";
+import { useSellerServices, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
 import type { Platform, ServiceMode } from "@/types";
 import {
@@ -21,6 +21,10 @@ import {
   Calculator,
   CheckCircle2,
   AlertCircle,
+  Users,
+  Zap,
+  ChevronDown,
+  Building2,
 } from "lucide-react";
 
 interface OrderItem {
@@ -48,6 +52,7 @@ const contactTypes = [
 export default function NewOrderPage() {
   const router = useRouter();
   const { data: mockServices, isLoading } = useSellerServices();
+  const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Customer info
@@ -64,6 +69,25 @@ export default function NewOrderPage() {
   const [targetUrl, setTargetUrl] = useState("");
   const [quantity, setQuantity] = useState("");
   const [commentTemplates, setCommentTemplates] = useState("");
+
+  // Auto create jobs
+  const [autoCreateJobs, setAutoCreateJobs] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [jobPayRate, setJobPayRate] = useState("");
+
+  // Team options for select
+  const teamOptions = useMemo(() => {
+    if (!teams) return [];
+    return teams.map((team) => ({
+      value: team.id,
+      label: `${team.name} (${team.memberCount} คน)`,
+    }));
+  }, [teams]);
+
+  // Check if any human service in items
+  const hasHumanService = useMemo(() => {
+    return items.some(item => item.serviceType === "human");
+  }, [items]);
 
   const handleAddItem = () => {
     if (!selectedService || !targetUrl || !quantity || !mockServices) {
@@ -123,6 +147,18 @@ export default function NewOrderPage() {
       return;
     }
 
+    // Validate auto create jobs settings
+    if (autoCreateJobs && hasHumanService) {
+      if (!selectedTeamId) {
+        alert("กรุณาเลือกทีมสำหรับสร้าง Job");
+        return;
+      }
+      if (!jobPayRate || parseFloat(jobPayRate) <= 0) {
+        alert("กรุณาระบุค่าจ้างต่อหน่วย");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -147,10 +183,21 @@ export default function NewOrderPage() {
           commentTemplates: item.commentTemplates ? item.commentTemplates.split('\n') : undefined,
         })),
         discount: 0,
+        // Auto create jobs config
+        autoCreateJobs: autoCreateJobs && hasHumanService,
+        jobConfig: autoCreateJobs && hasHumanService ? {
+          teamId: selectedTeamId,
+          payRate: parseFloat(jobPayRate),
+        } : undefined,
       });
       
-      // Success! Navigate to order detail
-      alert(`สร้างออเดอร์ ${newOrder.orderNumber} เรียบร้อย!\nยอดรวม: ฿${newOrder.total.toLocaleString()}\n\n⚠️ อย่าลืมไปส่งคำสั่งซื้อในหน้า Order Detail`);
+      // Success message based on whether jobs were created
+      const jobsCreated = autoCreateJobs && hasHumanService;
+      const successMessage = jobsCreated
+        ? `สร้างออเดอร์ ${newOrder.orderNumber} และสร้าง Job ให้ทีมเรียบร้อย!\nยอดรวม: ฿${newOrder.total.toLocaleString()}`
+        : `สร้างออเดอร์ ${newOrder.orderNumber} เรียบร้อย!\nยอดรวม: ฿${newOrder.total.toLocaleString()}\n\n⚠️ อย่าลืมไปส่งคำสั่งซื้อในหน้า Order Detail`;
+      
+      alert(successMessage);
       router.push(`/seller/orders/${newOrder.id}`);
     } catch (error) {
       console.error("Error creating order:", error);
@@ -161,28 +208,33 @@ export default function NewOrderPage() {
 
   const selectedServiceData = mockServices?.find((s: { id: string }) => s.id === selectedService);
 
-  if (isLoading) {
+  if (isLoading || isLoadingTeams) {
     return <div className="p-8 text-center text-brand-text-light">กำลังโหลด...</div>;
   }
 
   return (
-    <Container size="xl">
-      <Section spacing="lg" className="animate-fade-in pb-12">
-        {/* Header */}
-        <HStack gap={4} align="center">
-          <Link href="/seller/orders">
-            <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <PageHeader
-            title="สร้างออเดอร์ใหม่"
-          description="สร้างออเดอร์แบบ Manual สำหรับลูกค้าที่สั่งซื้อผ่านแชท"
-          icon={ShoppingCart}
-        />
-        </HStack>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link href="/seller/orders">
+          <button className="p-2.5 hover:bg-white hover:shadow-sm rounded-xl transition-all border border-transparent hover:border-brand-border/50 text-brand-text-light hover:text-brand-primary">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5 text-brand-primary" />
+            </div>
+            สร้างออเดอร์ใหม่
+          </h1>
+          <p className="text-brand-text-light text-sm mt-1 ml-[52px]">
+            สร้างออเดอร์แบบ Manual สำหรับลูกค้าที่สั่งซื้อผ่านแชท
+          </p>
+        </div>
+      </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-8">
           {/* Customer Info */}
@@ -438,6 +490,80 @@ export default function NewOrderPage() {
                   )}
                 </div>
 
+                {/* Auto Create Jobs Option (only show if has human services) */}
+                {hasHumanService && (
+                  <div className="py-4 border-b border-brand-border/50 space-y-4">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={autoCreateJobs}
+                          onChange={(e) => setAutoCreateJobs(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-brand-warning" />
+                        <span className="text-sm font-medium text-brand-text-dark group-hover:text-brand-primary transition-colors">
+                          สร้าง Job ทันที
+                        </span>
+                      </div>
+                    </label>
+
+                    {autoCreateJobs && (
+                      <div className="space-y-3 p-3 bg-brand-bg/50 rounded-xl border border-brand-border/30 animate-fade-in">
+                        <div>
+                          <label className="block text-xs font-medium text-brand-text-dark mb-1.5">
+                            เลือกทีม *
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={selectedTeamId}
+                              onChange={(e) => setSelectedTeamId(e.target.value)}
+                              className="w-full p-2.5 pl-9 rounded-lg border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer text-sm font-medium"
+                            >
+                              <option value="">-- เลือกทีม --</option>
+                              {teamOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <Building2 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
+                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light pointer-events-none" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-brand-text-dark mb-1.5">
+                            ค่าจ้าง/หน่วย (฿) *
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.15"
+                            value={jobPayRate}
+                            onChange={(e) => setJobPayRate(e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+
+                        {selectedTeamId && jobPayRate && (
+                          <div className="p-2 bg-brand-success/10 border border-brand-success/20 rounded-lg">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-brand-text-light">ค่าจ้างรวม (ประมาณ)</span>
+                              <span className="font-bold text-brand-success">
+                                ฿{(items.filter(i => i.serviceType === "human").reduce((sum, i) => sum + i.quantity, 0) * parseFloat(jobPayRate || "0")).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Total */}
                 <div className="">
                   <div className="flex justify-between items-center mb-1">
@@ -475,26 +601,43 @@ export default function NewOrderPage() {
             </Card>
 
             {/* Tips */}
-            <Card variant="bordered" padding="md" className="bg-[#FEF7E0] border border-[#FEEFC3]">
+            <Card variant="bordered" padding="md" className={autoCreateJobs && hasHumanService ? "bg-[#E6F4EA] border border-[#CEEAD6]" : "bg-[#FEF7E0] border border-[#FEEFC3]"}>
               <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-[#B06000] shrink-0 mt-0.5" />
-                <div className="text-sm text-[#5F4B32]">
-                  <p className="font-bold mb-1 text-[#B06000]">
-                    ⚠️ ขั้นตอนถัดไป
-                  </p>
-                  <ul className="space-y-1.5">
-                    <li>• หลังสร้างออเดอร์แล้ว ต้องไปกดส่งคำสั่งซื้อในหน้า Order Detail</li>
-                    <li>• <b>Bot:</b> กดส่ง API เพื่อเริ่มทำงานอัตโนมัติ</li>
-                    <li>• <b>คนจริง:</b> กดมอบหมายงานให้ทีม Worker</li>
-                  </ul>
-                </div>
+                {autoCreateJobs && hasHumanService ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-[#1E8E3E] shrink-0 mt-0.5" />
+                    <div className="text-sm text-[#137333]">
+                      <p className="font-bold mb-1 text-[#1E8E3E]">
+                        ✨ สร้าง Job อัตโนมัติ
+                      </p>
+                      <ul className="space-y-1.5">
+                        <li>• บริการคนจริงจะสร้าง Job ทันทีหลังสร้างออเดอร์</li>
+                        <li>• Worker ในทีมจะเห็นงานและรับทำได้เลย</li>
+                        <li>• <b>Bot:</b> ยังต้องกดส่ง API ในหน้า Order Detail</li>
+                      </ul>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-[#B06000] shrink-0 mt-0.5" />
+                    <div className="text-sm text-[#5F4B32]">
+                      <p className="font-bold mb-1 text-[#B06000]">
+                        ⚠️ ขั้นตอนถัดไป
+                      </p>
+                      <ul className="space-y-1.5">
+                        <li>• หลังสร้างออเดอร์แล้ว ต้องไปกดส่งคำสั่งซื้อในหน้า Order Detail</li>
+                        <li>• <b>Bot:</b> กดส่ง API เพื่อเริ่มทำงานอัตโนมัติ</li>
+                        <li>• <b>คนจริง:</b> กดมอบหมายงานให้ทีม Worker</li>
+                      </ul>
+                    </div>
+                  </>
+                )}
               </div>
             </Card>
           </div>
         </div>
-        </div>
-      </Section>
-    </Container>
+      </div>
+    </div>
   );
 }
 

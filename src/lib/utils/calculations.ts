@@ -79,7 +79,8 @@ export function calculateMax(numbers: number[]): number | null {
 
 export function calculateCompletionRate(completed: number, total: number): number {
   if (total === 0) return 0;
-  return (completed / total) * 100;
+  // Round to 1 decimal place to avoid floating point precision issues
+  return Math.round((completed / total) * 100 * 10) / 10;
 }
 
 export function calculateSuccessRate(successful: number, total: number): number {

@@ -1,4 +1,5 @@
 // Seller Components
+export { SellerBottomNav } from "./bottom-nav";
 export { PlatformIcon } from "./platform-icon";
 export { ServiceTypeIcon } from "./service-type-icon";
 export { ServiceRow } from "./service-row";

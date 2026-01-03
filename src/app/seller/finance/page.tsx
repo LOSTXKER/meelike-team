@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Badge, Button, Input, Dialog, Tabs, Modal } from "@/components/ui";
-import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { Card, Badge, Button, Input, Modal, Tabs } from "@/components/ui";
 import { PageHeader, EmptyState } from "@/components/shared";
 import { useTransactions, useBalance } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
@@ -24,6 +23,8 @@ import {
   ShieldCheck,
   Clock,
   ChevronRight,
+  TrendingUp,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +40,6 @@ const BANK_INFO = {
 type FilterType = "all" | "income" | "expense" | "topup";
 
 export default function FinancePage() {
-  // Use API hooks
   const { data: allTransactions = [], isLoading, refetch: refetchTransactions } = useTransactions();
   const { data: balance = 0, refetch: refetchBalance } = useBalance();
 
@@ -63,6 +63,11 @@ export default function FinancePage() {
     const matchFilter = filter === "all" || txn.type === filter;
     return matchSearch && matchFilter;
   });
+
+  // Calculate stats
+  const totalIncome = (allTransactions || []).filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+  const totalExpense = (allTransactions || []).filter(t => t.type === "expense").reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalTopup = (allTransactions || []).filter(t => t.type === "topup").reduce((sum, t) => sum + t.amount, 0);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -100,58 +105,82 @@ export default function FinancePage() {
   const finalAmount = customAmount ? parseInt(customAmount) : topupAmount;
 
   return (
-    <Container size="xl">
-      <Section spacing="md" className="animate-fade-in pb-12">
-        {/* Header */}
-        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
-          <PageHeader
-            title="การเงิน"
-            description="จัดการยอดเงิน เติมเงิน และดูประวัติธุรกรรม"
-            icon={Wallet}
-          />
-          <Button
-            variant="outline"
-            className="bg-white"
-            leftIcon={<Download className="w-4 h-4" />}
-          >
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <PageHeader
+        title="การเงิน"
+        description="จัดการยอดเงิน เติมเงิน และดูประวัติธุรกรรม"
+        icon={Wallet}
+        action={
+          <Button variant="outline" leftIcon={<Download className="w-4 h-4" />}>
             ส่งออก CSV
           </Button>
-        </HStack>
+        }
+      />
 
-      {/* Balance Card */}
-      <Card className="p-6 bg-gradient-to-br from-brand-primary to-brand-primary/80 text-white border-none shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-white/20 rounded-2xl">
-              <Wallet className="w-10 h-10" />
+      {/* Balance Card - Clean Style */}
+      <Card className="p-6 border-none shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <div className="text-brand-text-light text-sm flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-brand-primary" />
+              </div>
+              <span>ยอดเงินคงเหลือ</span>
             </div>
-            <div>
-              <p className="text-white/80 text-sm">ยอดเงินคงเหลือ</p>
-              <p className="text-4xl font-bold">{formatCurrency(balance || 0)}</p>
+            <p className="text-4xl sm:text-5xl font-bold text-brand-text-dark">{formatCurrency(balance || 0)}</p>
+            <div className="flex items-center gap-2 mt-2 text-sm text-brand-text-light">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <span>เติมเงินแล้ว {formatCurrency(totalTopup)} เดือนนี้</span>
             </div>
           </div>
           <Button
             onClick={() => setIsTopupModalOpen(true)}
-            className="bg-white text-brand-primary hover:bg-white/90 shadow-lg"
+            size="lg"
+            leftIcon={<Plus className="w-5 h-5" />}
           >
-            <Plus className="w-4 h-4 mr-2" />
             เติมเงิน
           </Button>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-brand-border/30">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</p>
+            <p className="text-xs text-brand-text-light flex items-center justify-center gap-1 mt-1">
+              <ArrowDownRight className="w-3 h-3 text-emerald-500" />
+              รายรับ
+            </p>
+          </div>
+          <div className="text-center border-x border-brand-border/30">
+            <p className="text-2xl font-bold text-red-500">{formatCurrency(totalExpense)}</p>
+            <p className="text-xs text-brand-text-light flex items-center justify-center gap-1 mt-1">
+              <ArrowUpRight className="w-3 h-3 text-red-500" />
+              รายจ่าย
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-brand-text-dark">{(allTransactions || []).length}</p>
+            <p className="text-xs text-brand-text-light flex items-center justify-center gap-1 mt-1">
+              <History className="w-3 h-3" />
+              ธุรกรรม
+            </p>
+          </div>
         </div>
       </Card>
 
       {/* Transaction History */}
-      <Card className="border-none shadow-lg overflow-hidden">
-        {/* Filter Bar */}
+      <Card className="border-none shadow-md overflow-hidden">
+        {/* Header with Filters */}
         <div className="p-4 border-b border-brand-border/30 bg-brand-bg/30">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <History className="w-5 h-5 text-brand-primary" />
               <h2 className="font-bold text-brand-text-dark">ประวัติธุรกรรม</h2>
               <Badge variant="default" size="sm">{allTransactions?.length || 0} รายการ</Badge>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               {/* Filter Tabs */}
               <Tabs
                 tabs={[
@@ -166,14 +195,14 @@ export default function FinancePage() {
               />
 
               {/* Search */}
-              <div className="relative flex-1 sm:w-48">
+              <div className="relative sm:w-48">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
                 <input
                   type="text"
                   placeholder="ค้นหา..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-brand-border/50 text-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-brand-border/50 text-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none"
                 />
               </div>
             </div>
@@ -183,12 +212,13 @@ export default function FinancePage() {
         {/* Transaction List */}
         <div className="divide-y divide-brand-border/30">
           {filteredTransactions.length === 0 ? (
-            <EmptyState
-              icon={History}
-              title="ไม่พบรายการธุรกรรม"
-              description="ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
-              className="py-12"
-            />
+            <div className="p-8">
+              <EmptyState
+                icon={History}
+                title="ไม่พบรายการธุรกรรม"
+                description="ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+              />
+            </div>
           ) : (
             filteredTransactions.map((txn) => (
               <div
@@ -200,7 +230,7 @@ export default function FinancePage() {
                     className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
                       txn.type === "income"
-                        ? "bg-green-100 text-green-600"
+                        ? "bg-emerald-100 text-emerald-600"
                         : txn.type === "topup"
                         ? "bg-blue-100 text-blue-600"
                         : "bg-red-100 text-red-600"
@@ -230,11 +260,11 @@ export default function FinancePage() {
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p
                     className={cn(
                       "text-lg font-bold",
-                      txn.amount > 0 ? "text-green-600" : "text-red-600"
+                      txn.amount > 0 ? "text-emerald-600" : "text-red-600"
                     )}
                   >
                     {txn.amount > 0 ? "+" : ""}
@@ -335,7 +365,6 @@ export default function FinancePage() {
         {/* Step 2: Payment */}
         {topupStep === "payment" && (
           <div className="space-y-6">
-            {/* Amount Summary */}
             <div className="text-center p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
               <p className="text-sm text-brand-text-light">จำนวนที่ต้องชำระ</p>
               <p className="text-3xl font-bold text-brand-primary">{formatCurrency(finalAmount)}</p>
@@ -474,7 +503,6 @@ export default function FinancePage() {
           </div>
         )}
       </Modal>
-      </Section>
-    </Container>
+    </div>
   );
 }

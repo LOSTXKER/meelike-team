@@ -8,7 +8,7 @@ import {
   mockMeeLikeServices, 
   meeLikeCategories,
   getMeeLikeRatePerUnit 
-} from "@/lib/mock-data/meelike";
+} from "@/lib/constants/meelike";
 import { PLATFORM_CONFIGS, SERVICE_TYPE_CONFIGS, VISIBILITY_OPTIONS } from "@/lib/constants/services";
 import { formatCurrency } from "@/lib/utils";
 import type { MeeLikeService, StoreService, Platform, ServiceType, ServiceMode } from "@/types";

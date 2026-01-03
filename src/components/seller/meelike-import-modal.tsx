@@ -6,7 +6,7 @@ import {
   mockMeeLikeServices, 
   meeLikeCategories,
   getMeeLikeRatePerUnit 
-} from "@/lib/mock-data/meelike";
+} from "@/lib/constants/meelike";
 import { formatCurrency } from "@/lib/utils";
 import type { MeeLikeService, StoreService, Platform, ServiceType } from "@/types";
 import {

@@ -3,11 +3,11 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Dialog, Textarea, Skeleton, Modal } from "@/components/ui";
-import { Container, Section, VStack, HStack } from "@/components/layout";
-import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
+import { Card, Badge, Button, Textarea, Skeleton, Modal, Avatar } from "@/components/ui";
+import { PlatformIcon, EmptyState, Breadcrumb } from "@/components/shared";
 import { usePendingReviews, useWorkers, useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 import type { Platform } from "@/types";
 import {
   CheckCircle2,
@@ -21,6 +21,8 @@ import {
   Star,
   Package,
   CheckCircle,
+  Eye,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function TeamReviewPage() {
@@ -151,232 +153,268 @@ export default function TeamReviewPage() {
   }
 
   return (
-    <Container size="xl">
-      <Section spacing="lg" className="animate-fade-in">
-        {/* Header */}
-        <HStack justify="between" align="center" className="flex-col lg:flex-row gap-4">
-          <PageHeader
-            title="รอตรวจสอบ"
-            description={`ตรวจสอบงานของทีม ${currentTeam?.name || ""}`}
-            icon={CheckCircle2}
-          />
+    <div className="space-y-6 animate-fade-in">
+      {/* Breadcrumb */}
+      <Breadcrumb />
 
-          {pendingReviewJobs.length > 0 && (
-            <HStack gap={4} align="center" className="bg-white p-2 pl-4 rounded-xl shadow-sm border border-brand-border/50">
-              <div className="text-right">
-                <p className="text-xs text-brand-text-light font-medium">ยอดจ่ายรวม</p>
-                <p className="text-lg font-bold text-brand-success">฿{totalPayout.toLocaleString()}</p>
-              </div>
-             <Button
-                size="sm"
-                onClick={async () => {
-                  if (confirm(`อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน? จะสร้างรายการจ่ายเงินรวม ฿${totalPayout}`)) {
-                    setIsProcessing(true);
-                    try {
-                      // Approve all claims
-                      for (const job of pendingReviewJobs) {
-                        await api.seller.approveJobClaim(job.id);
-                      }
-                      
-                      // Refetch to update the UI
-                      await refetchReviews();
-                      
-                      setLocallyRemovedIds(new Set(pendingReviewJobs.map(j => j.id)));
-                      alert(`อนุมัติงานทั้งหมด ${pendingReviewJobs.length} รายการเรียบร้อย!`);
-                    } catch (error) {
-                      console.error("Error approving all:", error);
-                      alert("เกิดข้อผิดพลาดบางรายการ กรุณาตรวจสอบอีกครั้ง");
-                    } finally {
-                      setIsProcessing(false);
-                    }
-                  }
-                }}
-                className="rounded-lg shadow-md shadow-brand-primary/20"
-                disabled={isProcessing}
-              >
-                <ThumbsUp className="w-4 h-4 mr-2" />
-                {isProcessing ? "กำลังอนุมัติ..." : `อนุมัติทั้งหมด (${pendingReviewJobs.length})`}
-              </Button>
-            </HStack>
-          )}
-        </HStack>
-
-      {/* Quick Stats */}
-      {pendingReviewJobs.length > 0 && (
-        <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 bg-brand-info/5">
-          <div className="flex items-start gap-4 p-2">
-            <div className="p-3 bg-white rounded-xl shadow-sm text-brand-info border border-brand-info/20">
-               <AlertCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-brand-text-dark">มี {pendingReviewJobs.length} งานที่รอการตรวจสอบ</h3>
-              <p className="text-brand-text-light text-sm mt-1">
-                กรุณาตรวจสอบความถูกต้องของงานก่อนอนุมัติ หากอนุมัติแล้วระบบจะโอนเงินให้ Worker ทันที
-              </p>
-            </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+            <ShieldCheck className="w-5 h-5 text-amber-600" />
           </div>
-        </Card>
-      )}
+          <div>
+            <h1 className="text-xl font-bold text-brand-text-dark">รอตรวจสอบ</h1>
+            <p className="text-sm text-brand-text-light">ตรวจสอบงานของทีม {currentTeam?.name || ""}</p>
+          </div>
+        </div>
 
-      {/* Jobs List */}
-      {pendingReviewJobs.length === 0 ? (
-        <EmptyState 
-            icon={CheckCircle2} 
-            title="ไม่มีงานรอตรวจสอบ" 
-            description="งานทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว"
-            action={
-                <Link href={`/seller/team/${teamId}/jobs`}>
-                  <Button variant="outline" className="mt-4">
-                    ดูงานทั้งหมด
-                  </Button>
-                </Link>
-            }
-            className="py-16"
-        />
-      ) : (
-        <div className="space-y-6">
-          {pendingReviewJobs.map((job) => (
-            <div key={job.id} className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden hover:shadow-md transition-shadow">
-               {/* Header Section */}
-               <div className="p-6 border-b border-brand-border/30 bg-brand-bg/30">
-                 <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                       <div className="p-3 bg-white rounded-xl shadow-sm border border-brand-border/20">
-                          <PlatformIcon platform={job.platform as Platform} size="lg" />
-                       </div>
-                       <div>
-                          <h3 className="font-bold text-lg text-brand-text-dark">{job.serviceName}</h3>
-                          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-light">
-                             <span className="bg-white px-2 py-1 rounded-lg border border-brand-border/50 shadow-sm flex items-center gap-1.5">
-                                <Package className="w-3.5 h-3.5" />
-                                <span className="font-mono">{job.orderNumber}</span>
-                             </span>
-                             <span className="flex items-center gap-1.5">
-                                <Target className="w-3.5 h-3.5" />
-                                <span>เป้าหมาย {job.completedQuantity}/{job.quantity}</span>
-                             </span>
-                            <span className="flex items-center gap-1.5 text-brand-text-light/70">
-                               <Clock className="w-3.5 h-3.5" />
-                               {job.submittedAt ? new Date(job.submittedAt).toLocaleDateString("th-TH", {
-                                 day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
-                               }) : "N/A"}
-                            </span>
-                          </div>
-                       </div>
+        {pendingReviewJobs.length > 0 && (
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-xs text-brand-text-light">ยอดจ่ายรวม</p>
+              <p className="text-lg font-bold text-brand-success">{formatCurrency(totalPayout)}</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={async () => {
+                if (confirm(`อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน? จะสร้างรายการจ่ายเงินรวม ${formatCurrency(totalPayout)}`)) {
+                  setIsProcessing(true);
+                  try {
+                    for (const job of pendingReviewJobs) {
+                      await api.seller.approveJobClaim(job.id);
+                    }
+                    await refetchReviews();
+                    setLocallyRemovedIds(new Set(pendingReviewJobs.map(j => j.id)));
+                    alert(`อนุมัติงานทั้งหมด ${pendingReviewJobs.length} รายการเรียบร้อย!`);
+                  } catch (error) {
+                    console.error("Error approving all:", error);
+                    alert("เกิดข้อผิดพลาดบางรายการ กรุณาตรวจสอบอีกครั้ง");
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }
+              }}
+              disabled={isProcessing}
+            >
+              <ThumbsUp className="w-4 h-4 mr-2" />
+              {isProcessing ? "กำลังอนุมัติ..." : `อนุมัติทั้งหมด (${pendingReviewJobs.length})`}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Jobs Table */}
+      <Card className="border-none shadow-md overflow-hidden">
+        {/* Desktop Table */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-brand-bg/50 border-b border-brand-border/30">
+                <th className="text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3">งาน</th>
+                <th className="text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3">Worker</th>
+                <th className="text-center text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3">จำนวน</th>
+                <th className="text-center text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3">หลักฐาน</th>
+                <th className="text-right text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3">ค่าจ้าง</th>
+                <th className="text-center text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3">ส่งเมื่อ</th>
+                <th className="text-center text-xs font-semibold text-brand-text-light uppercase tracking-wider px-4 py-3 w-48">การกระทำ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-brand-border/30">
+              {pendingReviewJobs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                        <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+                      </div>
+                      <p className="font-medium text-brand-text-dark">ไม่มีงานรอตรวจสอบ</p>
+                      <p className="text-sm text-brand-text-light mt-1">งานทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว</p>
+                      <Link href={`/seller/team/${teamId}/jobs`}>
+                        <Button variant="outline" size="sm" className="mt-4">ดูงานทั้งหมด</Button>
+                      </Link>
                     </div>
-                    <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 lg:gap-0 w-full lg:w-auto justify-between lg:justify-start">
-                        <div className="text-right">
-                           <span className="text-sm text-brand-text-light block">ค่าจ้างที่ต้องจ่าย</span>
-                           <span className="text-2xl font-bold text-brand-success">฿{job.workerPayout}</span>
+                  </td>
+                </tr>
+              ) : (
+                pendingReviewJobs.map((job) => (
+                  <tr key={job.id} className="hover:bg-brand-bg/30 transition-colors">
+                    {/* Job Info */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-brand-bg flex items-center justify-center shrink-0">
+                          <PlatformIcon platform={job.platform as Platform} size="sm" />
                         </div>
-                    </div>
-                 </div>
-               </div>
-
-               {/* Content Section */}
-               <div className="p-6">
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Left: Worker & Proof */}
-                    <div className="space-y-6">
-                       {/* Worker Profile */}
-                       <div className="flex items-center gap-4 p-4 rounded-xl bg-brand-bg/50 border border-brand-border/30">
-                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-brand-border/50 shadow-sm">
-                             <span className="text-lg font-bold text-brand-primary">{job.worker.displayName.charAt(0)}</span>
+                        <div className="min-w-0">
+                          <p className="font-medium text-brand-text-dark truncate max-w-[200px]">{job.serviceName}</p>
+                          <p className="text-xs text-brand-text-light font-mono">{job.orderNumber}</p>
+                        </div>
+                      </div>
+                    </td>
+                    
+                    {/* Worker */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <Avatar fallback={job.worker.displayName} size="sm" />
+                        <div>
+                          <p className="font-medium text-brand-text-dark text-sm">@{job.worker.displayName}</p>
+                          <div className="flex items-center gap-1 text-xs text-brand-text-light">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <span>{job.worker.rating}</span>
                           </div>
-                          <div className="flex-1">
-                             <div className="flex items-center gap-2">
-                                <span className="font-bold text-brand-text-dark">@{job.worker.displayName}</span>
-                                <Badge variant="success" size="sm" className="px-1.5 py-0 text-[10px] h-5">{job.worker.level}</Badge>
-                             </div>
-                             <div className="flex items-center gap-3 text-sm text-brand-text-light mt-0.5">
-                                <span className="flex items-center gap-1">
-                                   <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
-                                   {job.worker.rating}
-                                </span>
-                                <span className="w-1 h-1 bg-brand-border rounded-full"></span>
-                                <span>งานเสร็จ {job.worker.totalJobsCompleted}</span>
-                             </div>
-                          </div>
-                       </div>
-
-                       {/* Worker Note */}
-                       {job.workerNote && (
-                         <div className="relative pl-4 border-l-2 border-brand-info/30 py-1">
-                            <p className="text-sm italic text-brand-text-light">"{job.workerNote}"</p>
-                         </div>
-                       )}
-                       
-                       {/* Target Link */}
+                        </div>
+                      </div>
+                    </td>
+                    
+                    {/* Quantity */}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-medium text-brand-text-dark">{job.completedQuantity}</span>
+                      <span className="text-brand-text-light">/{job.quantity}</span>
+                    </td>
+                    
+                    {/* Proof */}
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        {job.proofImages.length > 0 ? (
+                          <button className="flex items-center gap-1.5 text-brand-primary hover:text-brand-primary-dark text-sm">
+                            <ImageIcon className="w-4 h-4" />
+                            <span>{job.proofImages.length} รูป</span>
+                          </button>
+                        ) : (
+                          <span className="text-brand-text-light text-sm">-</span>
+                        )}
                         <a
                           href={job.targetUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-brand-primary hover:text-brand-primary-dark transition-colors group w-fit"
+                          className="p-1.5 rounded-lg hover:bg-brand-bg text-brand-text-light hover:text-brand-primary transition-colors"
+                          title="เปิดลิงก์"
                         >
-                          <div className="p-2 bg-brand-primary/10 rounded-lg group-hover:bg-brand-primary/20 transition-colors">
-                             <ExternalLink className="w-4 h-4" />
-                          </div>
-                          <span className="font-medium underline decoration-brand-primary/30 underline-offset-4">เปิดลิงก์งานตรวจสอบ</span>
+                          <ExternalLink className="w-4 h-4" />
                         </a>
-                    </div>
-
-                    {/* Right: Proof Images */}
-                    <div className="space-y-3">
-                       <h4 className="font-bold text-brand-text-dark flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4 text-brand-text-light" />
-                          หลักฐานการทำงาน
-                          <span className="text-xs font-normal text-brand-text-light bg-brand-bg px-2 py-0.5 rounded-full">
-                             {job.proofImages.length} รูป
-                          </span>
-                       </h4>
-                       
-                       {job.proofImages.length > 0 ? (
-                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {job.proofImages.map((img, index) => (
-                              <div key={index} className="aspect-square bg-brand-bg rounded-xl border border-brand-border/50 flex items-center justify-center relative overflow-hidden group cursor-pointer hover:shadow-md transition-all">
-                                 <ImageIcon className="w-8 h-8 text-brand-text-light/50 group-hover:scale-110 transition-transform duration-500" />
-                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
-                              </div>
-                            ))}
-                         </div>
-                       ) : (
-                         <div className="p-8 rounded-xl border-2 border-dashed border-brand-border/50 bg-brand-bg/20 text-center">
-                            <ImageIcon className="w-8 h-8 text-brand-text-light/30 mx-auto mb-2" />
-                            <p className="text-sm text-brand-text-light">ไม่มีรูปภาพหลักฐาน</p>
-                         </div>
-                       )}
-                    </div>
-                 </div>
-               </div>
-
-               {/* Footer Actions */}
-               <div className="p-4 bg-brand-bg/50 border-t border-brand-border/50 flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    className="border-brand-error/20 text-brand-error hover:bg-brand-error/5 hover:border-brand-error/50 min-w-[120px]"
-                    onClick={() => {
-                      setSelectedJobId(job.id);
-                      setShowRejectModal(true);
-                    }}
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    ปฏิเสธ
-                  </Button>
-                  <Button
-                    className="min-w-[120px] shadow-lg shadow-brand-primary/20"
-                    onClick={() => {
-                      setSelectedJobId(job.id);
-                      setShowApproveModal(true);
-                    }}
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    อนุมัติ
-                  </Button>
-               </div>
-            </div>
-          ))}
+                      </div>
+                    </td>
+                    
+                    {/* Payout */}
+                    <td className="px-4 py-4 text-right">
+                      <span className="font-bold text-brand-success">{formatCurrency(job.workerPayout)}</span>
+                    </td>
+                    
+                    {/* Time */}
+                    <td className="px-4 py-4 text-center">
+                      <span className="text-sm text-brand-text-light">
+                        {job.submittedAt ? new Date(job.submittedAt).toLocaleDateString("th-TH", {
+                          day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                        }) : "-"}
+                      </span>
+                    </td>
+                    
+                    {/* Actions */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            setSelectedJobId(job.id);
+                            setShowRejectModal(true);
+                          }}
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-emerald-500 hover:bg-emerald-600"
+                          onClick={() => {
+                            setSelectedJobId(job.id);
+                            setShowApproveModal(true);
+                          }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          อนุมัติ
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {/* Mobile Cards */}
+        <div className="lg:hidden">
+          {pendingReviewJobs.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+              </div>
+              <p className="font-medium text-brand-text-dark">ไม่มีงานรอตรวจสอบ</p>
+              <p className="text-sm text-brand-text-light mt-1">งานทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว</p>
+              <Link href={`/seller/team/${teamId}/jobs`}>
+                <Button variant="outline" size="sm" className="mt-4">ดูงานทั้งหมด</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-brand-border/30">
+              {pendingReviewJobs.map((job) => (
+                <div key={job.id} className="p-4 space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-brand-bg flex items-center justify-center shrink-0">
+                        <PlatformIcon platform={job.platform as Platform} size="md" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-brand-text-dark">{job.serviceName}</p>
+                        <p className="text-xs text-brand-text-light font-mono">{job.orderNumber}</p>
+                      </div>
+                    </div>
+                    <span className="font-bold text-brand-success">{formatCurrency(job.workerPayout)}</span>
+                  </div>
+                  
+                  {/* Worker & Details */}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <Avatar fallback={job.worker.displayName} size="sm" />
+                      <span className="text-brand-text-dark">@{job.worker.displayName}</span>
+                    </div>
+                    <span className="text-brand-text-light">{job.completedQuantity}/{job.quantity}</span>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 border-red-200 text-red-600"
+                      onClick={() => {
+                        setSelectedJobId(job.id);
+                        setShowRejectModal(true);
+                      }}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      ปฏิเสธ
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+                      onClick={() => {
+                        setSelectedJobId(job.id);
+                        setShowApproveModal(true);
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-1" />
+                      อนุมัติ
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Approve Modal */}
       <Modal
@@ -452,26 +490,26 @@ export default function TeamReviewPage() {
       >
         {selectedJob && (
           <div className="space-y-6">
-             <div className="flex items-center gap-4 p-4 bg-brand-error/5 border border-brand-error/20 rounded-xl">
-               <div className="p-3 bg-brand-error/10 rounded-full text-brand-error">
-                  <AlertCircle className="w-6 h-6" />
-               </div>
-               <div>
-                  <h4 className="font-bold text-brand-text-dark">ไม่อนุมัติงานนี้?</h4>
-                  <p className="text-sm text-brand-text-light">งานจะถูกส่งกลับให้ Worker แก้ไข</p>
-               </div>
+            <div className="flex items-center gap-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="p-3 bg-red-100 rounded-full text-red-600">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-brand-text-dark">ไม่อนุมัติงานนี้?</h4>
+                <p className="text-sm text-brand-text-light">งานจะถูกส่งกลับให้ Worker แก้ไข</p>
+              </div>
             </div>
 
             <div className="space-y-2">
-               <label className="text-sm font-medium text-brand-text-dark">ระบุเหตุผลที่ปฏิเสธ</label>
-               <Textarea
-                  placeholder="เช่น รูปหลักฐานไม่ชัดเจน, จำนวนยอดไม่ครบ..."
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  rows={4}
-                  className="bg-white"
-               />
-               <p className="text-xs text-brand-text-light">* Worker จะเห็นข้อความนี้เพื่อนำไปแก้ไขงาน</p>
+              <label className="text-sm font-medium text-brand-text-dark">ระบุเหตุผลที่ปฏิเสธ</label>
+              <Textarea
+                placeholder="เช่น รูปหลักฐานไม่ชัดเจน, จำนวนยอดไม่ครบ..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={4}
+                className="bg-white"
+              />
+              <p className="text-xs text-brand-text-light">* Worker จะเห็นข้อความนี้เพื่อนำไปแก้ไขงาน</p>
             </div>
 
             <div className="flex gap-3 justify-end pt-2">
@@ -487,7 +525,7 @@ export default function TeamReviewPage() {
                 ยกเลิก
               </Button>
               <Button
-                className="flex-1 bg-brand-error hover:bg-brand-error/90 shadow-lg shadow-brand-error/20 border-transparent text-white"
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                 onClick={handleReject}
                 disabled={!rejectReason.trim() || isProcessing}
                 isLoading={isProcessing}
@@ -499,7 +537,6 @@ export default function TeamReviewPage() {
           </div>
         )}
       </Modal>
-      </Section>
-    </Container>
+    </div>
   );
 }

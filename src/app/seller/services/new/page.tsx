@@ -3,15 +3,14 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Input, Select, Badge, Tabs, RadioGroup } from "@/components/ui";
-import { Container, Section, VStack, HStack } from "@/components/layout";
-import { PageHeader } from "@/components/shared";
+import { HStack } from "@/components/layout";
 import { PlatformIcon, ServiceTypeIcon } from "@/components/seller";
 import { api } from "@/lib/api";
 import { 
   mockMeeLikeServices, 
   meeLikeCategories,
   getMeeLikeRatePerUnit 
-} from "@/lib/mock-data/meelike";
+} from "@/lib/constants/meelike";
 import { PLATFORM_CONFIGS, SERVICE_TYPE_CONFIGS } from "@/lib/constants/services";
 import { formatCurrency } from "@/lib/utils";
 import type { MeeLikeService, StoreService, Platform, ServiceType } from "@/types";
@@ -335,30 +334,36 @@ export default function NewServicePage() {
   // ============================================
 
   return (
-    <Container size="xl">
-      <Section spacing="md">
-        <PageHeader
-          title="เพิ่มบริการใหม่"
-          description="เลือกประเภทบริการที่คุณต้องการเพิ่ม"
-          icon={Package}
-          action={
-            selectedMode && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                setSelectedMode(null);
-                // Reset states when changing mode
-                setManualRows([createEmptyManualRow()]);
-                setSelectedServices(new Map());
-                setCustomPrices(new Map());
-              }}
-              leftIcon={<ArrowLeft className="w-4 h-4" />}
-            >
-              เปลี่ยนประเภท
-            </Button>
-          )
-        }
-      />
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <Package className="w-5 h-5 text-brand-primary" />
+            </div>
+            เพิ่มบริการใหม่
+          </h1>
+          <p className="text-brand-text-light text-sm mt-1 ml-[52px]">
+            เลือกประเภทบริการที่คุณต้องการเพิ่ม
+          </p>
+        </div>
+        {selectedMode && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSelectedMode(null);
+              // Reset states when changing mode
+              setManualRows([createEmptyManualRow()]);
+              setSelectedServices(new Map());
+              setCustomPrices(new Map());
+            }}
+            leftIcon={<ArrowLeft className="w-4 h-4" />}
+          >
+            เปลี่ยนประเภท
+          </Button>
+        )}
+      </div>
 
       {/* Step 1: Choose Mode */}
       {!selectedMode && (
@@ -480,8 +485,7 @@ export default function NewServicePage() {
           canSubmit={canSubmit}
         />
       )}
-      </Section>
-    </Container>
+    </div>
   );
 }
 

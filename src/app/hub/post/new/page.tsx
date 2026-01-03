@@ -102,9 +102,11 @@ function NewPostForm() {
   // Outsource fields
   const [jobType, setJobType] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [budget, setBudget] = useState("");
+  const [pricePerUnit, setPricePerUnit] = useState("");
   const [deadline, setDeadline] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
+  const [isUrgent, setIsUrgent] = useState(false);
+  const [outsourceRequirements, setOutsourceRequirements] = useState<string[]>([""]);
 
   useEffect(() => {
     const type = searchParams.get("type") as PostType;
@@ -179,10 +181,30 @@ function NewPostForm() {
         payload.expectedPay = expectedPay;
         payload.availability = availability;
       } else if (postType === "outsource") {
-        payload.jobType = jobType;
-        payload.quantity = quantity ? parseInt(quantity) : undefined;
-        payload.budget = budget;
-        payload.deadline = deadline;
+        // Validate outsource fields
+        if (!jobType || !quantity || !pricePerUnit || !deadline || !targetUrl) {
+          alert("กรุณากรอกข้อมูลให้ครบ (ประเภทงาน, จำนวน, ราคา/หน่วย, URL, กำหนดส่ง)");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Use dedicated outsource API
+        await api.hub.postOutsourceDirect({
+          platform: platforms[0], // Use first selected platform
+          jobType,
+          quantity: parseInt(quantity),
+          suggestedPricePerUnit: parseFloat(pricePerUnit),
+          deadline,
+          targetUrl,
+          title,
+          description,
+          requirements: outsourceRequirements.filter(r => r.trim() !== ""),
+          isUrgent,
+        });
+        
+        alert("โพสต์สำเร็จ! งานจะแสดงในตลาด Hub แล้ว");
+        router.push("/seller/outsource");
+        return;
       }
       
       await api.hub.createPost(payload);
@@ -531,13 +553,25 @@ function NewPostForm() {
                       onChange={(e) => setQuantity(e.target.value)}
                     />
                     <Input
-                      label="งบประมาณ (บาท) *"
+                      label="ราคาแนะนำ/หน่วย (บาท) *"
                       type="number"
-                      placeholder="200"
-                      value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
+                      step="0.01"
+                      placeholder="0.15"
+                      value={pricePerUnit}
+                      onChange={(e) => setPricePerUnit(e.target.value)}
                     />
                   </div>
+
+                  {quantity && pricePerUnit && (
+                    <div className="p-3 bg-brand-success/10 border border-brand-success/20 rounded-lg">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-brand-text-light">งบประมาณ (ถ้า bid ตามราคาแนะนำ)</span>
+                        <span className="font-bold text-brand-success">
+                          ฿{(parseFloat(quantity || "0") * parseFloat(pricePerUnit || "0")).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   <Input
                     label="URL เป้าหมาย *"
@@ -552,6 +586,51 @@ function NewPostForm() {
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                   />
+
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text-dark mb-2">
+                      ข้อกำหนดเพิ่มเติม (ถ้ามี)
+                    </label>
+                    {outsourceRequirements.map((req, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <Input
+                          placeholder="เช่น ต้องแคปหลักฐาน, แอคคนจริงเท่านั้น"
+                          value={req}
+                          onChange={(e) =>
+                            handleUpdateItem(index, e.target.value, outsourceRequirements, setOutsourceRequirements)
+                          }
+                        />
+                        {outsourceRequirements.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(index, outsourceRequirements, setOutsourceRequirements)}
+                            className="p-2 text-brand-error hover:bg-brand-error/10 rounded-lg"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => handleAddItem(outsourceRequirements, setOutsourceRequirements)}
+                      className="text-sm text-brand-primary hover:underline flex items-center gap-1"
+                    >
+                      <Plus className="w-4 h-4" /> เพิ่มข้อกำหนด
+                    </button>
+                  </div>
+
+                  <label className="flex items-center gap-3 cursor-pointer p-3 bg-brand-warning/10 border border-brand-warning/20 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={isUrgent}
+                      onChange={(e) => setIsUrgent(e.target.checked)}
+                      className="w-4 h-4 text-brand-warning rounded focus:ring-brand-warning"
+                    />
+                    <span className="text-sm text-brand-text-dark">
+                      🔥 งานด่วน (แสดงเป็น Urgent ใน Hub)
+                    </span>
+                  </label>
                 </>
               )}
 

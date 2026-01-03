@@ -280,9 +280,9 @@ export default function OrderStatusPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-lg bg-brand-bg flex items-center justify-center">
-                            {service?.category === "facebook" ? <Facebook className="w-6 h-6 text-blue-500" /> :
-                             service?.category === "instagram" ? <Instagram className="w-6 h-6 text-pink-500" /> :
-                             service?.category === "tiktok" ? <Music2 className="w-6 h-6 text-gray-800" /> : <Youtube className="w-6 h-6 text-red-500" />}
+                            {service?.category === "facebook" ? <Facebook className="w-6 h-6 social-facebook" /> :
+                             service?.category === "instagram" ? <Instagram className="w-6 h-6 social-instagram" /> :
+                             service?.category === "tiktok" ? <Music2 className="w-6 h-6 social-tiktok" /> : <Youtube className="w-6 h-6 social-youtube" />}
                           </div>
                           <div>
                             <p className="font-medium text-brand-text-dark">

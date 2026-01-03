@@ -2,9 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Input, Dialog, Skeleton, Modal } from "@/components/ui";
-import { Container, Section, VStack, HStack } from "@/components/layout";
-import { PageHeader, EmptyState, StatsGrid, FilterTabs, getPayoutStats, type PayoutFilterStatus } from "@/components/shared";
+import { Card, Badge, Button, Input, Skeleton, Modal } from "@/components/ui";
+import { EmptyState, FilterTabs, Breadcrumb, type PayoutFilterStatus } from "@/components/shared";
 import { useTeamPayouts, useWorkerBalances, useWorkers, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
 import type { TeamPayout } from "@/types";
@@ -13,12 +12,13 @@ import {
   Search,
   Clock,
   CheckCircle2,
-  Wallet,
   Send,
   AlertCircle,
   CreditCard,
   LayoutGrid,
   History,
+  Users,
+  Wallet,
 } from "lucide-react";
 
 export default function TeamPayoutsPage() {
@@ -86,26 +86,71 @@ export default function TeamPayoutsPage() {
     );
   }
 
-  return (
-    <Container size="xl">
-      <Section spacing="lg" className="animate-fade-in">
-        {/* Header */}
-        <PageHeader
-          title="จ่ายเงินลูกทีม"
-          description={`จัดการการจ่ายเงินของทีม ${currentTeam?.name || ""}`}
-          icon={DollarSign}
-        />
+  const completedAmount = payouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0);
 
-        {/* Summary Stats */}
-        <StatsGrid
-          stats={getPayoutStats({
-            pendingCount: pendingPayouts.length,
-            pendingAmount: totalPending,
-          completedAmount: payouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0),
-          totalWorkers: workers.length,
-        })}
-        columns={4}
-      />
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Breadcrumb */}
+      <Breadcrumb />
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+          <DollarSign className="w-5 h-5 text-emerald-600" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-brand-text-dark">จ่ายเงินลูกทีม</h1>
+          <p className="text-sm text-brand-text-light">จัดการการจ่ายเงินของทีม {currentTeam?.name || ""}</p>
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{pendingPayouts.length}</p>
+              <p className="text-xs text-brand-text-light">รายการรอจ่าย</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-600">฿{totalPending.toLocaleString()}</p>
+              <p className="text-xs text-brand-text-light">ยอดเงินค้างจ่าย</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-emerald-600">฿{completedAmount.toLocaleString()}</p>
+              <p className="text-xs text-brand-text-light">จ่ายไปแล้ว</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-none shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-brand-text-dark">{workers.length}</p>
+              <p className="text-xs text-brand-text-light">Worker ทั้งหมด</p>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       {/* Pending Alert */}
       {pendingPayouts.length > 0 && (
@@ -140,45 +185,8 @@ export default function TeamPayoutsPage() {
         </div>
       )}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left: Worker Balances List */}
-        <div className="lg:col-span-1 space-y-4">
-           <h3 className="font-bold text-lg text-brand-text-dark flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-brand-primary" />
-              ยอดเงินสะสม Worker
-           </h3>
-           <div className="bg-white rounded-2xl border border-brand-border/50 shadow-sm overflow-hidden">
-             <div className="max-h-[500px] overflow-y-auto divide-y divide-brand-border/30">
-                {workerBalances.map((wb) => (
-                    <div
-                      key={wb.worker.id}
-                      className="flex items-center justify-between p-4 hover:bg-brand-bg/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary text-sm font-bold border border-brand-primary/20">
-                          {wb.worker.displayName.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-brand-text-dark">@{wb.worker.displayName}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                             <Badge variant="success" size="sm" className="px-1.5 py-0 text-[10px] h-4">{wb.worker.level}</Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-brand-text-light mb-0.5">ยอดถอนได้</p>
-                        <p className="text-base font-bold text-brand-success">฿{wb.availableBalance.toLocaleString()}</p>
-                      </div>
-                    </div>
-                ))}
-             </div>
-           </div>
-        </div>
-
-        {/* Right: Payout History */}
-        <div className="lg:col-span-2 space-y-4">
+      {/* Payout History */}
+      <div className="space-y-4">
            {/* Filter & Search */}
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-brand-border/50">
              <FilterTabs
@@ -202,7 +210,7 @@ export default function TeamPayoutsPage() {
              </div>
            </div>
 
-           {/* List */}
+           {/* Table */}
            <div className="bg-white rounded-2xl shadow-sm border border-brand-border/50 overflow-hidden">
              <div className="p-4 bg-brand-bg/30 border-b border-brand-border/30 flex items-center justify-between">
                 <h3 className="font-bold text-brand-text-dark flex items-center gap-2">
@@ -213,85 +221,115 @@ export default function TeamPayoutsPage() {
                    {filteredPayouts.length} รายการ
                 </span>
              </div>
-             <div className="divide-y divide-brand-border/30">
-                {filteredPayouts.length === 0 ? (
-                    <EmptyState 
-                        icon={DollarSign} 
-                        title="ไม่พบรายการจ่ายเงิน" 
-                        description="ยังไม่มีประวัติการจ่ายเงินในขณะนี้"
-                        className="py-12"
-                    />
-                ) : (
-                    filteredPayouts.map((payout) => (
-                      <div
-                        key={payout.id}
-                        className="p-5 hover:bg-brand-bg/30 transition-colors"
-                      >
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex items-start gap-4">
-                             <div className="w-12 h-12 bg-white border border-brand-border/50 shadow-sm rounded-xl flex items-center justify-center text-brand-primary shrink-0">
-                                <DollarSign className="w-6 h-6" />
-                             </div>
-                             <div>
-                                <div className="flex items-center gap-2">
-                                   <p className="font-bold text-brand-text-dark text-lg">@{payout.worker?.displayName || 'Unknown Worker'}</p>
-                                   {payout.status === "completed" && (
-                                     <Badge variant="success" size="sm" className="gap-1 border-none bg-brand-success/10 text-brand-success">
-                                        <CheckCircle2 className="w-3 h-3" /> จ่ายแล้ว
-                                     </Badge>
-                                   )}
-                                   {payout.status === "pending" && (
-                                     <Badge variant="warning" size="sm" className="gap-1 border-none bg-brand-warning/10 text-brand-warning">
-                                        <Clock className="w-3 h-3" /> รอจ่าย
-                                     </Badge>
-                                   )}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-brand-text-light mt-1">
-                                   <span className="flex items-center gap-1.5">
-                                      <LayoutGrid className="w-3.5 h-3.5" />
-                                      {payout.jobCount} งาน
-                                   </span>
-                                   <span className="flex items-center gap-1.5">
-                                      <CreditCard className="w-3.5 h-3.5" />
-                                      {payout.paymentMethod === "promptpay" ? "PromptPay" : payout.bankName}
-                                      <span className="font-mono text-xs bg-brand-bg px-1.5 py-0.5 rounded ml-1">{payout.paymentAccount}</span>
-                                   </span>
-                                </div>
+             
+             {filteredPayouts.length === 0 ? (
+                <EmptyState 
+                    icon={DollarSign} 
+                    title="ไม่พบรายการจ่ายเงิน" 
+                    description="ยังไม่มีประวัติการจ่ายเงินในขณะนี้"
+                    className="py-12"
+                />
+             ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-brand-bg/30 border-b border-brand-border/30">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">Worker</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">จำนวนงาน</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-brand-text-light uppercase tracking-wider">ช่องทางโอน</th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-brand-text-light uppercase tracking-wider">ยอดเงิน</th>
+                        <th className="px-6 py-3 text-center text-xs font-semibold text-brand-text-light uppercase tracking-wider">สถานะ</th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-brand-text-light uppercase tracking-wider">การดำเนินการ</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-border/30">
+                      {filteredPayouts.map((payout) => (
+                        <tr key={payout.id} className="hover:bg-brand-bg/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-brand-secondary rounded-full flex items-center justify-center text-sm font-bold text-brand-primary">
+                                {payout.worker?.displayName?.charAt(0) || 'U'}
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm text-brand-text-dark">
+                                  @{payout.worker?.displayName || 'Unknown Worker'}
+                                </p>
                                 {payout.status === "completed" && payout.completedAt && (
-                                  <p className="text-xs text-brand-text-light/70 mt-1 font-mono">
-                                     Ref: {payout.transactionRef} • {new Date(payout.completedAt).toLocaleDateString("th-TH")}
+                                  <p className="text-xs text-brand-text-light">
+                                    {new Date(payout.completedAt).toLocaleDateString("th-TH", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric"
+                                    })}
                                   </p>
                                 )}
-                             </div>
-                          </div>
-                          
-                          <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-4">
-                             <div className="text-right">
-                                <p className="text-sm text-brand-text-light">ยอดโอนสุทธิ</p>
-                                <p className="text-2xl font-bold text-brand-success">฿{payout.amount.toLocaleString()}</p>
-                             </div>
-                             
-                             {payout.status === "pending" && (
-                               <Button
-                                 size="sm"
-                                 className="rounded-lg shadow-lg shadow-brand-primary/20 bg-brand-primary hover:bg-brand-primary-dark"
-                                 onClick={() => {
-                                   setSelectedPayout(payout);
-                                   setShowPayModal(true);
-                                 }}
-                               >
-                                 <Send className="w-4 h-4 mr-1.5" />
-                                 แจ้งโอนเงิน
-                               </Button>
-                             )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                )}
-             </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-text-dark">
+                              <LayoutGrid className="w-4 h-4 text-brand-text-light" />
+                              {payout.jobCount} งาน
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium text-brand-text-dark flex items-center gap-1.5">
+                                <CreditCard className="w-4 h-4 text-brand-text-light" />
+                                {payout.paymentMethod === "promptpay" ? "PromptPay" : payout.bankName}
+                              </p>
+                              <p className="text-xs font-mono text-brand-text-light bg-brand-bg/50 px-2 py-0.5 rounded w-fit">
+                                {payout.paymentAccount}
+                              </p>
+                              {payout.status === "completed" && payout.transactionRef && (
+                                <p className="text-xs text-brand-text-light/70 font-mono">
+                                  Ref: {payout.transactionRef}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div>
+                              <p className="text-xl font-bold text-brand-success">
+                                ฿{payout.amount.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-brand-text-light">ยอดโอนสุทธิ</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {payout.status === "completed" && (
+                              <Badge variant="success" size="sm" className="gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> จ่ายแล้ว
+                              </Badge>
+                            )}
+                            {payout.status === "pending" && (
+                              <Badge variant="warning" size="sm" className="gap-1">
+                                <Clock className="w-3 h-3" /> รอจ่าย
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {payout.status === "pending" && (
+                              <Button
+                                size="sm"
+                                className="rounded-lg shadow-md"
+                                onClick={() => {
+                                  setSelectedPayout(payout);
+                                  setShowPayModal(true);
+                                }}
+                              >
+                                <Send className="w-4 h-4 mr-1.5" />
+                                แจ้งโอนเงิน
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+             )}
            </div>
-        </div>
       </div>
 
       {/* Pay Modal */}
@@ -365,7 +403,6 @@ export default function TeamPayoutsPage() {
           </div>
         )}
       </Modal>
-      </Section>
-    </Container>
+    </div>
   );
 }
