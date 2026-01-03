@@ -24,6 +24,7 @@ import {
 } from "@/lib/constants/services";
 import { formatCurrency } from "@/lib/utils";
 import { useSellerServices } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import { useBulkSelection, useFilters, useSort } from "@/lib/hooks";
 import type { StoreService } from "@/types";
 import {
@@ -143,32 +144,51 @@ export default function ServicesPage() {
   const humanCount = services.filter(s => s.serviceType === "human").length;
 
   // Handlers
-  const toggleService = (id: string) => {
-    setServices(services.map(s => s.id === id ? { ...s, isActive: !s.isActive } : s));
+  const toggleService = async (id: string) => {
+    const service = services.find(s => s.id === id);
+    if (!service) return;
+    
+    await api.seller.updateService(id, { isActive: !service.isActive });
+    await refetch();
   };
 
-  const updateShowInStore = (id: string, showInStore: boolean) => {
-    setServices(services.map(s => s.id === id ? { ...s, showInStore } : s));
+  const updateShowInStore = async (id: string, showInStore: boolean) => {
+    await api.seller.updateService(id, { showInStore });
+    await refetch();
   };
 
-  const handleBulkAction = (action: BulkAction) => {
-    switch (action) {
-      case "show":
-        setServices(services.map(s => selectedIds.has(s.id) ? { ...s, showInStore: true } : s));
-        break;
-      case "hide":
-        setServices(services.map(s => selectedIds.has(s.id) ? { ...s, showInStore: false } : s));
-        break;
-      case "toggle":
-        setServices(services.map(s => selectedIds.has(s.id) ? { ...s, isActive: !s.isActive } : s));
-        break;
-      case "delete":
-        if (confirm(`ต้องการลบ ${selectedCount} บริการที่เลือกหรือไม่?`)) {
-          setServices(services.filter(s => !selectedIds.has(s.id)));
-        }
-        break;
+  const handleBulkAction = async (action: BulkAction) => {
+    const ids = Array.from(selectedIds);
+    
+    try {
+      switch (action) {
+        case "show":
+          await api.seller.bulkUpdateServices(ids, { showInStore: true });
+          break;
+        case "hide":
+          await api.seller.bulkUpdateServices(ids, { showInStore: false });
+          break;
+        case "toggle":
+          // For toggle, we need to get current state and toggle each
+          const servicesToToggle = services.filter(s => selectedIds.has(s.id));
+          for (const service of servicesToToggle) {
+            await api.seller.updateService(service.id, { isActive: !service.isActive });
+          }
+          break;
+        case "delete":
+          if (confirm(`ต้องการลบ ${selectedCount} บริการที่เลือกหรือไม่?`)) {
+            for (const id of ids) {
+              await api.seller.deleteService(id);
+            }
+          }
+          break;
+      }
+      await refetch();
+      clearSelection();
+    } catch (error) {
+      console.error("Error performing bulk action:", error);
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
-    clearSelection();
   };
 
   // Define columns for GenericDataTable
@@ -286,6 +306,12 @@ export default function ServicesPage() {
             <Edit2 className="w-4 h-4" />
           </button>
           <button 
+            onClick={async () => {
+              if (confirm(`ต้องการลบบริการ "${service.name}" หรือไม่?`)) {
+                await api.seller.deleteService(service.id);
+                await refetch();
+              }
+            }}
             className="p-2 rounded-lg text-brand-text-light hover:text-brand-error hover:bg-brand-error/10" 
             title="ลบ"
           >
@@ -427,17 +453,30 @@ export default function ServicesPage() {
           title="แก้ไขบริการ" 
           size="lg"
         >
-          <form className="space-y-4" key={editingService?.id || "edit"}>
-            <ServiceForm service={editingService} />
+          <div className="space-y-4" key={editingService?.id || "edit"}>
+            <ServiceForm 
+              service={editingService}
+              onSubmit={async (data) => {
+                if (!editingService) return;
+                
+                try {
+                  await api.seller.updateService(editingService.id, data);
+                  await refetch();
+                  setIsEditModalOpen(false);
+                  setEditingService(null);
+                  alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
+                } catch (error) {
+                  console.error("Error updating service:", error);
+                  alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                }
+              }}
+            />
             <div className="flex gap-3 pt-4">
               <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsEditModalOpen(false); setEditingService(null); }}>
                 ยกเลิก
               </Button>
-              <Button type="submit" className="flex-1">
-                บันทึกการเปลี่ยนแปลง
-              </Button>
             </div>
-          </form>
+          </div>
         </Modal>
       </div>
     </AsyncBoundary>

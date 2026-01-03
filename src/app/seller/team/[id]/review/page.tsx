@@ -6,7 +6,8 @@ import { useParams } from "next/navigation";
 import { Card, Badge, Button, Dialog, Textarea, Skeleton, Modal } from "@/components/ui";
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, EmptyState } from "@/components/shared";
-import { usePendingReviews, useWorkers, useSellerJobs, useSellerTeams } from "@/lib/api/hooks";
+import { usePendingReviews, useWorkers, useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import type { Platform } from "@/types";
 import {
   CheckCircle2,
@@ -31,12 +32,13 @@ export default function TeamReviewPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [locallyRemovedIds, setLocallyRemovedIds] = useState<Set<string>>(new Set());
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Use API hooks
   const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
-  const { data: pendingReviewsData, isLoading: isLoadingReviews } = usePendingReviews();
+  const { data: pendingReviewsData, isLoading: isLoadingReviews, refetch: refetchReviews } = usePendingReviews();
   const { data: workers, isLoading: isLoadingWorkers } = useWorkers();
-  const { data: jobs, isLoading: isLoadingJobs } = useSellerJobs();
+  const { data: teamJobs, isLoading: isLoadingJobs } = useTeamJobs();
 
   const isLoading = isLoadingTeams || isLoadingReviews || isLoadingWorkers || isLoadingJobs;
   
@@ -46,19 +48,19 @@ export default function TeamReviewPage() {
 
   // Build pending review jobs from claims
   const pendingReviewJobs = useMemo(() => {
-    if (!pendingReviewsData || !workers || !jobs) return [];
+    if (!pendingReviewsData || !workers || !teamJobs) return [];
     
     return pendingReviewsData
       .filter(claim => !locallyRemovedIds.has(claim.id))
       .map(claim => {
         const worker = workers.find(w => w.id === claim.workerId);
-        const job = jobs.find(j => j.id === claim.jobId);
+        const job = teamJobs.find(j => j.id === claim.jobId);
         
         return {
           id: claim.id,
-          orderId: job?.id || "",
-          orderNumber: `ORD-${claim.jobId?.slice(-4) || "0000"}`,
-          serviceName: job?.title || "Unknown Service",
+          orderId: job?.orderId || "",
+          orderNumber: job?.orderNumber || `ORD-${claim.jobId?.slice(-4) || "0000"}`,
+          serviceName: job?.serviceName || "Unknown Service",
           platform: job?.platform || "facebook",
           quantity: claim.quantity,
           completedQuantity: claim.actualQuantity || claim.quantity,
@@ -73,32 +75,62 @@ export default function TeamReviewPage() {
             totalJobsCompleted: 0,
           },
           submittedAt: claim.submittedAt,
-          proofImages: [] as string[],
+          proofImages: claim.proofUrls || [],
           workerNote: claim.workerNote || "",
         };
       });
-  }, [pendingReviewsData, workers, jobs, locallyRemovedIds]);
+  }, [pendingReviewsData, workers, teamJobs, locallyRemovedIds]);
 
   const selectedJob = selectedJobId 
     ? pendingReviewJobs.find(j => j.id === selectedJobId) 
     : null;
 
-  const handleApprove = () => {
-    if (selectedJob) {
+  const handleApprove = async () => {
+    if (!selectedJob) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      await api.seller.approveJobClaim(selectedJob.id);
+      
+      // Refetch to update the UI
+      await refetchReviews();
+      
       setLocallyRemovedIds(prev => new Set(prev).add(selectedJob.id));
       setShowApproveModal(false);
       setSelectedJobId(null);
-      alert(`อนุมัติงาน ${selectedJob.serviceName} เรียบร้อย! จ่ายเงิน ฿${selectedJob.workerPayout} ให้ @${selectedJob.worker.displayName}`);
+      
+      alert(`อนุมัติงาน ${selectedJob.serviceName} เรียบร้อย! ระบบจะสร้างรายการจ่ายเงิน ฿${selectedJob.workerPayout} ให้ @${selectedJob.worker.displayName}`);
+    } catch (error) {
+      console.error("Error approving job:", error);
+      alert("เกิดข้อผิดพลาดในการอนุมัติงาน กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleReject = () => {
-    if (selectedJob) {
+  const handleReject = async () => {
+    if (!selectedJob || !rejectReason.trim()) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      await api.seller.rejectJobClaim(selectedJob.id, rejectReason);
+      
+      // Refetch to update the UI
+      await refetchReviews();
+      
       setLocallyRemovedIds(prev => new Set(prev).add(selectedJob.id));
       setShowRejectModal(false);
       setSelectedJobId(null);
       setRejectReason("");
+      
       alert(`ปฏิเสธงาน ${selectedJob.serviceName} - ส่งกลับให้ Worker แก้ไข`);
+    } catch (error) {
+      console.error("Error rejecting job:", error);
+      alert("เกิดข้อผิดพลาดในการปฏิเสธงาน กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -137,16 +169,33 @@ export default function TeamReviewPage() {
               </div>
              <Button
                 size="sm"
-                onClick={() => {
-                  if (confirm(`อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน?`)) {
-                    setLocallyRemovedIds(new Set(pendingReviewJobs.map(j => j.id)));
-                    alert("อนุมัติงานทั้งหมดเรียบร้อย!");
+                onClick={async () => {
+                  if (confirm(`อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน? จะสร้างรายการจ่ายเงินรวม ฿${totalPayout}`)) {
+                    setIsProcessing(true);
+                    try {
+                      // Approve all claims
+                      for (const job of pendingReviewJobs) {
+                        await api.seller.approveJobClaim(job.id);
+                      }
+                      
+                      // Refetch to update the UI
+                      await refetchReviews();
+                      
+                      setLocallyRemovedIds(new Set(pendingReviewJobs.map(j => j.id)));
+                      alert(`อนุมัติงานทั้งหมด ${pendingReviewJobs.length} รายการเรียบร้อย!`);
+                    } catch (error) {
+                      console.error("Error approving all:", error);
+                      alert("เกิดข้อผิดพลาดบางรายการ กรุณาตรวจสอบอีกครั้ง");
+                    } finally {
+                      setIsProcessing(false);
+                    }
                   }
                 }}
                 className="rounded-lg shadow-md shadow-brand-primary/20"
+                disabled={isProcessing}
               >
                 <ThumbsUp className="w-4 h-4 mr-2" />
-                อนุมัติทั้งหมด ({pendingReviewJobs.length})
+                {isProcessing ? "กำลังอนุมัติ..." : `อนุมัติทั้งหมด (${pendingReviewJobs.length})`}
               </Button>
             </HStack>
           )}
@@ -377,9 +426,14 @@ export default function TeamReviewPage() {
               >
                 ยกเลิก
               </Button>
-              <Button onClick={handleApprove} className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent">
+              <Button 
+                onClick={handleApprove} 
+                className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent"
+                disabled={isProcessing}
+                isLoading={isProcessing}
+              >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                ยืนยันอนุมัติ
+                {isProcessing ? "กำลังอนุมัติ..." : "ยืนยันอนุมัติ"}
               </Button>
             </div>
           </div>
@@ -435,10 +489,11 @@ export default function TeamReviewPage() {
               <Button
                 className="flex-1 bg-brand-error hover:bg-brand-error/90 shadow-lg shadow-brand-error/20 border-transparent text-white"
                 onClick={handleReject}
-                disabled={!rejectReason.trim()}
+                disabled={!rejectReason.trim() || isProcessing}
+                isLoading={isProcessing}
               >
                 <XCircle className="w-4 h-4 mr-2" />
-                ยืนยันปฏิเสธ
+                {isProcessing ? "กำลังปฏิเสธ..." : "ยืนยันปฏิเสธ"}
               </Button>
             </div>
           </div>

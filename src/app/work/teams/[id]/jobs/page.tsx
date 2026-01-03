@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Progress, Avatar } from "@/components/ui";
@@ -8,6 +8,8 @@ import { Container, Section, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, ServiceTypeBadge, EmptyState, SegmentedControl, StatsGridCompact, ClaimJobModal, ReviewTeamModal } from "@/components/shared";
 import type { FilterOption } from "@/components/shared";
 import type { Platform, ServiceMode } from "@/types";
+import { useWorkerTeams, useWorkerJobs, useTeamJobs } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import {
   ArrowLeft,
   Briefcase,
@@ -48,97 +50,73 @@ export default function TeamJobsPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewJobName, setReviewJobName] = useState<string>("");
 
-  // Mock Team Data
-  const team = {
-    id: teamId,
-    name: "JohnBoost Team",
-    rating: 4.9,
-    memberCount: 45,
-  };
+  // Get data from API
+  const { data: teams } = useWorkerTeams();
+  const { data: workerJobsData } = useWorkerJobs();
+  const { data: allTeamJobs } = useTeamJobs(); // All available team jobs
+  
+  const team = useMemo(() => {
+    return teams?.find(t => t.id === teamId);
+  }, [teams, teamId]);
+  
+  // Organize jobs by status
+  const teamJobsOrganized = useMemo(() => {
+    if (!workerJobsData || !allTeamJobs) {
+      return { available: [], in_progress: [], completed: [] };
+    }
+    
+    // Available jobs = team jobs that belong to this team and are not yet claimed by current worker
+    // Filter team jobs where status is pending or in_progress (still accepting workers) AND belong to this team
+    const available = allTeamJobs
+      .filter(tj => 
+        tj.teamId === teamId && // Only jobs from this team
+        (tj.status === "pending" || tj.status === "in_progress") &&
+        tj.completedQuantity < tj.quantity
+      )
+      .map(tj => ({
+        id: tj.id,
+        serviceName: tj.serviceName,
+        platform: tj.platform,
+        type: "human" as const,
+        quantity: tj.quantity,
+        claimed: tj.completedQuantity,
+        pricePerUnit: tj.pricePerUnit,
+        deadline: tj.deadline ? new Date(tj.deadline).toLocaleString('th-TH') : "ไม่มีกำหนด",
+        urgent: tj.deadline ? new Date(tj.deadline).getTime() - Date.now() < 7200000 : false, // < 2 hours
+      }));
+    
+    // Map worker's actual jobs to display format
+    const inProgress = workerJobsData.in_progress.map(wj => ({
+      id: wj.id,
+      serviceName: wj.serviceName,
+      platform: wj.platform,
+      type: wj.type,
+      quantity: wj.quantity,
+      completed: wj.completedQuantity,
+      pricePerUnit: wj.pricePerUnit,
+      deadline: wj.deadline,
+      myPayout: wj.quantity * wj.pricePerUnit,
+    }));
+    
+    const completed = workerJobsData.completed.map(wj => ({
+      id: wj.id,
+      serviceName: wj.serviceName,
+      platform: wj.platform,
+      type: wj.type,
+      quantity: wj.quantity,
+      completed: wj.completedQuantity,
+      pricePerUnit: wj.pricePerUnit,
+      completedAt: wj.completedAt,
+      myEarnings: wj.earnings || 0,
+      isPaid: !!wj.earnings,
+      paidAt: wj.completedAt,
+      hasReviewed: false, // Would need separate review tracking
+    }));
+    
+    return { available, in_progress: inProgress, completed };
+  }, [workerJobsData, allTeamJobs]);
 
-  // Mock Jobs Data
-  const teamJobs = {
-    available: [
-      {
-        id: "job-1",
-        serviceName: "ไลค์ Facebook",
-        platform: "facebook",
-        type: "human",
-        quantity: 500,
-        claimed: 320,
-        pricePerUnit: 0.2,
-        deadline: "2 ชม.",
-        urgent: true,
-      },
-      {
-        id: "job-2",
-        serviceName: "Follow Instagram",
-        platform: "instagram",
-        type: "human",
-        quantity: 200,
-        claimed: 50,
-        pricePerUnit: 0.3,
-        deadline: "5 ชม.",
-        urgent: false,
-      },
-      {
-        id: "job-3",
-        serviceName: "View TikTok",
-        platform: "tiktok",
-        type: "human",
-        quantity: 1000,
-        claimed: 200,
-        pricePerUnit: 0.08,
-        deadline: "12 ชม.",
-        urgent: false,
-      },
-    ],
-    in_progress: [
-      {
-        id: "job-4",
-        serviceName: "ไลค์ Facebook",
-        platform: "facebook",
-        type: "human",
-        quantity: 100,
-        completed: 65,
-        pricePerUnit: 0.2,
-        deadline: "1 ชม.",
-        myPayout: 20,
-      },
-    ],
-    completed: [
-      {
-        id: "job-5",
-        serviceName: "เม้น Facebook",
-        platform: "facebook",
-        type: "human",
-        quantity: 50,
-        completed: 50,
-        pricePerUnit: 1.5,
-        completedAt: "2024-12-29",
-        myEarnings: 75,
-        isPaid: true,
-        paidAt: "2024-12-30",
-        hasReviewed: false,
-      },
-      {
-        id: "job-6",
-        serviceName: "Follow Instagram",
-        platform: "instagram",
-        type: "human",
-        quantity: 80,
-        completed: 80,
-        pricePerUnit: 0.3,
-        completedAt: "2024-12-28",
-        myEarnings: 24,
-        isPaid: false, // ยังไม่จ่าย - ไม่สามารถรีวิวได้
-        paidAt: null,
-        hasReviewed: false,
-      },
-    ],
-  };
-
-  const currentJobs = teamJobs[activeTab];
+  const currentJobs = teamJobsOrganized[activeTab];
 
   // Handle claim job
   const handleOpenClaimModal = (job: AvailableJob) => {
@@ -154,47 +132,55 @@ export default function TeamJobsPage() {
     
     setIsClaimLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsClaimLoading(false);
-    setIsClaimModalOpen(false);
-    
-    // Redirect to jobs page after successful claim
-    router.push("/work/jobs");
+    try {
+      await api.worker.claimTeamJob(selectedJob.id, quantity);
+      
+      alert(`จองงาน ${selectedJob.serviceName} จำนวน ${quantity} สำเร็จ!`);
+      
+      setIsClaimLoading(false);
+      setIsClaimModalOpen(false);
+      setSelectedJob(null);
+      
+      // Redirect to jobs page after successful claim
+      router.push("/work/jobs");
+    } catch (error: any) {
+      console.error("Error claiming job:", error);
+      alert(error?.message || "เกิดข้อผิดพลาดในการจองงาน กรุณาลองใหม่อีกครั้ง");
+      setIsClaimLoading(false);
+    }
   };
 
   // Stats
-  const statsData = [
+  const statsData = useMemo(() => [
     {
       label: "งานว่าง",
-      value: teamJobs.available.length,
+      value: teamJobsOrganized.available.length,
       icon: Briefcase,
       iconColor: "text-brand-primary",
       iconBgColor: "bg-brand-primary/10",
     },
     {
       label: "กำลังทำ",
-      value: teamJobs.in_progress.length,
+      value: teamJobsOrganized.in_progress.length,
       icon: PlayCircle,
       iconColor: "text-brand-warning",
       iconBgColor: "bg-brand-warning/10",
     },
     {
       label: "เสร็จแล้ว",
-      value: teamJobs.completed.length,
+      value: teamJobsOrganized.completed.length,
       icon: CheckCircle2,
       iconColor: "text-brand-success",
       iconBgColor: "bg-brand-success/10",
     },
-  ];
+  ], [teamJobsOrganized]);
 
   // Tab Options
-  const tabOptions: FilterOption<TabType>[] = [
-    { key: "available", label: "งานว่าง", icon: <Briefcase className="w-4 h-4" />, count: teamJobs.available.length },
-    { key: "in_progress", label: "กำลังทำ", icon: <PlayCircle className="w-4 h-4" />, count: teamJobs.in_progress.length },
-    { key: "completed", label: "เสร็จแล้ว", icon: <CheckCircle2 className="w-4 h-4" />, count: teamJobs.completed.length },
-  ];
+  const tabOptions: FilterOption<TabType>[] = useMemo(() => [
+    { key: "available", label: "งานว่าง", icon: <Briefcase className="w-4 h-4" />, count: teamJobsOrganized.available.length },
+    { key: "in_progress", label: "กำลังทำ", icon: <PlayCircle className="w-4 h-4" />, count: teamJobsOrganized.in_progress.length },
+    { key: "completed", label: "เสร็จแล้ว", icon: <CheckCircle2 className="w-4 h-4" />, count: teamJobsOrganized.completed.length },
+  ], [teamJobsOrganized]);
 
   return (
     <Container size="xl">
@@ -209,21 +195,21 @@ export default function TeamJobsPage() {
               </button>
             </Link>
           <div className="flex-1 flex items-center gap-5">
-            <Avatar fallback={team.name} size="xl" className="w-20 h-20 text-2xl border-4 border-white shadow-md" />
+            <Avatar fallback={team?.name || "T"} size="xl" className="w-20 h-20 text-2xl border-4 border-white shadow-md" />
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-3xl font-bold text-brand-text-dark tracking-tight">
-                  {team.name}
+                  {team?.name || "ทีม"}
                 </h1>
                 <Badge variant="warning" className="text-sm px-2 py-0.5 font-bold shadow-sm">
                   <Star className="w-3.5 h-3.5 mr-1 fill-current" />
-                  {team.rating}
+                  {team?.rating || 0}
                 </Badge>
               </div>
               <div className="flex items-center gap-4 text-brand-text-light font-medium">
                 <span className="flex items-center gap-1.5">
                   <Users className="w-4 h-4" />
-                  {team.memberCount} สมาชิก
+                  {team?.memberCount || 0} สมาชิก
                 </span>
                 <span className="w-1 h-1 rounded-full bg-brand-border" />
                 <span className="text-brand-primary">
@@ -263,7 +249,7 @@ export default function TeamJobsPage() {
         ) : (
           <>
             {/* Available Jobs */}
-            {activeTab === "available" && teamJobs.available.map((job) => (
+            {activeTab === "available" && teamJobsOrganized.available.map((job) => (
               <Card 
                 key={job.id} 
                 variant="elevated" 
@@ -329,7 +315,7 @@ export default function TeamJobsPage() {
             ))}
 
             {/* In Progress Jobs */}
-            {activeTab === "in_progress" && teamJobs.in_progress.map((job) => (
+            {activeTab === "in_progress" && teamJobsOrganized.in_progress.map((job) => (
               <Link href={`/work/jobs/${job.id}`} key={job.id}>
                 <Card variant="elevated" className="border-l-4 border-l-brand-warning border-none shadow-md hover:shadow-lg transition-all cursor-pointer group">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -376,7 +362,7 @@ export default function TeamJobsPage() {
             ))}
 
             {/* Completed Jobs */}
-            {activeTab === "completed" && teamJobs.completed.map((job) => (
+            {activeTab === "completed" && teamJobsOrganized.completed.map((job) => (
               <Card key={job.id} variant="elevated" className="border-l-4 border-l-brand-success border-none shadow-sm hover:shadow-md transition-all">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <Link href={`/work/jobs/${job.id}`} className="flex items-start gap-4 flex-1 group">
@@ -390,7 +376,7 @@ export default function TeamJobsPage() {
                       <div className="flex flex-wrap items-center gap-2 text-sm text-brand-text-light mt-1">
                         <span>{job.completed} หน่วย</span>
                         <span>•</span>
-                        <span>เสร็จเมื่อ {new Date(job.completedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</span>
+                        <span>เสร็จเมื่อ {job.completedAt ? new Date(job.completedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : '-'}</span>
                         {job.isPaid ? (
                           <Badge variant="success" size="sm">💰 จ่ายแล้ว</Badge>
                         ) : (
@@ -444,7 +430,7 @@ export default function TeamJobsPage() {
           setIsClaimModalOpen(false);
           setSelectedJob(null);
         }}
-        job={selectedJob ? { ...selectedJob, teamName: team.name } : null}
+        job={selectedJob ? { ...selectedJob, teamName: team?.name || "ทีม" } : null}
         onConfirm={handleClaimJob}
         isLoading={isClaimLoading}
       />
@@ -456,7 +442,7 @@ export default function TeamJobsPage() {
           setIsReviewModalOpen(false);
           setReviewJobName("");
         }}
-        teamName={team.name}
+        teamName={team?.name || "ทีม"}
         jobName={reviewJobName}
         onSubmit={async (data) => {
           // Simulate API call

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -27,87 +27,22 @@ import {
 import { Card, Badge, Button, Skeleton, Tabs } from "@/components/ui";
 import { Container, Grid, Section } from "@/components/layout";
 import { PageHeader, StatsGrid } from "@/components/shared";
-import { useSellerStats } from "@/lib/api/hooks";
+import { useSellerOrders, useSellerServices, useSellerTeams, useTransactions } from "@/lib/api/hooks";
+import { computeAnalytics } from "@/lib/utils/analytics";
 import { formatCurrency, cn } from "@/lib/utils";
-
-// Mock analytics data
-const mockAnalytics = {
-  overview: {
-    totalRevenue: 285000,
-    revenueChange: 12.5,
-    totalOrders: 1247,
-    ordersChange: 8.3,
-    totalCustomers: 89,
-    customersChange: 15.2,
-    successRate: 99.5,
-    successRateChange: 0.3,
-    avgOrderValue: 228.55,
-    avgOrderValueChange: -2.1,
-    repeatCustomerRate: 67.8,
-  },
-  revenueByDay: [
-    { day: "จ.", value: 12500, orders: 45 },
-    { day: "อ.", value: 15200, orders: 52 },
-    { day: "พ.", value: 18900, orders: 68 },
-    { day: "พฤ.", value: 14300, orders: 49 },
-    { day: "ศ.", value: 22100, orders: 78 },
-    { day: "ส.", value: 28500, orders: 95 },
-    { day: "อา.", value: 19800, orders: 71 },
-  ],
-  revenueByMonth: [
-    { month: "ม.ค.", value: 185000 },
-    { month: "ก.พ.", value: 210000 },
-    { month: "มี.ค.", value: 245000 },
-    { month: "เม.ย.", value: 198000 },
-    { month: "พ.ค.", value: 267000 },
-    { month: "มิ.ย.", value: 285000 },
-  ],
-  topServices: [
-    { name: "ไลค์ Facebook (คนจริง)", orders: 423, revenue: 84600, growth: 15.2 },
-    { name: "Follow Instagram (Bot)", orders: 312, revenue: 62400, growth: 8.7 },
-    { name: "View TikTok (Bot)", orders: 287, revenue: 57400, growth: 22.3 },
-    { name: "เม้น Facebook (คนจริง)", orders: 156, revenue: 46800, growth: -5.1 },
-    { name: "Share Facebook", orders: 69, revenue: 20700, growth: 3.4 },
-  ],
-  topTeams: [
-    { name: "JohnBoost Team", members: 45, completedJobs: 892, rating: 4.8, revenue: 125000 },
-    { name: "JohnBoost TikTok", members: 28, completedJobs: 567, rating: 4.7, revenue: 85000 },
-    { name: "JohnBoost Premium", members: 12, completedJobs: 234, rating: 5.0, revenue: 75000 },
-  ],
-  orderStatus: {
-    completed: 1185,
-    inProgress: 42,
-    pending: 15,
-    failed: 5,
-  },
-  customerInsights: {
-    newCustomers: 23,
-    returningCustomers: 66,
-    avgOrdersPerCustomer: 14,
-    topCustomerSpend: 45000,
-  },
-  peakHours: [
-    { hour: "09:00", orders: 45 },
-    { hour: "10:00", orders: 78 },
-    { hour: "11:00", orders: 92 },
-    { hour: "12:00", orders: 65 },
-    { hour: "13:00", orders: 88 },
-    { hour: "14:00", orders: 102 },
-    { hour: "15:00", orders: 95 },
-    { hour: "16:00", orders: 87 },
-    { hour: "17:00", orders: 76 },
-    { hour: "18:00", orders: 68 },
-    { hour: "19:00", orders: 112 },
-    { hour: "20:00", orders: 98 },
-    { hour: "21:00", orders: 72 },
-  ],
-};
 
 type Period = "today" | "week" | "month" | "year";
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<Period>("month");
-  const { isLoading } = useSellerStats();
+  
+  // Load data from localStorage
+  const { data: orders = [], isLoading: isLoadingOrders } = useSellerOrders();
+  const { data: services = [], isLoading: isLoadingServices } = useSellerServices();
+  const { data: teams = [], isLoading: isLoadingTeams } = useSellerTeams();
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useTransactions();
+  
+  const isLoading = isLoadingOrders || isLoadingServices || isLoadingTeams || isLoadingTransactions;
 
   const periodLabels: Record<Period, string> = {
     today: "วันนี้",
@@ -116,9 +51,39 @@ export default function AnalyticsPage() {
     year: "ปีนี้",
   };
 
+  // Compute analytics from stored data
+  const mockAnalytics = useMemo(() => {
+    if (isLoading || !orders || !services || !teams || !transactions) {
+      // Return empty structure while loading
+      return {
+        overview: {
+          totalRevenue: 0,
+          revenueChange: 0,
+          totalOrders: 0,
+          ordersChange: 0,
+          totalCustomers: 0,
+          customersChange: 0,
+          successRate: 0,
+          successRateChange: 0,
+          avgOrderValue: 0,
+          avgOrderValueChange: 0,
+          repeatCustomerRate: 0,
+        },
+        revenueByDay: [],
+        revenueByMonth: [],
+        topServices: [],
+        topTeams: [],
+        orderStatus: { completed: 0, inProgress: 0, pending: 0, failed: 0 },
+        customerInsights: { newCustomers: 0, returningCustomers: 0, avgOrdersPerCustomer: 0, topCustomerSpend: 0 },
+        peakHours: [],
+      };
+    }
+    return computeAnalytics(orders, services, teams, transactions);
+  }, [orders, services, teams, transactions, isLoading]);
+
   // Calculate max for charts
-  const maxRevenue = Math.max(...mockAnalytics.revenueByDay.map((d) => d.value));
-  const maxOrders = Math.max(...mockAnalytics.peakHours.map((d) => d.orders));
+  const maxRevenue = Math.max(...mockAnalytics.revenueByDay.map((d) => d.value), 1);
+  const maxOrders = Math.max(...mockAnalytics.peakHours.map((d) => d.orders), 1);
 
   if (isLoading) {
     return (

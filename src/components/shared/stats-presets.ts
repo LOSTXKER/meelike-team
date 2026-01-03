@@ -57,7 +57,7 @@ export function getTeamStats(team: Team): StatItem[] {
     },
     {
       label: "Rating",
-      value: team.rating.toFixed(1),
+      value: (team.rating ?? 0).toFixed(1),
       icon: Star,
       iconColor: "text-brand-warning",
       iconBgColor: "bg-brand-warning/10",

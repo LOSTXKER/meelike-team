@@ -7,6 +7,7 @@ import { Card, Badge, Button, Input, Select, Textarea } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import { useSellerServices } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import type { Platform, ServiceMode } from "@/types";
 import {
   ArrowLeft,
@@ -28,6 +29,7 @@ interface OrderItem {
   serviceName: string;
   serviceType: ServiceMode;
   platform: string;
+  type: string;
   targetUrl: string;
   quantity: number;
   unitPrice: number;
@@ -84,6 +86,7 @@ export default function NewOrderPage() {
       serviceName: service.name,
       serviceType: service.serviceType,
       platform: service.category,
+      type: service.type, // Add the service type (like, comment, follow, etc.)
       targetUrl,
       quantity: qty,
       unitPrice: service.sellPrice,
@@ -122,13 +125,38 @@ export default function NewOrderPage() {
 
     setIsSubmitting(true);
 
-    // Mock create order
-    const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
-    
-    setTimeout(() => {
-      alert(`สร้างออเดอร์ ${orderNumber} เรียบร้อย!\nยอดรวม: ฿${calculateTotal().toLocaleString()}\n\n⚠️ อย่าลืมไปส่งคำสั่งซื้อในหน้า Order Detail`);
-      router.push("/seller/orders");
-    }, 1000);
+    try {
+      // Create order via API
+      const newOrder = await api.seller.createOrder({
+        customer: {
+          name: customerName,
+          contactType: contactType as "line" | "facebook" | "phone" | "email",
+          contactValue: contactValue,
+          note: customerNote || undefined,
+        },
+        items: items.map((item) => ({
+          serviceId: item.serviceId,
+          serviceName: item.serviceName,
+          serviceType: item.serviceType,
+          platform: item.platform,
+          type: item.type,
+          targetUrl: item.targetUrl,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          costPerUnit: item.costPrice,
+          commentTemplates: item.commentTemplates ? item.commentTemplates.split('\n') : undefined,
+        })),
+        discount: 0,
+      });
+      
+      // Success! Navigate to order detail
+      alert(`สร้างออเดอร์ ${newOrder.orderNumber} เรียบร้อย!\nยอดรวม: ฿${newOrder.total.toLocaleString()}\n\n⚠️ อย่าลืมไปส่งคำสั่งซื้อในหน้า Order Detail`);
+      router.push(`/seller/orders/${newOrder.id}`);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("เกิดข้อผิดพลาดในการสร้างออเดอร์ กรุณาลองใหม่อีกครั้ง");
+      setIsSubmitting(false);
+    }
   };
 
   const selectedServiceData = mockServices?.find((s: { id: string }) => s.id === selectedService);

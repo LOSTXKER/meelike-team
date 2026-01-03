@@ -180,6 +180,7 @@ export const mockTeamMembers: TeamMember[] = [
 export const mockTeamJobs: TeamJob[] = [
   {
     id: "job-1",
+    teamId: "team-1",
     orderId: "order-1",
     orderNumber: "ORD-2024-001",
     serviceName: "เม้น Facebook (คนไทยจริง)",
@@ -196,6 +197,7 @@ export const mockTeamJobs: TeamJob[] = [
   },
   {
     id: "job-2",
+    teamId: "team-1",
     orderId: "order-1",
     orderNumber: "ORD-2024-001",
     serviceName: "Follow Instagram (คนไทยจริง)",
@@ -211,6 +213,7 @@ export const mockTeamJobs: TeamJob[] = [
   },
   {
     id: "job-3",
+    teamId: "team-1",
     orderId: "order-3",
     orderNumber: "ORD-2024-003",
     serviceName: "ไลค์ Facebook (คนไทยจริง)",
@@ -227,6 +230,7 @@ export const mockTeamJobs: TeamJob[] = [
   },
   {
     id: "job-4",
+    teamId: "team-2",
     orderId: "order-4",
     orderNumber: "ORD-2024-004",
     serviceName: "View TikTok (คนไทยจริง)",
@@ -243,6 +247,7 @@ export const mockTeamJobs: TeamJob[] = [
   },
   {
     id: "job-5",
+    teamId: "team-1",
     orderId: "order-5",
     orderNumber: "ORD-2024-005",
     serviceName: "ไลค์ Facebook (คนไทยจริง)",

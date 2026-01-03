@@ -7,7 +7,8 @@ import { Card, Button, Badge, Input, Dialog, Progress, Dropdown } from "@/compon
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, StatsGrid, EmptyState, InfoCard } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
-import { useSellerTeams } from "@/lib/api/hooks";
+import { useSellerTeams, useTeamPayouts, useTransactions } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import {
   Building2,
   Users,
@@ -39,7 +40,9 @@ type FilterOption = "all" | "active" | "inactive";
 
 export default function TeamCenterPage() {
   const router = useRouter();
-  const { data: teams, isLoading } = useSellerTeams();
+  const { data: teams, isLoading, refetch } = useSellerTeams();
+  const { data: allPayouts } = useTeamPayouts();
+  const { data: allTransactions } = useTransactions();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("earnings");
@@ -48,23 +51,54 @@ export default function TeamCenterPage() {
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamDescription, setNewTeamDescription] = useState("");
 
-  // Mock earnings data per team
+  // Calculate real earnings data per team from payouts/transactions
   const getTeamEarnings = (teamId: string) => {
-    const mockData: Record<string, { thisMonth: number; lastMonth: number; total: number }> = {
-      "team-1": { thisMonth: 45000, lastMonth: 38000, total: 285000 },
-      "team-2": { thisMonth: 32000, lastMonth: 35000, total: 180000 },
-      "team-3": { thisMonth: 18000, lastMonth: 15000, total: 95000 },
+    if (!allPayouts || !allTransactions) {
+      return { thisMonth: 0, lastMonth: 0, total: 0 };
+    }
+    
+    // Get payouts related to this team (filter by worker's team membership would be ideal)
+    // For now, calculate from completed payouts
+    const teamPayouts = allPayouts.filter(p => p.status === "completed");
+    
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    
+    const thisMonthPayouts = teamPayouts.filter(p => 
+      p.completedAt && new Date(p.completedAt) >= thisMonthStart
+    );
+    
+    const lastMonthPayouts = teamPayouts.filter(p => 
+      p.completedAt && 
+      new Date(p.completedAt) >= lastMonthStart && 
+      new Date(p.completedAt) < thisMonthStart
+    );
+    
+    return {
+      thisMonth: thisMonthPayouts.reduce((sum, p) => sum + p.amount, 0),
+      lastMonth: lastMonthPayouts.reduce((sum, p) => sum + p.amount, 0),
+      total: teamPayouts.reduce((sum, p) => sum + p.amount, 0),
     };
-    return mockData[teamId] || { thisMonth: 0, lastMonth: 0, total: 0 };
   };
 
   const getTeamPendingData = (teamId: string) => {
-    const mockData: Record<string, { pendingReviews: number; pendingPayouts: number }> = {
-      "team-1": { pendingReviews: 5, pendingPayouts: 2450 },
-      "team-2": { pendingReviews: 7, pendingPayouts: 1800 },
-      "team-3": { pendingReviews: 0, pendingPayouts: 0 },
+    if (!allPayouts) {
+      return { pendingReviews: 0, pendingPayouts: 0 };
+    }
+    
+    // Calculate pending payouts for this team
+    const pendingPayouts = allPayouts.filter(p => 
+      p.status === "pending"
+      // Would ideally filter by team membership
+    );
+    
+    const pendingAmount = pendingPayouts.reduce((sum, p) => sum + p.amount, 0);
+    
+    return {
+      pendingReviews: 0, // Would derive from JOB_CLAIMS with status "submitted"
+      pendingPayouts: pendingAmount,
     };
-    return mockData[teamId] || { pendingReviews: 0, pendingPayouts: 0 };
   };
 
   // Calculate totals
@@ -133,15 +167,30 @@ export default function TeamCenterPage() {
     });
   }, [teams]);
 
-  const handleCreateTeam = () => {
+  const handleCreateTeam = async () => {
     if (!newTeamName.trim()) {
       alert("กรุณาใส่ชื่อทีม");
       return;
     }
-    alert(`สร้างทีม "${newTeamName}" สำเร็จ!`);
-    setIsCreateModalOpen(false);
-    setNewTeamName("");
-    setNewTeamDescription("");
+    
+    try {
+      const newTeam = await api.seller.createTeam({
+        name: newTeamName,
+        description: newTeamDescription || undefined,
+      });
+      
+      await refetch();
+      alert(`สร้างทีม "${newTeamName}" สำเร็จ!`);
+      setIsCreateModalOpen(false);
+      setNewTeamName("");
+      setNewTeamDescription("");
+      
+      // Navigate to the new team
+      router.push(`/seller/team/${newTeam.id}`);
+    } catch (error) {
+      console.error("Error creating team:", error);
+      alert("เกิดข้อผิดพลาดในการสร้างทีม กรุณาลองใหม่อีกครั้ง");
+    }
   };
 
   const colors = [

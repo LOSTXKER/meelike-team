@@ -40,13 +40,16 @@ export default function TeamJobsPage() {
   }, [teams, teamId]);
 
   // Filter jobs (mock: in real app, would filter by teamId)
-  const allJobs = teamJobs || [];
+  // Filter out jobs with missing required fields to avoid crashes
+  const allJobs = (teamJobs || []).filter(job => job.serviceName && job.orderNumber);
 
   const filteredJobs = allJobs.filter((job) => {
+    // Add null-safety check for undefined fields
     const matchSearch =
-      job.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.orderNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      (job.serviceName?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (job.orderNumber?.toLowerCase() || "").includes(searchQuery.toLowerCase());
     const matchStatus = filterStatus === "all" || job.status === filterStatus;
+    
     return matchSearch && matchStatus;
   });
 

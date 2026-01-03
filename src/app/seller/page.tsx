@@ -23,7 +23,7 @@ import {
   QuickActionCard
 } from "@/components/shared";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import { useSellerStats, useSellerOrders, useSellerTeams } from "@/lib/api/hooks";
+import { useSellerStats, useSellerOrders, useSellerTeams, useTeamPayouts, usePendingReviews } from "@/lib/api/hooks";
 import {
   DollarSign,
   ShoppingBag,
@@ -58,14 +58,18 @@ export default function SellerDashboard() {
   const { data: stats, isLoading: statsLoading } = useSellerStats();
   const { data: orders, isLoading: ordersLoading } = useSellerOrders();
   const { data: teams, isLoading: teamsLoading } = useSellerTeams();
+  const { data: allPayouts } = useTeamPayouts();
+  const { data: pendingReviewClaims } = usePendingReviews();
 
   const getTeamPendingData = (teamId: string) => {
-    const mockData: Record<string, { pendingReviews: number; pendingPayouts: number }> = {
-      "team-1": { pendingReviews: 5, pendingPayouts: 2450 },
-      "team-2": { pendingReviews: 7, pendingPayouts: 1800 },
-      "team-3": { pendingReviews: 0, pendingPayouts: 0 },
+    // Calculate from real data
+    const pendingReviewCount = pendingReviewClaims?.length || 0;
+    const pendingPayoutAmount = allPayouts?.filter(p => p.status === "pending").reduce((sum, p) => sum + p.amount, 0) || 0;
+    
+    return {
+      pendingReviews: pendingReviewCount,
+      pendingPayouts: pendingPayoutAmount,
     };
-    return mockData[teamId] || { pendingReviews: 0, pendingPayouts: 0 };
   };
 
   const handleCreateTeam = () => {

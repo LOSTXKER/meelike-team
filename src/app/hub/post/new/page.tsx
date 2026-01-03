@@ -7,6 +7,7 @@ import { Card, Badge, Button, Input, Textarea, Select, Checkbox } from "@/compon
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import {
   ArrowLeft,
   Users,
@@ -151,14 +152,48 @@ function NewPostForm() {
       alert("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
+    
+    if (!postType) {
+      alert("กรุณาเลือกประเภทโพสต์");
+      return;
+    }
 
     setIsSubmitting(true);
 
-    // Mock submit
-    setTimeout(() => {
+    try {
+      // Build payload based on post type
+      const payload: any = {
+        type: postType,
+        title,
+        description,
+        platforms,
+      };
+      
+      if (postType === "recruit") {
+        payload.payRate = payRateMin && payRateMax ? { min: parseFloat(payRateMin), max: parseFloat(payRateMax), unit: "บาท/หน่วย" } : undefined;
+        payload.requirements = requirements.filter(r => r.trim() !== "");
+        payload.benefits = benefits.filter(b => b.trim() !== "");
+        payload.openSlots = openSlots ? parseInt(openSlots) : undefined;
+      } else if (postType === "find-team") {
+        payload.experience = experience;
+        payload.expectedPay = expectedPay;
+        payload.availability = availability;
+      } else if (postType === "outsource") {
+        payload.jobType = jobType;
+        payload.quantity = quantity ? parseInt(quantity) : undefined;
+        payload.budget = budget;
+        payload.deadline = deadline;
+      }
+      
+      await api.hub.createPost(payload);
+      
       alert("โพสต์สำเร็จ! โพสต์ของคุณจะแสดงในตลาดกลางแล้ว");
       router.push("/hub");
-    }, 1000);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("เกิดข้อผิดพลาดในการสร้างโพสต์ กรุณาลองใหม่อีกครั้ง");
+      setIsSubmitting(false);
+    }
   };
 
   if (!hasHydrated) {

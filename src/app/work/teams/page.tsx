@@ -11,8 +11,8 @@ export default function WorkerTeamsPage() {
   // Use API hook
   const { data: teams, isLoading } = useWorkerTeams();
 
-  // Mock: Worker is in multiple teams
-  const myTeams = teams ? [...teams, { ...teams[0], id: "team-2", name: "ABC Boost" }] : [];
+  // Use actual teams from API (worker's teams from TEAM_MEMBERS)
+  const myTeams = teams || [];
 
   if (isLoading) {
     return (

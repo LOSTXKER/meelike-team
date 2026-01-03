@@ -1,12 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { Card, Button, Badge, Progress, Skeleton } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { StatCard } from "@/components/shared";
 import { formatCurrency, formatDate, getLevelInfo } from "@/lib/utils";
-import { useWorkerStats } from "@/lib/api/hooks";
+import { useWorkerStats, useWorkerJobs } from "@/lib/api/hooks";
 import {
   Wallet,
   TrendingUp,
@@ -29,44 +30,41 @@ export default function WorkerEarningsPage() {
   const worker = user?.worker;
   const levelInfo = getLevelInfo(worker?.level || "bronze");
 
-  // Use API hook
+  // Use API hooks
   const { data: workerStats, isLoading } = useWorkerStats();
+  const { data: workerJobs } = useWorkerJobs();
 
-  // Mock transactions
-  const transactions = [
-    {
-      id: 1,
-      type: "earn",
-      description: "งาน: 500 ไลค์ FB",
-      amount: 6,
-      date: "2024-12-30",
-      status: "completed",
-    },
-    {
-      id: 2,
-      type: "earn",
-      description: "งาน: 100 เม้น FB",
-      amount: 5,
-      date: "2024-12-30",
-      status: "pending",
-    },
-    {
-      id: 3,
-      type: "withdraw",
-      description: "ถอนเงิน - กสิกร",
-      amount: -100,
-      date: "2024-12-29",
-      status: "completed",
-    },
-    {
-      id: 4,
-      type: "bonus",
-      description: "Streak Bonus 7 วัน",
-      amount: 15,
-      date: "2024-12-28",
-      status: "completed",
-    },
-  ];
+  // Derive transactions from completed jobs
+  const transactions = useMemo(() => {
+    if (!workerJobs) return [];
+    
+    const earnTransactions = workerJobs.completed
+      .filter(job => job.earnings)
+      .map((job, index) => ({
+        id: index + 1,
+        type: "earn" as const,
+        description: `งาน: ${job.serviceName}`,
+        amount: job.earnings || 0,
+        date: job.completedAt || new Date().toISOString(),
+        status: "completed" as const,
+      }));
+    
+    // Mock withdrawals for display (would come from separate withdrawal system)
+    const mockWithdrawals = [
+      {
+        id: 900,
+        type: "withdraw" as const,
+        description: "ถอนเงิน - กสิกร",
+        amount: -100,
+        date: "2024-12-29",
+        status: "completed" as const,
+      },
+    ];
+    
+    return [...earnTransactions, ...mockWithdrawals].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [workerJobs]);
 
   // Calculate level progress
   const levelThresholds = {
@@ -299,15 +297,11 @@ export default function WorkerEarningsPage() {
                       className={`p-3 rounded-2xl shadow-sm transition-transform group-hover:scale-105 ${
                         tx.type === "earn"
                           ? "bg-brand-success/10"
-                          : tx.type === "bonus"
-                          ? "bg-brand-warning/10"
                           : "bg-brand-error/10"
                       }`}
                     >
                       {tx.type === "earn" ? (
                         <ArrowUpRight className="w-5 h-5 text-brand-success" />
-                      ) : tx.type === "bonus" ? (
-                        <Star className="w-5 h-5 text-brand-warning" />
                       ) : (
                         <ArrowDownRight className="w-5 h-5 text-brand-error" />
                       )}

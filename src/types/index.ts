@@ -472,6 +472,7 @@ export interface WorkerAccount {
 // ===== TEAM JOB =====
 export interface TeamJob {
   id: string;
+  teamId?: string; // ID of team this job belongs to
   orderId: string;
   orderNumber: string;
   serviceName: string;
@@ -655,7 +656,7 @@ export interface WorkerJob {
   id: string;
   teamName: string;
   serviceName: string;
-  platform: string;
+  platform: Platform;
   type: string;
   targetUrl: string;
   quantity: number;
@@ -666,6 +667,14 @@ export interface WorkerJob {
   submittedAt?: string;
   completedAt?: string;
   earnings?: number;
+  instructions?: string;
+  earnedSoFar?: number;
+  totalEarnings?: number;
+  startedAt?: string;
+  claimedAt?: string;
+  teamLogo?: string;
+  teamRating?: number;
+  teamJobsCompleted?: number;
 }
 
 // ===== MEELIKE API =====

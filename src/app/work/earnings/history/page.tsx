@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Card, Button, Badge, Tabs } from "@/components/ui";
 import { Container, Section, HStack, VStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useWorkerJobs } from "@/lib/api/hooks";
 import {
   ArrowLeft,
   History,
@@ -36,29 +37,11 @@ interface Transaction {
   jobId?: string;
 }
 
-const mockTransactions: Transaction[] = [
+// Mock withdrawals and bonuses (would come from separate API in production)
+// Real earnings come from worker jobs API
+const mockWithdrawalsAndBonuses: Transaction[] = [
   {
-    id: "tx-1",
-    type: "earn",
-    description: "งาน: 500 ไลค์ FB",
-    amount: 6,
-    date: "2024-12-30",
-    status: "completed",
-    teamName: "JohnBoost Team",
-    jobId: "job-1",
-  },
-  {
-    id: "tx-2",
-    type: "earn",
-    description: "งาน: 100 เม้น FB",
-    amount: 5,
-    date: "2024-12-30",
-    status: "pending",
-    teamName: "JohnBoost Team",
-    jobId: "job-2",
-  },
-  {
-    id: "tx-3",
+    id: "tx-w1",
     type: "withdraw",
     description: "ถอนเงิน - กสิกร",
     amount: -100,
@@ -66,7 +49,7 @@ const mockTransactions: Transaction[] = [
     status: "completed",
   },
   {
-    id: "tx-4",
+    id: "tx-b1",
     type: "bonus",
     description: "Streak Bonus 7 วัน",
     amount: 15,
@@ -74,27 +57,7 @@ const mockTransactions: Transaction[] = [
     status: "completed",
   },
   {
-    id: "tx-5",
-    type: "earn",
-    description: "งาน: 200 Follow IG",
-    amount: 10,
-    date: "2024-12-27",
-    status: "completed",
-    teamName: "SocialPro Team",
-    jobId: "job-3",
-  },
-  {
-    id: "tx-6",
-    type: "earn",
-    description: "งาน: 1000 View TikTok",
-    amount: 8,
-    date: "2024-12-26",
-    status: "completed",
-    teamName: "SocialPro Team",
-    jobId: "job-4",
-  },
-  {
-    id: "tx-7",
+    id: "tx-w2",
     type: "withdraw",
     description: "ถอนเงิน - กสิกร",
     amount: -200,
@@ -102,30 +65,12 @@ const mockTransactions: Transaction[] = [
     status: "completed",
   },
   {
-    id: "tx-8",
+    id: "tx-b2",
     type: "bonus",
     description: "โบนัสงานแรกของวัน",
     amount: 5,
     date: "2024-12-25",
     status: "completed",
-  },
-  {
-    id: "tx-9",
-    type: "earn",
-    description: "งาน: 300 ไลค์ FB",
-    amount: 3.6,
-    date: "2024-12-24",
-    status: "completed",
-    teamName: "BoostKing Team",
-    jobId: "job-5",
-  },
-  {
-    id: "tx-10",
-    type: "withdraw",
-    description: "ถอนเงิน - กสิกร",
-    amount: -150,
-    date: "2024-12-23",
-    status: "rejected",
   },
 ];
 
@@ -140,7 +85,44 @@ export default function EarningsHistoryPage() {
   const [activeFilter, setActiveFilter] = useState<TransactionType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredTransactions = mockTransactions.filter((tx) => {
+  // Get real worker jobs data
+  const { data: workerJobs, isLoading } = useWorkerJobs();
+
+  // Combine real earnings from jobs with mock withdrawals/bonuses
+  const allTransactions = useMemo(() => {
+    if (!workerJobs) return mockWithdrawalsAndBonuses;
+
+    // Convert completed jobs to earn transactions
+    const earnTransactions: Transaction[] = workerJobs.completed.map((job, index) => ({
+      id: `earn-${job.id}`,
+      type: "earn" as const,
+      description: `งาน: ${job.serviceName}`,
+      amount: job.earnings || 0,
+      date: job.completedAt || new Date().toISOString(),
+      status: "completed" as const,
+      teamName: job.teamName,
+      jobId: job.id,
+    }));
+
+    // Convert pending review jobs to pending earn transactions
+    const pendingTransactions: Transaction[] = workerJobs.pending_review.map((job) => ({
+      id: `pending-${job.id}`,
+      type: "earn" as const,
+      description: `งาน: ${job.serviceName}`,
+      amount: job.earnings || 0,
+      date: job.submittedAt || new Date().toISOString(),
+      status: "pending" as const,
+      teamName: job.teamName,
+      jobId: job.id,
+    }));
+
+    // Combine all and sort by date
+    return [...earnTransactions, ...pendingTransactions, ...mockWithdrawalsAndBonuses].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [workerJobs]);
+
+  const filteredTransactions = allTransactions.filter((tx) => {
     const matchesType = activeFilter === "all" || tx.type === activeFilter;
     const matchesSearch = tx.description
       .toLowerCase()
@@ -148,15 +130,15 @@ export default function EarningsHistoryPage() {
     return matchesType && matchesSearch;
   });
 
-  const totalEarned = mockTransactions
+  const totalEarned = allTransactions
     .filter((tx) => tx.type === "earn" && tx.status === "completed")
     .reduce((sum, tx) => sum + tx.amount, 0);
 
-  const totalWithdrawn = mockTransactions
+  const totalWithdrawn = allTransactions
     .filter((tx) => tx.type === "withdraw" && tx.status === "completed")
     .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
 
-  const totalBonus = mockTransactions
+  const totalBonus = allTransactions
     .filter((tx) => tx.type === "bonus" && tx.status === "completed")
     .reduce((sum, tx) => sum + tx.amount, 0);
 

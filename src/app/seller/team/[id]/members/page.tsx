@@ -17,6 +17,7 @@ import {
   type DataTableColumn,
 } from "@/components/shared";
 import { useSellerTeams, useTeamMembersWithWorkers, type MemberWithWorker } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import { TEAM_ROLES, type TeamRoleType } from "@/lib/constants/statuses";
 import type { TeamRole } from "@/types";
 import {
@@ -46,7 +47,7 @@ export default function TeamMembersPage() {
 
   // Use API hooks - useTeamMembersWithWorkers already joins member + worker data
   const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
-  const { data: members, isLoading: isLoadingMembers } = useTeamMembersWithWorkers(teamId);
+  const { data: members, isLoading: isLoadingMembers, refetch: refetchMembers } = useTeamMembersWithWorkers(teamId);
 
   const currentTeam = useMemo(() => {
     return teams?.find((t) => t.id === teamId);
@@ -287,7 +288,11 @@ export default function TeamMembersPage() {
             {/* Role Change */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-brand-text-dark">เปลี่ยนบทบาท</label>
-              <Select defaultValue={selectedMember.role} className="w-full">
+              <Select 
+                defaultValue={selectedMember.role} 
+                className="w-full"
+                id={`role-select-${selectedMember.id}`}
+              >
                 <option value="lead">หัวหน้าทีม</option>
                 <option value="assistant">ผู้ช่วย</option>
                 <option value="worker">Worker</option>
@@ -312,11 +317,18 @@ export default function TeamMembersPage() {
               <Button
                 variant="outline"
                 className="flex-1 border-brand-error/20 text-brand-error hover:bg-brand-error/5"
-                onClick={() => {
+                onClick={async () => {
                   if (confirm(`ลบ @${selectedMember.worker.displayName} ออกจากทีม?`)) {
-                    setShowMemberModal(false);
-                    setSelectedMemberId(null);
-                    alert("ลบสมาชิกออกจากทีมแล้ว");
+                    try {
+                      await api.seller.removeTeamMember(teamId, selectedMember.workerId);
+                      await refetchMembers();
+                      setShowMemberModal(false);
+                      setSelectedMemberId(null);
+                      alert("ลบสมาชิกออกจากทีมแล้ว");
+                    } catch (error) {
+                      console.error("Error removing member:", error);
+                      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                    }
                   }
                 }}
               >
@@ -324,9 +336,24 @@ export default function TeamMembersPage() {
               </Button>
               <Button
                 className="flex-1"
-                onClick={() => {
-                  setShowMemberModal(false);
-                  setSelectedMemberId(null);
+                onClick={async () => {
+                  try {
+                    // Get selected role from select element
+                    const selectElement = document.getElementById(`role-select-${selectedMember.id}`) as HTMLSelectElement;
+                    const newRole = selectElement?.value || selectedMember.role;
+                    
+                    if (newRole !== selectedMember.role) {
+                      await api.seller.updateTeamMemberRole(teamId, selectedMember.workerId, newRole);
+                      await refetchMembers();
+                      alert("อัปเดตบทบาทเรียบร้อย");
+                    }
+                    
+                    setShowMemberModal(false);
+                    setSelectedMemberId(null);
+                  } catch (error) {
+                    console.error("Error updating member:", error);
+                    alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                  }
                 }}
               >
                 บันทึก

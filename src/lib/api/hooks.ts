@@ -157,6 +157,14 @@ export function useSeller() {
   return useApiCall(() => api.seller.getSeller(), { deps: [] });
 }
 
+export function useTransactions() {
+  return useApiCall(() => api.seller.getTransactions(), { deps: [] });
+}
+
+export function useBalance() {
+  return useApiCall(() => api.seller.getBalance(), { deps: [] });
+}
+
 // ===== COMBINED HOOKS (Data with joins) =====
 
 /** Type for member with worker data joined */
@@ -252,4 +260,13 @@ export function useTeamMembers(teamId: string) {
 
 export function useWorkers() {
   return useApiCall(() => api.team.getWorkers(), { deps: [] });
+}
+
+// ===== JOB CLAIMS HOOKS =====
+export function useJobClaims() {
+  return useApiCall(() => api.seller.getJobClaims(), { deps: [] });
+}
+
+export function usePendingJobClaims() {
+  return useApiCall(() => api.seller.getPendingJobClaims(), { deps: [] });
 }

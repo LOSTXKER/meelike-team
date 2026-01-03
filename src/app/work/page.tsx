@@ -171,7 +171,7 @@ export default function WorkerDashboard() {
           </Card>
 
           {/* Daily Streak */}
-          <DailyStreak currentStreak={workerStats?.streak || 7} />
+          <DailyStreak currentStreak={7} />
 
           {/* Achievements */}
           <Card variant="elevated" className="border-none shadow-lg">
@@ -274,21 +274,28 @@ export default function WorkerDashboard() {
               </div>
             ) : activeJobs && activeJobs.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-4">
-                {activeJobs.map((job) => (
+                {activeJobs.filter((job): job is NonNullable<typeof job> => job !== null).map((job) => {
+                  const title = 'serviceName' in job ? job.serviceName : job.title;
+                  const teamName = 'teamName' in job ? job.teamName : job.team;
+                  const amount = ('earnings' in job ? (job.earnings || 0) : ('payout' in job ? job.payout : 0)) as number;
+                  const progress = ('completedQuantity' in job ? job.completedQuantity : job.progress) as number;
+                  const total = ('quantity' in job ? job.quantity : job.total) as number;
+                  
+                  return (
                   <Link href={`/work/jobs/${job.id}`} key={job.id}>
                     <Card variant="elevated" className="h-full hover:shadow-lg transition-all duration-300 border-l-4 border-l-brand-primary group cursor-pointer hover:-translate-y-1">
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <h3 className="font-bold text-brand-text-dark group-hover:text-brand-primary transition-colors line-clamp-1 text-lg">
-                              {job.title}
+                              {title}
                             </h3>
                             <p className="text-xs text-brand-text-light mt-1 flex items-center gap-1">
-                              จาก {job.team}
+                              จาก {teamName}
                             </p>
                           </div>
                           <Badge variant="info" className="bg-brand-primary/10 text-brand-primary border-none text-sm px-2.5 py-1">
-                            ฿{job.payout}
+                            ฿{amount}
                           </Badge>
                         </div>
 
@@ -296,18 +303,19 @@ export default function WorkerDashboard() {
                           <div className="flex justify-between text-xs text-brand-text-light font-medium">
                             <span className="flex items-center gap-1.5">
                               <Target className="w-3.5 h-3.5 text-brand-primary" /> 
-                              {job.progress}/{job.total}
+                              {progress}/{total}
                             </span>
                             <span className="text-brand-warning flex items-center gap-1.5 bg-brand-warning/10 px-2 py-0.5 rounded-md">
-                              <Clock className="w-3.5 h-3.5" /> เหลือ {job.deadline}
+                              <Clock className="w-3.5 h-3.5" /> เหลือ {job.deadline || '-'}
                             </span>
                           </div>
-                          <Progress value={(job.progress / job.total) * 100} className="h-2" />
+                          <Progress value={(progress / total) * 100} className="h-2" />
                         </div>
                       </div>
                     </Card>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <EmptyState

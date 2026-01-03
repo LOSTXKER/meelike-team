@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Card, Badge, Button, Input, Dialog, Tabs, Modal } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
-import { useAuthStore } from "@/lib/store";
+import { useTransactions, useBalance } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import {
   Wallet,
@@ -26,82 +27,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Mock transactions data
-const allTransactions = [
-  {
-    id: "txn-1",
-    type: "income" as const,
-    category: "order",
-    title: "รายได้จากออเดอร์ ORD-2024-001",
-    description: "ไลค์ Facebook 1,000 + เม้น 50",
-    amount: 385,
-    date: "2024-12-30T14:30:00",
-  },
-  {
-    id: "txn-2",
-    type: "expense" as const,
-    category: "payout",
-    title: "จ่ายค่าจ้าง Worker @นุ่น",
-    description: "งาน JOB-001 - ไลค์ Facebook 30",
-    amount: -50,
-    date: "2024-12-30T12:00:00",
-  },
-  {
-    id: "txn-3",
-    type: "topup" as const,
-    category: "topup",
-    title: "เติมเงินผ่าน PromptPay",
-    description: "Ref: PP202412290915",
-    amount: 500,
-    date: "2024-12-29T09:15:00",
-  },
-  {
-    id: "txn-4",
-    type: "income" as const,
-    category: "order",
-    title: "รายได้จากออเดอร์ ORD-2024-002",
-    description: "Follow Instagram 200",
-    amount: 150,
-    date: "2024-12-28T16:45:00",
-  },
-  {
-    id: "txn-5",
-    type: "expense" as const,
-    category: "api",
-    title: "ค่า MeeLike API (Bot)",
-    description: "ไลค์ Facebook Bot 1,000",
-    amount: -80,
-    date: "2024-12-28T10:00:00",
-  },
-  {
-    id: "txn-6",
-    type: "expense" as const,
-    category: "payout",
-    title: "จ่ายค่าจ้าง Worker @มิ้นท์",
-    description: "งาน JOB-002 - เม้น 50",
-    amount: -75,
-    date: "2024-12-27T18:00:00",
-  },
-  {
-    id: "txn-7",
-    type: "income" as const,
-    category: "order",
-    title: "รายได้จากออเดอร์ ORD-2024-003",
-    description: "View TikTok 5,000",
-    amount: 400,
-    date: "2024-12-27T11:30:00",
-  },
-  {
-    id: "txn-8",
-    type: "topup" as const,
-    category: "topup",
-    title: "เติมเงินผ่านโอนเงิน",
-    description: "Ref: KBANK202412251000",
-    amount: 1000,
-    date: "2024-12-25T10:00:00",
-  },
-];
-
 const TOPUP_AMOUNTS = [100, 300, 500, 1000, 2000, 5000];
 
 const BANK_INFO = {
@@ -114,8 +39,9 @@ const BANK_INFO = {
 type FilterType = "all" | "income" | "expense" | "topup";
 
 export default function FinancePage() {
-  const { user } = useAuthStore();
-  const balance = user?.seller?.balance || 2450;
+  // Use API hooks
+  const { data: allTransactions = [], isLoading, refetch: refetchTransactions } = useTransactions();
+  const { data: balance = 0, refetch: refetchBalance } = useBalance();
 
   // Topup Modal State
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
@@ -130,7 +56,7 @@ export default function FinancePage() {
   const [filter, setFilter] = useState<FilterType>("all");
 
   // Filter transactions
-  const filteredTransactions = allTransactions.filter((txn) => {
+  const filteredTransactions = (allTransactions || []).filter((txn) => {
     const matchSearch =
       txn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -144,8 +70,24 @@ export default function FinancePage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleTopupSubmit = () => {
-    setTopupStep("confirm");
+  const handleTopupSubmit = async () => {
+    try {
+      const amount = customAmount ? parseInt(customAmount) : topupAmount;
+      
+      await api.seller.createTopupTransaction({
+        amount,
+        method: paymentMethod,
+        reference: paymentMethod === "promptpay" ? `PP${Date.now()}` : `BANK${Date.now()}`,
+      });
+      
+      await refetchTransactions();
+      await refetchBalance();
+      
+      setTopupStep("confirm");
+    } catch (error) {
+      console.error("Error creating topup transaction:", error);
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    }
   };
 
   const resetTopup = () => {
@@ -185,7 +127,7 @@ export default function FinancePage() {
             </div>
             <div>
               <p className="text-white/80 text-sm">ยอดเงินคงเหลือ</p>
-              <p className="text-4xl font-bold">{formatCurrency(balance)}</p>
+              <p className="text-4xl font-bold">{formatCurrency(balance || 0)}</p>
             </div>
           </div>
           <Button
@@ -206,7 +148,7 @@ export default function FinancePage() {
             <div className="flex items-center gap-2">
               <History className="w-5 h-5 text-brand-primary" />
               <h2 className="font-bold text-brand-text-dark">ประวัติธุรกรรม</h2>
-              <Badge variant="default" size="sm">{allTransactions.length} รายการ</Badge>
+              <Badge variant="default" size="sm">{allTransactions?.length || 0} รายการ</Badge>
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -343,7 +285,7 @@ export default function FinancePage() {
           <div className="space-y-6">
             <div className="text-center p-4 bg-brand-bg/50 rounded-xl">
               <p className="text-sm text-brand-text-light">ยอดเงินปัจจุบัน</p>
-              <p className="text-2xl font-bold text-brand-primary">{formatCurrency(balance)}</p>
+              <p className="text-2xl font-bold text-brand-primary">{formatCurrency(balance || 0)}</p>
             </div>
 
             <div>

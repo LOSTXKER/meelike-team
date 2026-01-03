@@ -6,6 +6,7 @@ import { Card, Badge, Button, Input, Dialog, Skeleton, Modal } from "@/component
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState, StatsGrid, FilterTabs, getPayoutStats, type PayoutFilterStatus } from "@/components/shared";
 import { useTeamPayouts, useWorkerBalances, useWorkers, useSellerTeams } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import type { TeamPayout } from "@/types";
 import {
   DollarSign,
@@ -26,32 +27,26 @@ export default function TeamPayoutsPage() {
   
   // Use API hooks
   const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
-  const { data: teamPayoutsData, isLoading: isLoadingPayouts } = useTeamPayouts();
+  const { data: teamPayoutsData, isLoading: isLoadingPayouts, refetch: refetchPayouts } = useTeamPayouts();
   const { data: workerBalancesData, isLoading: isLoadingBalances } = useWorkerBalances();
   const { data: workersData, isLoading: isLoadingWorkers } = useWorkers();
 
-  const [payouts, setPayouts] = useState<TeamPayout[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<PayoutFilterStatus>("all");
   const [selectedPayout, setSelectedPayout] = useState<TeamPayout | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
-  const [initialized, setInitialized] = useState(false);
   
   const currentTeam = useMemo(() => {
     return teams?.find((t) => t.id === teamId);
   }, [teams, teamId]);
 
-  // Initialize payouts from API data
-  if (teamPayoutsData && !initialized) {
-    setPayouts(teamPayoutsData);
-    setInitialized(true);
-  }
-
   const workerBalances = workerBalancesData || [];
   const workers = workersData || [];
+  // Filter out payouts with missing worker data (corrupted/incomplete)
+  const payouts = (teamPayoutsData || []).filter(p => p.worker && p.worker.displayName);
 
   const filteredPayouts = payouts.filter((payout) => {
-    const matchSearch = payout.worker.displayName
+    const matchSearch = (payout.worker?.displayName || "")
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchStatus =
@@ -62,23 +57,18 @@ export default function TeamPayoutsPage() {
   const pendingPayouts = payouts.filter((p) => p.status === "pending");
   const totalPending = pendingPayouts.reduce((sum, p) => sum + p.amount, 0);
 
-  const handleProcessPayout = () => {
-    if (selectedPayout) {
-      setPayouts(
-        payouts.map((p) =>
-          p.id === selectedPayout.id
-            ? {
-                ...p,
-                status: "completed" as const,
-                completedAt: new Date().toISOString(),
-                transactionRef: `TXN-${Date.now()}`,
-              }
-            : p
-        )
-      );
+  const handleProcessPayout = async () => {
+    if (!selectedPayout) return;
+    
+    try {
+      await api.seller.processTeamPayout(selectedPayout.id);
+      await refetchPayouts();
       setShowPayModal(false);
       setSelectedPayout(null);
       alert(`โอนเงิน ฿${selectedPayout.amount} ให้ @${selectedPayout.worker.displayName} เรียบร้อย!`);
+    } catch (error) {
+      console.error("Error processing payout:", error);
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
   };
 
@@ -130,21 +120,16 @@ export default function TeamPayoutsPage() {
               </div>
             </div>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (confirm(`จ่ายเงินทั้งหมด ${pendingPayouts.length} รายการ รวม ฿${totalPending}?`)) {
-                  setPayouts(
-                    payouts.map((p) =>
-                      p.status === "pending"
-                        ? {
-                            ...p,
-                            status: "completed" as const,
-                            completedAt: new Date().toISOString(),
-                            transactionRef: `TXN-${Date.now()}-${p.id}`,
-                          }
-                        : p
-                    )
-                  );
-                  alert("จ่ายเงินทั้งหมดเรียบร้อย!");
+                  try {
+                    const count = await api.seller.processAllPendingPayouts();
+                    await refetchPayouts();
+                    alert(`จ่ายเงิน ${count} รายการเรียบร้อย!`);
+                  } catch (error) {
+                    console.error("Error processing payouts:", error);
+                    alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                  }
                 }
               }}
               className="bg-[#B06000] hover:bg-[#8F4D00] text-white border-transparent shadow-md shadow-[#B06000]/20 rounded-xl px-6"
@@ -249,7 +234,7 @@ export default function TeamPayoutsPage() {
                              </div>
                              <div>
                                 <div className="flex items-center gap-2">
-                                   <p className="font-bold text-brand-text-dark text-lg">@{payout.worker.displayName}</p>
+                                   <p className="font-bold text-brand-text-dark text-lg">@{payout.worker?.displayName || 'Unknown Worker'}</p>
                                    {payout.status === "completed" && (
                                      <Badge variant="success" size="sm" className="gap-1 border-none bg-brand-success/10 text-brand-success">
                                         <CheckCircle2 className="w-3 h-3" /> จ่ายแล้ว

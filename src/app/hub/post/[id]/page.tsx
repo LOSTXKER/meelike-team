@@ -7,6 +7,7 @@ import { Card, Badge, Button, Avatar, Skeleton } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, StatCard } from "@/components/shared";
 import { useHubPosts } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import { getLevelColor } from "@/lib/mock-data/helpers";
 import type { Platform } from "@/types";
 import {
@@ -60,11 +61,22 @@ export default function HubPostDetailPage() {
 
   const handleApply = async () => {
     setIsApplying(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsApplying(false);
-    setHasApplied(true);
-    alert("สมัครเข้าทีมสำเร็จ! รอการตอบรับจากแม่ทีม");
+    
+    try {
+      // Extract teamId from post (would need proper linking in real app)
+      // For now, assuming post author for recruit posts maps to a team
+      const teamId = post?.author.name || "team-1"; // Temporary workaround
+      
+      await api.hub.applyToTeam(teamId, undefined, "สนใจเข้าร่วมทีม");
+      
+      setIsApplying(false);
+      setHasApplied(true);
+      alert("สมัครเข้าทีมสำเร็จ! รอการตอบรับจากแม่ทีม");
+    } catch (error: any) {
+      console.error("Error applying:", error);
+      alert(error?.message || "เกิดข้อผิดพลาดในการสมัคร");
+      setIsApplying(false);
+    }
   };
 
   const handleContact = () => {

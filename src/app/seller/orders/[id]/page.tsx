@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Card, Badge, Button, Progress, Dialog, Input, Textarea, Select, Dropdown, Modal } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { useSellerOrder, useSellerServices, useSellerTeams } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import {
   ArrowLeft,
   Package,
@@ -64,7 +65,7 @@ export default function OrderDetailPage() {
   const [jobPayRate, setJobPayRate] = useState("");
 
   // Use API hooks
-  const { data: orderData, isLoading: isLoadingOrder } = useSellerOrder(orderId);
+  const { data: orderData, isLoading: isLoadingOrder, refetch } = useSellerOrder(orderId);
   const { data: mockServices, isLoading: isLoadingServices } = useSellerServices();
   const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
   
@@ -99,13 +100,22 @@ export default function OrderDetailPage() {
     navigator.clipboard.writeText(text);
   };
 
-  const handleConfirmPayment = () => {
-    alert("ยืนยันการชำระเงินเรียบร้อย");
-    setShowConfirmPayment(false);
+  const handleConfirmPayment = async () => {
+    try {
+      await api.seller.confirmPayment(orderId);
+      await refetch(); // Refetch order data to update UI
+      alert("ยืนยันการชำระเงินเรียบร้อย");
+      setShowConfirmPayment(false);
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      alert("เกิดข้อผิดพลาดในการยืนยันการชำระเงิน");
+    }
   };
 
   const handleSendBot = async () => {
-    if (selectedItem === null) return;
+    if (selectedItem === null || !order) return;
+    
+    const item = order.items[selectedItem];
     
     setSentItems((prev) => ({
       ...prev,
@@ -113,19 +123,33 @@ export default function OrderDetailPage() {
     }));
     setShowSendBotModal(false);
     
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    setSentItems((prev) => ({
-      ...prev,
-      [selectedItem]: { sent: true, loading: false },
-    }));
+    try {
+      // Call API to dispatch bot item
+      await api.seller.dispatchBotItem(orderId, item.id);
+      
+      // Refetch order data
+      await refetch();
+      
+      setSentItems((prev) => ({
+        ...prev,
+        [selectedItem]: { sent: true, loading: false },
+      }));
+      
+      alert("ส่งคำสั่งซื้อไป Bot API เรียบร้อย!");
+    } catch (error) {
+      console.error("Error dispatching bot item:", error);
+      setSentItems((prev) => ({
+        ...prev,
+        [selectedItem]: { sent: false, loading: false },
+      }));
+      alert("เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ");
+    }
     
     setSelectedItem(null);
   };
 
   const handleCreateJob = async () => {
-    if (selectedItem === null) return;
+    if (selectedItem === null || !order) return;
     
     if (!jobQuantity || !jobPayRate || !selectedTeamId) {
       alert("กรุณากรอกข้อมูลให้ครบถ้วน");
@@ -133,6 +157,7 @@ export default function OrderDetailPage() {
     }
     
     const selectedTeam = teams?.find((t) => t.id === selectedTeamId);
+    const item = order.items[selectedItem];
     
     setSentItems((prev) => ({
       ...prev,
@@ -140,15 +165,33 @@ export default function OrderDetailPage() {
     }));
     setShowCreateJobModal(false);
     
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    setSentItems((prev) => ({
-      ...prev,
-      [selectedItem]: { sent: true, loading: false },
-    }));
-    
-    alert(`มอบหมายงานให้ทีม "${selectedTeam?.name}" เรียบร้อย!`);
+    try {
+      // Call API to assign human item to team
+      await api.seller.assignHumanItemToTeam(
+        orderId,
+        item.id,
+        selectedTeamId,
+        parseInt(jobQuantity),
+        parseFloat(jobPayRate)
+      );
+      
+      // Refetch order data
+      await refetch();
+      
+      setSentItems((prev) => ({
+        ...prev,
+        [selectedItem]: { sent: true, loading: false },
+      }));
+      
+      alert(`มอบหมายงานให้ทีม "${selectedTeam?.name}" เรียบร้อย!`);
+    } catch (error) {
+      console.error("Error creating job:", error);
+      setSentItems((prev) => ({
+        ...prev,
+        [selectedItem]: { sent: false, loading: false },
+      }));
+      alert("เกิดข้อผิดพลาดในการมอบหมายงาน");
+    }
     
     setJobQuantity("");
     setJobPayRate("");
@@ -598,6 +641,18 @@ export default function OrderDetailPage() {
                   variant="outline"
                   className="w-full justify-start text-brand-error hover:bg-brand-error/5 hover:text-brand-error border-brand-error/20 h-10 rounded-xl"
                   size="sm"
+                  onClick={async () => {
+                    if (confirm("ต้องการยกเลิกออเดอร์นี้หรือไม่?")) {
+                      try {
+                        await api.seller.cancelOrder(orderId, "ยกเลิกโดย Seller");
+                        await refetch();
+                        alert("ยกเลิกออเดอร์เรียบร้อย");
+                      } catch (error) {
+                        console.error("Error cancelling order:", error);
+                        alert("เกิดข้อผิดพลาดในการยกเลิกออเดอร์");
+                      }
+                    }
+                  }}
                 >
                   <XCircle className="w-4 h-4 mr-2" />
                   ยกเลิกออเดอร์

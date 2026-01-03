@@ -6,6 +6,7 @@ import { Card, Button, Input, Select, Badge, Tabs, RadioGroup } from "@/componen
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import { PlatformIcon, ServiceTypeIcon } from "@/components/seller";
+import { api } from "@/lib/api";
 import { 
   mockMeeLikeServices, 
   meeLikeCategories,
@@ -270,55 +271,60 @@ export default function NewServicePage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
-    const servicesToAdd: Partial<StoreService>[] = [];
-    
-    if (selectedMode === "web") {
-      selectedServices.forEach((selected, serviceId) => {
-        const { meelikeService, customSellPrice, useCustomPrice } = selected;
-        const costPerUnit = getMeeLikeRatePerUnit(meelikeService.rate);
-        const sellPrice = calculateSellPrice(costPerUnit, customSellPrice, useCustomPrice);
-        
-        servicesToAdd.push({
-          name: meelikeService.name.replace(/^[🔵📸🎵▶️🐦]\s*/, ''),
-          description: meelikeService.description,
-          category: mapCategoryToPlatform(meelikeService.category),
-          type: mapTypeToServiceType(meelikeService.type),
-          serviceType: "bot",
-          costPrice: costPerUnit,
-          sellPrice: sellPrice,
-          minQuantity: parseInt(meelikeService.min),
-          maxQuantity: parseInt(meelikeService.max),
-          meelikeServiceId: meelikeService.service,
-          estimatedTime: meelikeService.averageTime,
-          isActive: true,
-          showInStore: true,
+    try {
+      const servicesToAdd: Partial<StoreService>[] = [];
+      
+      if (selectedMode === "web") {
+        selectedServices.forEach((selected, serviceId) => {
+          const { meelikeService, customSellPrice, useCustomPrice } = selected;
+          const costPerUnit = getMeeLikeRatePerUnit(meelikeService.rate);
+          const sellPrice = calculateSellPrice(costPerUnit, customSellPrice, useCustomPrice);
+          
+          servicesToAdd.push({
+            name: meelikeService.name.replace(/^[🔵📸🎵▶️🐦]\s*/, ''),
+            description: meelikeService.description,
+            category: mapCategoryToPlatform(meelikeService.category),
+            type: mapTypeToServiceType(meelikeService.type),
+            serviceType: "bot",
+            costPrice: costPerUnit,
+            sellPrice: sellPrice,
+            minQuantity: parseInt(meelikeService.min),
+            maxQuantity: parseInt(meelikeService.max),
+            meelikeServiceId: meelikeService.service,
+            estimatedTime: meelikeService.averageTime,
+            isActive: true,
+            showInStore: true,
+          });
         });
-      });
-    } else {
-      validManualRows.forEach(row => {
-        servicesToAdd.push({
-          name: row.name,
-          description: row.description,
-          category: row.category,
-          type: row.type,
-          serviceType: "human",
-          costPrice: row.costPrice,
-          sellPrice: row.sellPrice,
-          minQuantity: row.minQuantity,
-          maxQuantity: row.maxQuantity,
-          estimatedTime: row.estimatedTime,
-          isActive: true,
-          showInStore: true,
+      } else {
+        validManualRows.forEach(row => {
+          servicesToAdd.push({
+            name: row.name,
+            description: row.description,
+            category: row.category,
+            type: row.type,
+            serviceType: "human",
+            costPrice: row.costPrice,
+            sellPrice: row.sellPrice,
+            minQuantity: row.minQuantity,
+            maxQuantity: row.maxQuantity,
+            estimatedTime: row.estimatedTime,
+            isActive: true,
+            showInStore: true,
+          });
         });
-      });
+      }
+      
+      // Save to localStorage via API
+      await api.seller.createServices(servicesToAdd);
+      
+      alert(`เพิ่ม ${servicesToAdd.length} บริการเรียบร้อย!`);
+      router.push("/seller/services");
+    } catch (error) {
+      console.error("Error creating services:", error);
+      alert("เกิดข้อผิดพลาดในการเพิ่มบริการ กรุณาลองใหม่อีกครั้ง");
+      setIsSubmitting(false);
     }
-    
-    // TODO: Save to backend
-    console.log("Services to add:", servicesToAdd);
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setIsSubmitting(false);
-    router.push("/seller/services");
   };
 
   const availableCount = filteredServices.filter(s => !isAlreadyImported(s.service)).length;

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Card, Badge, Button, Progress, Dialog, Textarea, Modal } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
+import { useWorkerJobs } from "@/lib/api/hooks";
+import { api } from "@/lib/api";
 import {
   ArrowLeft,
   ExternalLink,
@@ -31,41 +33,81 @@ export default function JobDetailPage() {
 
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitNote, setSubmitNote] = useState("");
+  const [proofUrls, setProofUrls] = useState<string[]>([]);
   const [isWorking, setIsWorking] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mock job data
-  const job = {
-    id: jobId,
-    teamName: "JohnBoost Team",
-    teamLogo: "J",
-    serviceName: "ไลค์ Facebook",
-    serviceType: "human",
-    platform: "facebook",
-    targetUrl: "https://facebook.com/photo.php?fbid=123456789",
-    quantity: 100,
-    completedQuantity: 65,
-    pricePerUnit: 0.2,
-    totalEarnings: 20,
-    earnedSoFar: 13,
-    deadline: new Date(Date.now() + 3600000 * 2).toISOString(),
-    startedAt: new Date(Date.now() - 3600000).toISOString(),
-    instructions: "กดไลค์โพสต์ตามลิงก์ ใช้แอคคุณภาพเท่านั้น ห้ามใช้บอท",
-    status: "in_progress",
-  };
+  // Get job data from API
+  const { data: workerJobs, isLoading, refetch } = useWorkerJobs();
+  
+  const job = useMemo(() => {
+    if (!workerJobs) return null;
+    
+    // Find job across all categories
+    const allJobs = [
+      ...workerJobs.in_progress,
+      ...workerJobs.pending_review,
+      ...workerJobs.completed,
+    ];
+    
+    return allJobs.find(j => j.id === jobId);
+  }, [workerJobs, jobId]);
+  
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center text-brand-text-light">
+        กำลังโหลดข้อมูลงาน...
+      </div>
+    );
+  }
+  
+  if (!job) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-brand-text-light mb-4">ไม่พบงานนี้</p>
+        <Link href="/work/jobs">
+          <Button>กลับไปหน้างานของฉัน</Button>
+        </Link>
+      </div>
+    );
+  }
 
   const progress = (job.completedQuantity / job.quantity) * 100;
   const remainingQuantity = job.quantity - job.completedQuantity;
 
   const getTimeRemaining = () => {
+    if (!job.deadline) return "ไม่มีกำหนดส่ง";
     const diff = new Date(job.deadline).getTime() - Date.now();
+    if (diff < 0) return "หมดเวลาแล้ว";
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
     return `${hours} ชั่วโมง ${minutes} นาที`;
   };
 
-  const handleSubmit = () => {
-    alert("ส่งงานเรียบร้อย! รอ Seller ตรวจสอบ");
-    setShowSubmitModal(false);
+  const handleSubmit = async () => {
+    if (!job) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      await api.worker.submitJobClaim(job.id, {
+        actualQuantity: job.completedQuantity,
+        proofUrls,
+        note: submitNote,
+      });
+      
+      await refetch(); // Refresh job data
+      
+      alert("ส่งงานเรียบร้อย! รอ Seller ตรวจสอบ");
+      setShowSubmitModal(false);
+      setSubmitNote("");
+      setProofUrls([]);
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      alert("เกิดข้อผิดพลาดในการส่งงาน กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -102,10 +144,24 @@ export default function JobDetailPage() {
             </VStack>
           </HStack>
 
-          <Button onClick={() => setShowSubmitModal(true)} size="lg" className="shadow-lg shadow-brand-primary/20 px-8">
-            <Upload className="w-5 h-5 mr-2" />
-            ส่งงานทันที
-          </Button>
+          {job.status === "in_progress" && (
+            <Button onClick={() => setShowSubmitModal(true)} size="lg" className="shadow-lg shadow-brand-primary/20 px-8">
+              <Upload className="w-5 h-5 mr-2" />
+              ส่งงานทันที
+            </Button>
+          )}
+          {job.status === "pending_review" && (
+            <Badge variant="warning" className="px-4 py-2 text-base">
+              <Clock className="w-5 h-5 mr-2" />
+              รอ Seller ตรวจสอบ
+            </Badge>
+          )}
+          {job.status === "completed" && (
+            <Badge variant="success" className="px-4 py-2 text-base">
+              <CheckCircle2 className="w-5 h-5 mr-2" />
+              เสร็จสมบูรณ์
+            </Badge>
+          )}
         </HStack>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -289,10 +345,10 @@ export default function JobDetailPage() {
                 รายได้จากงานนี้
               </div>
               <p className="text-4xl font-bold mt-2 tracking-tight">
-                ฿{job.earnedSoFar.toFixed(2)}
+                ฿{(job.earnedSoFar || 0).toFixed(2)}
               </p>
               <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-sm">
-                <span className="text-white/80">ทั้งหมด ฿{job.totalEarnings.toFixed(2)}</span>
+                <span className="text-white/80">ทั้งหมด ฿{(job.totalEarnings || 0).toFixed(2)}</span>
                 <span className="px-2 py-1 bg-white/20 rounded-lg text-xs font-semibold backdrop-blur-sm">฿{job.pricePerUnit}/หน่วย</span>
               </div>
             </div>
@@ -311,19 +367,19 @@ export default function JobDetailPage() {
               <div className="flex justify-between items-center text-sm p-3 bg-brand-bg/50 rounded-xl">
                 <span className="text-brand-text-light font-medium">เริ่มงาน</span>
                 <span className="text-brand-text-dark font-bold">
-                  {new Date(job.startedAt).toLocaleTimeString("th-TH", {
+                  {job.startedAt ? new Date(job.startedAt).toLocaleTimeString("th-TH", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })} น.
+                  }) : "-"} น.
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm p-3 bg-brand-bg/50 rounded-xl">
                 <span className="text-brand-text-light font-medium">กำหนดส่ง</span>
                 <span className="text-brand-text-dark font-bold">
-                  {new Date(job.deadline).toLocaleTimeString("th-TH", {
+                  {job.deadline ? new Date(job.deadline).toLocaleTimeString("th-TH", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })} น.
+                  }) : "-"} น.
                 </span>
               </div>
               <div className="pt-4 border-t border-brand-border/50">
@@ -400,7 +456,7 @@ export default function JobDetailPage() {
             <div className="flex justify-between">
               <span className="text-brand-text-light">รายได้</span>
               <span className="font-bold text-brand-success">
-                ฿{job.earnedSoFar.toFixed(2)}
+                ฿{(job.earnedSoFar || 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -428,15 +484,15 @@ export default function JobDetailPage() {
             onChange={(e) => setSubmitNote(e.target.value)}
           />
 
-          <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={() => setShowSubmitModal(false)}>
-              ยกเลิก
-            </Button>
-            <Button onClick={handleSubmit}>
-              <Send className="w-4 h-4 mr-2" />
-              ส่งงาน
-            </Button>
-          </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowSubmitModal(false)} disabled={isSubmitting}>
+                ยกเลิก
+              </Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting} isLoading={isSubmitting}>
+                <Send className="w-4 h-4 mr-2" />
+                {isSubmitting ? "กำลังส่ง..." : "ส่งงาน"}
+              </Button>
+            </div>
         </div>
       </Modal>
       </Section>
