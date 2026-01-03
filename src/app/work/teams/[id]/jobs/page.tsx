@@ -254,7 +254,7 @@ export default function TeamJobsPage() {
                 key={job.id} 
                 variant="elevated" 
                 className="border-none shadow-md hover:shadow-lg transition-all group cursor-pointer"
-                onClick={() => router.push(`/work/jobs/${job.id}?from=team&teamId=${teamId}`)}
+                onClick={() => router.push(`/work/jobs/preview/${job.id}`)}
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
@@ -296,10 +296,10 @@ export default function TeamJobsPage() {
                       className="shadow-md shadow-brand-primary/20"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleOpenClaimModal(job);
+                        router.push(`/work/jobs/preview/${job.id}`);
                       }}
                     >
-                      จองงาน <ChevronRight className="w-4 h-4 ml-1" />
+                      ดูรายละเอียด <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
                 </div>

@@ -52,6 +52,12 @@ export { StatCard } from "./StatCard";
 export { InfoCard } from "./InfoCard";
 export { QuickActionCard } from "./QuickActionCard";
 
+// Help System components
+export { HelpIcon } from "./help-icon";
+export { ContextualHelp } from "./contextual-help";
+export { HelpTooltip } from "./help-tooltip";
+export { HelpSidebar } from "./help-sidebar";
+
 // Types
 export type { StatItem } from "./stats-grid";
 export type { FilterOption } from "./filter-bar";

@@ -482,12 +482,16 @@ export interface TeamJob {
   pricePerUnit: number;
   totalPayout: number;
   targetUrl: string;
+  instructions?: string; // Instructions for workers
   status: "pending" | "in_progress" | "pending_review" | "completed" | "cancelled";
   assignedWorker?: Worker;
   deadline?: string;
   submittedAt?: string;
   completedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // ===== TEAM PAYOUT =====
@@ -672,6 +676,8 @@ export interface WorkerJob {
   totalEarnings?: number;
   startedAt?: string;
   claimedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
   teamLogo?: string;
   teamRating?: number;
   teamJobsCompleted?: number;

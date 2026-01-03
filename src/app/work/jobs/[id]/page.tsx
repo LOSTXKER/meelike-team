@@ -25,6 +25,8 @@ import {
   ClipboardList,
   Star,
   DollarSign,
+  XCircle,
+  Ban,
 } from "lucide-react";
 
 export default function JobDetailPage() {
@@ -164,9 +166,53 @@ export default function JobDetailPage() {
           )}
         </HStack>
 
+        {/* Cancelled Job Banner */}
+        {job.status === "completed" && job.cancelledAt && (
+          <Card className="bg-red-50 border-red-200">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <Ban className="w-6 h-6 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-red-900 mb-2">
+                    งานนี้ถูกยกเลิกโดย Seller
+                  </h3>
+                  {job.cancelReason && (
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-red-800 mb-1">เหตุผล:</p>
+                      <p className="text-sm text-red-700">{job.cancelReason}</p>
+                    </div>
+                  )}
+                  {job.earnedSoFar && job.earnedSoFar > 0 && (
+                    <div className="p-3 bg-white rounded-lg border border-red-200">
+                      <p className="text-sm text-red-700 mb-1">ค่าตอบแทนที่คุณได้รับ:</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        ฿{job.earnedSoFar.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-red-600 mt-1">
+                        ({job.completedQuantity}/{job.quantity} หน่วย)
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-sm text-red-600 mt-3">
+                    วันที่ยกเลิก: {new Date(job.cancelledAt).toLocaleDateString("th-TH", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
           {/* Progress Card */}
           <Card variant="elevated" padding="lg" className="border-none shadow-xl shadow-brand-primary/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />

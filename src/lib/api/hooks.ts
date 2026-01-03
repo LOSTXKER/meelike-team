@@ -145,6 +145,14 @@ export function useTeamJobs() {
   return useApiCall(() => api.seller.getTeamJobs(), { deps: [] });
 }
 
+export function useTeamJobById(teamJobId: string) {
+  return useApiCall(() => api.seller.getTeamJobById(teamJobId), { deps: [teamJobId] });
+}
+
+export function useJobClaimsByTeamJobId(teamJobId: string) {
+  return useApiCall(() => api.seller.getJobClaimsByTeamJobId(teamJobId), { deps: [teamJobId] });
+}
+
 export function useTeamPayouts() {
   return useApiCall(() => api.seller.getTeamPayouts(), { deps: [] });
 }
@@ -218,6 +226,10 @@ export function useWorkerAccounts() {
 
 export function useWorkerTeams() {
   return useApiCall(() => api.worker.getTeams(), { deps: [] });
+}
+
+export function useTeamJobPreview(teamJobId: string) {
+  return useApiCall(() => api.worker.getTeamJobPreview(teamJobId), { deps: [teamJobId] });
 }
 
 // ===== HUB HOOKS =====

@@ -135,9 +135,10 @@ export default function TeamJobsPage() {
               const progress = (job.completedQuantity / job.quantity) * 100;
               
               return (
-                <div
+                <Link
                   key={job.id}
-                  className="p-6 hover:bg-brand-bg/30 transition-colors group"
+                  href={`/seller/team/${teamId}/jobs/${job.id}`}
+                  className="block p-6 hover:bg-brand-bg/30 transition-colors group cursor-pointer"
                 >
                   <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
                     <div className="flex items-start gap-5 flex-1">
@@ -216,12 +217,18 @@ export default function TeamJobsPage() {
                       </p>
                       
                       {job.status === "pending_review" && (
-                        <Link href={`/seller/team/${teamId}/review`}>
-                          <Button size="sm" className="shadow-lg shadow-brand-primary/20 rounded-xl">
-                            ตรวจสอบงาน
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </Link>
+                        <Button 
+                          size="sm" 
+                          className="shadow-lg shadow-brand-primary/20 rounded-xl"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/seller/team/${teamId}/review`;
+                          }}
+                        >
+                          ตรวจสอบงาน
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
                       )}
                       
                       {job.status === "pending" && (
@@ -232,7 +239,7 @@ export default function TeamJobsPage() {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })
           )}

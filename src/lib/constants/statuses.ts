@@ -30,7 +30,7 @@ export const TEAM_JOB_STATUSES: Record<TeamJobStatus, StatusConfig> = {
   in_progress: { label: "In Progress", labelTh: "กำลังทำ", variant: "info" },
   pending_review: { label: "Pending Review", labelTh: "รอตรวจสอบ", variant: "warning" },
   completed: { label: "Completed", labelTh: "เสร็จสิ้น", variant: "success" },
-  cancelled: { label: "Cancelled", labelTh: "ยกเลิก", variant: "error" },
+  cancelled: { label: "Cancelled", labelTh: "ยกเลิกแล้ว", variant: "default" },
 };
 
 // Legacy JOB_STATUSES for backward compatibility

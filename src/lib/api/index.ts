@@ -622,6 +622,29 @@ export const sellerApi = {
     return getTeamJobsFromStorage();
   },
 
+  async getTeamJobById(teamJobId: string): Promise<TeamJob | null> {
+    await delay();
+    const jobs = getTeamJobsFromStorage();
+    return jobs.find(j => j.id === teamJobId) || null;
+  },
+
+  async getJobClaimsByTeamJobId(teamJobId: string): Promise<JobClaim[]> {
+    await delay();
+    const claims = getJobClaimsFromStorage();
+    const workers = mockWorkers;
+    
+    const jobClaims = claims.filter(c => c.jobId === teamJobId);
+    
+    // Join worker data
+    return jobClaims.map(claim => {
+      const worker = workers.find(w => w.id === claim.workerId);
+      return {
+        ...claim,
+        worker,
+      };
+    });
+  },
+
   async getTeamPayouts(): Promise<TeamPayout[]> {
     await delay();
     return getTeamPayoutsFromStorage();
@@ -936,6 +959,13 @@ export const sellerApi = {
     
     // Create TeamJob entry
     const jobs = getTeamJobsFromStorage();
+    
+    // Build instructions from requirements or commentTemplates
+    let instructions = requirements || "";
+    if (!instructions && item.commentTemplates && item.commentTemplates.length > 0) {
+      instructions = `ตัวอย่างความคิดเห็น:\n${item.commentTemplates.join('\n')}`;
+    }
+    
     const newJob: TeamJob = {
       id: mockJobId,
       teamId: teamId, // Add teamId for proper linking
@@ -948,6 +978,7 @@ export const sellerApi = {
       pricePerUnit: payRate,
       totalPayout: quantity * payRate,
       targetUrl: item.targetUrl || "",
+      instructions: instructions || undefined,
       status: "pending",
       createdAt: now,
     };
@@ -998,6 +1029,221 @@ export const sellerApi = {
     
     saveOrdersToStorage(orders);
     return orders[orderIndex];
+  },
+
+  // ===== TEAM JOB MANAGEMENT =====
+
+  async updateTeamJob(jobId: string, updates: {
+    quantity?: number;
+    pricePerUnit?: number;
+    instructions?: string;
+    deadline?: string;
+  }): Promise<TeamJob | null> {
+    await delay();
+    
+    const jobs = getTeamJobsFromStorage();
+    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    
+    if (jobIndex === -1) return null;
+    
+    const job = jobs[jobIndex];
+    
+    // Only allow editing if status is pending
+    if (job.status !== "pending") {
+      throw new Error("Cannot edit job that is already in progress or completed");
+    }
+    
+    const now = new Date().toISOString();
+    
+    // Update job
+    jobs[jobIndex] = {
+      ...job,
+      ...updates,
+      // Recalculate totalPayout if quantity or price changed
+      totalPayout: (updates.quantity ?? job.quantity) * (updates.pricePerUnit ?? job.pricePerUnit),
+      updatedAt: now,
+    };
+    
+    saveTeamJobsToStorage(jobs);
+    return jobs[jobIndex];
+  },
+
+  async deleteTeamJob(jobId: string): Promise<boolean> {
+    await delay();
+    
+    const jobs = getTeamJobsFromStorage();
+    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    
+    if (jobIndex === -1) return false;
+    
+    const job = jobs[jobIndex];
+    
+    // Only allow deletion if status is pending
+    if (job.status !== "pending") {
+      throw new Error("Cannot delete job that is already in progress or completed");
+    }
+    
+    // Check if there are any claims
+    const claims = getJobClaimsFromStorage();
+    const hasClaims = claims.some(c => c.jobId === jobId);
+    
+    if (hasClaims) {
+      throw new Error("Cannot delete job that has worker claims");
+    }
+    
+    // Remove job
+    jobs.splice(jobIndex, 1);
+    saveTeamJobsToStorage(jobs);
+    
+    return true;
+  },
+
+  async cancelTeamJob(jobId: string, reason?: string): Promise<{
+    success: boolean;
+    payoutAmount: number;
+    payoutCreated?: TeamPayout;
+  }> {
+    await delay(800);
+    
+    const jobs = getTeamJobsFromStorage();
+    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    
+    if (jobIndex === -1) {
+      throw new Error("Job not found");
+    }
+    
+    const job = jobs[jobIndex];
+    
+    // Cannot cancel completed jobs
+    if (job.status === "completed" || job.status === "cancelled") {
+      throw new Error("Cannot cancel completed or already cancelled job");
+    }
+    
+    const now = new Date().toISOString();
+    const claims = getJobClaimsFromStorage();
+    const workers = mockWorkers;
+    
+    // Get all claims for this job
+    const jobClaims = claims.filter(c => c.jobId === jobId);
+    
+    let totalPayoutAmount = 0;
+    let payoutCreated: TeamPayout | undefined;
+    
+    // Calculate payment based on status
+    if (job.status === "pending") {
+      // No payment needed - no one started work
+      totalPayoutAmount = 0;
+    } else if (job.status === "in_progress") {
+      // Pay partial: completedQuantity * pricePerUnit for each claim
+      jobClaims.forEach(claim => {
+        if (claim.status === "claimed") {
+          const partialAmount = (claim.actualQuantity || 0) * job.pricePerUnit;
+          totalPayoutAmount += partialAmount;
+        }
+      });
+    } else if (job.status === "pending_review") {
+      // Pay full amount for all submitted claims
+      jobClaims.forEach(claim => {
+        if (claim.status === "submitted") {
+          totalPayoutAmount += claim.earnAmount;
+        }
+      });
+    }
+    
+    // Update job status to cancelled
+    jobs[jobIndex] = {
+      ...job,
+      status: "cancelled",
+      cancelledAt: now,
+      cancelReason: reason,
+      updatedAt: now,
+    };
+    
+    saveTeamJobsToStorage(jobs);
+    
+    // Update all claims to cancelled
+    const updatedClaims = claims.map(claim => {
+      if (claim.jobId === jobId && claim.status !== "approved") {
+        return {
+          ...claim,
+          status: "cancelled" as const,
+          updatedAt: now,
+        };
+      }
+      return claim;
+    });
+    
+    saveJobClaimsToStorage(updatedClaims);
+    
+    // Create payouts for workers if there's payment needed
+    if (totalPayoutAmount > 0 && jobClaims.length > 0) {
+      const payouts = getTeamPayoutsFromStorage();
+      
+      // Group by worker and create/update payouts
+      const workerPayments = new Map<string, number>();
+      
+      jobClaims.forEach(claim => {
+        if ((job.status === "in_progress" && claim.status === "claimed") ||
+            (job.status === "pending_review" && claim.status === "submitted")) {
+          const amount = job.status === "in_progress" 
+            ? (claim.actualQuantity || 0) * job.pricePerUnit
+            : claim.earnAmount;
+          
+          workerPayments.set(
+            claim.workerId,
+            (workerPayments.get(claim.workerId) || 0) + amount
+          );
+        }
+      });
+      
+      // Create payouts
+      workerPayments.forEach((amount, workerId) => {
+        const worker = workers.find(w => w.id === workerId);
+        
+        if (worker) {
+          // Check if there's already a pending payout for this worker
+          const existingPayoutIndex = payouts.findIndex(
+            p => p.workerId === workerId && p.status === "pending"
+          );
+          
+          if (existingPayoutIndex !== -1) {
+            // Add to existing payout
+            payouts[existingPayoutIndex].amount += amount;
+            payouts[existingPayoutIndex].jobCount += 1;
+          } else {
+            // Create new payout
+            const newPayout: TeamPayout = {
+              id: `payout-${generateId()}`,
+              workerId,
+              worker,
+              amount,
+              jobCount: 1,
+              status: "pending",
+              requestedAt: now,
+              paymentMethod: worker.promptPayId ? "promptpay" : "bank",
+              paymentAccount: worker.promptPayId || worker.bankAccount || "",
+              bankName: worker.bankName,
+              accountName: worker.bankAccountName,
+            };
+            
+            payouts.push(newPayout);
+            
+            // Set this for return value
+            if (!payoutCreated) {
+              payoutCreated = newPayout;
+            }
+          }
+        }
+      });
+      
+      saveTeamPayoutsToStorage(payouts);
+    }
+    
+    return {
+      success: true,
+      payoutAmount: totalPayoutAmount,
+      payoutCreated,
+    };
   },
   
   // ===== JOB REVIEW & APPROVAL =====
@@ -1246,6 +1492,13 @@ export const workerApi = {
         submittedAt: claim.submittedAt,
         completedAt: claim.status === "approved" ? claim.reviewedAt : undefined,
         earnings: claim.status === "approved" ? claim.earnAmount : undefined,
+        instructions: job.instructions,
+        earnedSoFar: claim.status === "approved" ? claim.earnAmount : (claim.actualQuantity || 0) * job.pricePerUnit,
+        totalEarnings: claim.quantity * job.pricePerUnit,
+        startedAt: claim.createdAt,
+        claimedAt: claim.createdAt,
+        cancelledAt: claim.status === "cancelled" ? claim.updatedAt : job.cancelledAt,
+        cancelReason: job.cancelReason,
       };
     };
     
@@ -1276,6 +1529,29 @@ export const workerApi = {
       .map(m => m.teamId);
     
     return teams.filter(t => workerTeamIds.includes(t.id));
+  },
+
+  async getTeamJobPreview(teamJobId: string): Promise<{
+    teamJob: TeamJob | null;
+    team: Team | null;
+    existingClaim: JobClaim | null;
+  }> {
+    await delay();
+    const workerId = getCurrentWorkerId();
+    
+    const teamJobs = getTeamJobsFromStorage();
+    const teams = getTeamsFromStorage();
+    const claims = getJobClaimsFromStorage();
+    
+    const teamJob = teamJobs.find(j => j.id === teamJobId) || null;
+    const team = teamJob?.teamId ? teams.find(t => t.id === teamJob.teamId) || null : null;
+    
+    // Check if current worker already has a claim for this job
+    const existingClaim = workerId 
+      ? claims.find(c => c.jobId === teamJobId && c.workerId === workerId) || null
+      : null;
+    
+    return { teamJob, team, existingClaim };
   },
   
   // ===== WORKER MUTATIONS =====
