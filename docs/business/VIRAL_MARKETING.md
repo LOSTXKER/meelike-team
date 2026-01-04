@@ -101,10 +101,10 @@
 | Level | งานสำเร็จ | Withdrawal Fee | Perks |
 |-------|----------|----------------|-------|
 | 🥉 Bronze | 0-50 | 5% | - |
-| 🥈 Silver | 51-200 | 3.5% | Badge |
-| 🥇 Gold | 201-500 | 3% | Badge + Priority |
-| 💎 Platinum | 501-1K | 2.5% | Badge + Priority + Early Access |
-| 👑 VIP | 1K+ | 2% | All + Special Perks |
+| 🥈 Silver | 51-200 | 4% | Badge |
+| 🥇 Gold | 201-500 | 3.5% | Badge + Priority |
+| 💎 Platinum | 501-1K | 3% | Badge + Priority + Early Access |
+| 👑 VIP | 1K+ | 2.5% | All + Special Perks |
 
 ### Daily Streak
 

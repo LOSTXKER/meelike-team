@@ -178,14 +178,14 @@ Actions:
 - บัญชีธนาคาร
 - True Money Wallet
 
-Withdrawal Fee ตาม Level:
+Withdrawal Fee ตาม Level (ขั้นต่ำถอน ฿20):
 | Level | Fee |
 |-------|-----|
-| Bronze | ฿15 + 5% |
-| Silver | ฿15 + 3.5% |
-| Gold | ฿15 + 3% |
-| Platinum | ฿15 + 2.5% |
-| VIP | ฿15 + 2% |
+| 🥉 Bronze | 5% |
+| 🥈 Silver | 4% |
+| 🥇 Gold | 3.5% |
+| 💎 Platinum | 3% |
+| 👑 VIP | 2.5% |
 
 ---
 

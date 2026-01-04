@@ -5,7 +5,7 @@ import { useRequireAuth } from "@/lib/hooks";
 import { useAppStore } from "@/lib/store";
 import { DashboardLayout } from "@/components/layout";
 import { WorkerBottomNav } from "@/components/worker/bottom-nav";
-import { ErrorBoundary } from "@/components/shared";
+import { ErrorBoundary, DevTools } from "@/components/shared";
 import { WORKER_NAV } from "@/lib/constants/navigation";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { Avatar } from "@/components/ui";
@@ -72,6 +72,7 @@ export default function WorkerLayout({
       >
         {children}
       </DashboardLayout>
+      {(process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_DEV_TOOLS === "true") && <DevTools />}
     </ErrorBoundary>
   );
 }

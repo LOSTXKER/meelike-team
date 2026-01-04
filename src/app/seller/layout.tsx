@@ -477,7 +477,7 @@ export default function SellerLayout({
       {/* ============================================ */}
       {/* DEV TOOLS - Development Only */}
       {/* ============================================ */}
-      {process.env.NODE_ENV === "development" && <DevTools />}
+      {(process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_DEV_TOOLS === "true") && <DevTools />}
     </div>
   );
 }

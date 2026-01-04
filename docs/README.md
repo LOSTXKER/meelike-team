@@ -173,7 +173,7 @@
 |------------|-----|-------|
 | Subscription | Seller | ฿0-799/เดือน |
 | Order Fee | Seller | 2-10% ตามแพ็กเกจ |
-| Withdrawal Fee | Worker | ฿15 + 2-5% ตาม Level |
+| Withdrawal Fee | Worker | 2.5-5% ตาม Level (ขั้นต่ำถอน ฿20) |
 
 ---
 

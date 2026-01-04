@@ -96,8 +96,8 @@
 │                                                                              │
 │  Revenue:                                                                   │
 │  ├── Job Fee: 12% จาก Employer                                             │
-│  └── Withdrawal Fee: 3% จาก Worker                                         │
-│  รวม: ~15% ต่อ Transaction                                                  │
+│  └── Withdrawal Fee: 2.5-5% จาก Worker (ตาม Level)                         │
+│  รวม: ~14.5-17% ต่อ Transaction                                            │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
