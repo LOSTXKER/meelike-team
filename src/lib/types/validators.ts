@@ -158,17 +158,26 @@ export function validateServiceForm(data: ServiceFormData): ValidationResult {
     errors.push("กรุณาเลือกรูปแบบบริการ");
   }
   
-  // Price validation
-  if (!isPositiveNumber(data.costPrice)) {
-    errors.push("ต้นทุนต้องเป็นตัวเลขที่มากกว่า 0");
-  }
-  
-  if (!isPositiveNumber(data.sellPrice)) {
-    errors.push("ราคาขายต้องเป็นตัวเลขที่มากกว่า 0");
-  }
-  
-  if (data.sellPrice <= data.costPrice) {
-    errors.push("ราคาขายต้องมากกว่าต้นทุน");
+  // Price validation - different for bot vs human services
+  if (data.serviceType === "bot") {
+    // Bot services require costPrice
+    if (!isPositiveNumber(data.costPrice)) {
+      errors.push("ต้นทุน API ต้องเป็นตัวเลขที่มากกว่า 0");
+    }
+    
+    if (!isPositiveNumber(data.sellPrice)) {
+      errors.push("ราคาขายต้องเป็นตัวเลขที่มากกว่า 0");
+    }
+    
+    if (data.sellPrice <= (data.costPrice || 0)) {
+      errors.push("ราคาขายต้องมากกว่าต้นทุน");
+    }
+  } else {
+    // Human services - costPrice is not required (worker rate set when creating job)
+    // Just validate sellPrice
+    if (!isPositiveNumber(data.sellPrice)) {
+      errors.push("ราคาขายต้องเป็นตัวเลขที่มากกว่า 0");
+    }
   }
   
   // Quantity validation

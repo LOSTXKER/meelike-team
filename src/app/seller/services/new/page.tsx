@@ -58,7 +58,6 @@ interface ManualServiceRow {
   description: string;
   category: Platform;
   type: ServiceType;
-  costPrice: number;
   sellPrice: number;
   minQuantity: number;
   maxQuantity: number;
@@ -97,8 +96,7 @@ function createEmptyManualRow(): ManualServiceRow {
     description: "",
     category: "facebook",
     type: "like",
-    costPrice: 0.5,
-    sellPrice: 0,
+    sellPrice: 0, // ราคาขายลูกค้า
     minQuantity: 100,
     maxQuantity: 10000,
     estimatedTime: "24-48 ชม.",
@@ -303,7 +301,7 @@ export default function NewServicePage() {
             category: row.category,
             type: row.type,
             serviceType: "human",
-            costPrice: row.costPrice,
+            // ไม่ต้องกรอก workerRate ตอนสร้างบริการ - จะกรอกตอนสร้าง Job
             sellPrice: row.sellPrice,
             minQuantity: row.minQuantity,
             maxQuantity: row.maxQuantity,
@@ -1069,12 +1067,10 @@ function ManualServicesForm({
     label: `${value.emoji} ${value.label}`,
   }));
 
-  // Calculate total profit
-  const totalProfit = rows.reduce((sum, row) => {
-    if (row.costPrice > 0 && row.sellPrice > 0) {
-      return sum + (row.sellPrice - row.costPrice);
-    }
-    return sum;
+  // For manual services, we don't calculate profit here
+  // (worker rate is set when creating jobs)
+  const totalSellPrice = rows.reduce((sum, row) => {
+    return sum + (row.sellPrice > 0 ? row.sellPrice : 0);
   }, 0);
 
   return (
@@ -1087,12 +1083,6 @@ function ManualServicesForm({
               <p className="text-sm text-brand-text-light">จำนวนบริการที่กรอกแล้ว</p>
               <p className="text-2xl font-bold text-brand-text-dark">{validCount} รายการ</p>
             </div>
-            {totalProfit > 0 && (
-              <div className="pl-6 border-l border-brand-border/30">
-                <p className="text-sm text-brand-text-light">กำไรรวม/หน่วย</p>
-                <p className="text-2xl font-bold text-green-600">฿{totalProfit.toFixed(2)}</p>
-              </div>
-            )}
           </div>
           <Button
             onClick={onSubmit}
@@ -1108,13 +1098,20 @@ function ManualServicesForm({
 
       {/* Info Banner */}
       <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-purple-100 rounded-lg shrink-0">
             <Users className="w-5 h-5 text-purple-600" />
           </div>
           <div>
             <p className="font-medium text-purple-900">สร้างบริการงานกดมือ</p>
-            <p className="text-sm text-purple-700">เพิ่มหลายบริการพร้อมกัน กำหนดราคาและรายละเอียดเอง</p>
+            <p className="text-sm text-purple-700 mb-2">เพิ่มหลายบริการพร้อมกัน กำหนดราคาขายลูกค้า</p>
+            <div className="p-3 bg-white/60 rounded-lg border border-purple-200/50">
+              <p className="text-xs font-medium text-purple-800 mb-1">💡 ค่าจ้าง Worker จะกรอกตอนสร้าง Job</p>
+              <p className="text-xs text-purple-700">
+                เพราะค่าจ้างแต่ละงานอาจไม่เท่ากัน (งานด่วนจ่ายมากกว่า ฯลฯ) • 
+                กำไรจะคำนวณตอนสร้าง Job ให้ทีม
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1126,23 +1123,17 @@ function ManualServicesForm({
             <thead>
               <tr className="bg-brand-bg/50 border-b border-brand-border/30">
                 <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-8">#</th>
-                <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider min-w-[200px]">ชื่อบริการ</th>
-                <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[120px]">แพลตฟอร์ม</th>
-                <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[120px]">ประเภท</th>
-                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[100px]">ต้นทุน</th>
-                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[100px]">ราคาขาย</th>
-                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[80px]">ขั้นต่ำ</th>
-                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[80px]">สูงสุด</th>
-                <th className="text-center p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[100px]">กำไร</th>
+                <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider min-w-[250px]">ชื่อบริการ</th>
+                <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[130px]">แพลตฟอร์ม</th>
+                <th className="text-left p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[130px]">ประเภท</th>
+                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[120px]">ราคาขาย</th>
+                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[100px]">ขั้นต่ำ</th>
+                <th className="text-right p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[100px]">สูงสุด</th>
                 <th className="text-center p-3 text-xs font-semibold text-brand-text-light uppercase tracking-wider w-[80px]">จัดการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border/30">
               {rows.map((row, index) => {
-                const profit = row.sellPrice - row.costPrice;
-                const profitPercent = row.costPrice > 0 ? (profit / row.costPrice) * 100 : 0;
-                const isProfitable = profit > 0;
-                
                 return (
                   <tr key={row.id} className="hover:bg-brand-bg/30 transition-colors">
                     {/* Row Number */}
@@ -1189,24 +1180,12 @@ function ManualServicesForm({
                       </select>
                     </td>
                     
-                    {/* Cost Price */}
-                    <td className="p-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.5"
-                        value={row.costPrice || ""}
-                        onChange={(e) => onUpdateRow(row.id, "costPrice", parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-2 text-sm text-right border border-brand-border/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-                      />
-                    </td>
-                    
                     {/* Sell Price */}
                     <td className="p-2">
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="0.00"
+                        placeholder="0.40"
                         value={row.sellPrice > 0 ? row.sellPrice : ""}
                         onChange={(e) => onUpdateRow(row.id, "sellPrice", parseFloat(e.target.value) || 0)}
                         className="w-full px-2 py-2 text-sm text-right border border-brand-border/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
@@ -1233,22 +1212,6 @@ function ManualServicesForm({
                         onChange={(e) => onUpdateRow(row.id, "maxQuantity", parseInt(e.target.value) || 0)}
                         className="w-full px-2 py-2 text-sm text-right border border-brand-border/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
                       />
-                    </td>
-                    
-                    {/* Profit */}
-                    <td className="p-2 text-center">
-                      {row.costPrice > 0 && row.sellPrice > 0 ? (
-                        <div className={`inline-flex flex-col items-center px-2 py-1 rounded-lg ${isProfitable ? "bg-green-50" : "bg-red-50"}`}>
-                          <span className={`text-sm font-bold ${isProfitable ? "text-green-600" : "text-red-600"}`}>
-                            ฿{profit.toFixed(2)}
-                          </span>
-                          <span className={`text-xs ${isProfitable ? "text-green-600" : "text-red-600"}`}>
-                            {isProfitable ? "+" : ""}{profitPercent.toFixed(0)}%
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-brand-text-light text-sm">-</span>
-                      )}
                     </td>
                     
                     {/* Actions */}

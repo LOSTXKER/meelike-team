@@ -67,11 +67,17 @@ export function ServiceRow({
         <ServiceTypeIcon type={service.type} useEmoji showLabel />
       </td>
       
-      {/* Cost Price */}
+      {/* Cost / Worker Rate */}
       <td className="p-4 text-right">
-        <span className="text-sm text-brand-text-light font-medium">
-          {formatCurrency(service.costPrice)}
-        </span>
+        {service.serviceType === "human" ? (
+          <div>
+            <span className="text-xs text-purple-500 italic">กรอกตอนสร้าง Job</span>
+          </div>
+        ) : (
+          <span className="text-sm text-brand-text-light font-medium">
+            {formatCurrency(service.costPrice || 0)}
+          </span>
+        )}
       </td>
       
       {/* Sell Price */}
@@ -83,12 +89,26 @@ export function ServiceRow({
       
       {/* Profit */}
       <td className="p-4 text-right">
-        <div className="text-sm font-medium text-brand-success">
-          +{formatCurrency(service.sellPrice - service.costPrice)}
-        </div>
-        <div className="text-[10px] text-brand-success/80">
-          {Math.round(((service.sellPrice - service.costPrice) / service.costPrice) * 100)}%
-        </div>
+        {service.serviceType === "human" ? (
+          <span className="text-xs text-brand-text-light italic">-</span>
+        ) : (
+          (() => {
+            const cost = service.costPrice || 0;
+            const profit = service.sellPrice - cost;
+            const margin = service.sellPrice > 0 ? (profit / service.sellPrice) * 100 : 0;
+            
+            return (
+              <>
+                <div className="text-sm font-medium text-brand-success">
+                  +{formatCurrency(profit)}
+                </div>
+                <div className="text-[10px] text-brand-success/80">
+                  {Math.round(margin)}%
+                </div>
+              </>
+            );
+          })()
+        )}
       </td>
       
       {/* Estimated Time */}

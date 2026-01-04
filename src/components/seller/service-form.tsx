@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   FormField, 
   FormInput, 
@@ -8,9 +8,11 @@ import {
   FormTextarea,
   InlineError 
 } from "@/components/shared";
+import { Card, Badge } from "@/components/ui";
 import { VISIBILITY_OPTIONS } from "@/lib/constants/services";
 import { validateServiceForm } from "@/lib/types/validators";
 import type { StoreService, Platform, ServiceType, ServiceMode } from "@/types";
+import { Bot, Users, DollarSign, Calculator, AlertCircle, Info } from "lucide-react";
 
 interface ServiceFormProps {
   service?: StoreService | null;
@@ -19,18 +21,31 @@ interface ServiceFormProps {
 
 export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
   const [errors, setErrors] = useState<string[]>([]);
+  const [serviceMode, setServiceMode] = useState<ServiceMode>(service?.serviceType || "bot");
+  const [costPrice, setCostPrice] = useState<number>(service?.costPrice || 0);
+  const [sellPrice, setSellPrice] = useState<number>(service?.sellPrice || 0);
+
+  // Calculate profit margin (only for bot services)
+  const profitPerUnit = sellPrice - costPrice;
+  const profitMargin = sellPrice > 0 ? ((profitPerUnit / sellPrice) * 100) : 0;
 
   const handleValidation = (e: React.FormEvent) => {
     if (onSubmit) {
       e.preventDefault();
       const formData = new FormData(e.target as HTMLFormElement);
+      
+      // For human services, costPrice is 0 (will be set per job)
+      const finalCostPrice = serviceMode === "human" 
+        ? 0 
+        : parseFloat(formData.get("costPrice") as string);
+
       const data = {
         name: formData.get("name") as string,
         description: formData.get("description") as string,
         category: formData.get("category") as Platform,
         type: formData.get("type") as ServiceType,
-        serviceType: formData.get("serviceType") as ServiceMode,
-        costPrice: parseFloat(formData.get("costPrice") as string),
+        serviceType: serviceMode,
+        costPrice: finalCostPrice,
         sellPrice: parseFloat(formData.get("sellPrice") as string),
         minQuantity: parseInt(formData.get("minQuantity") as string),
         maxQuantity: parseInt(formData.get("maxQuantity") as string),
@@ -106,14 +121,62 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
 
       {/* Service Mode */}
       <FormField label="รูปแบบบริการ" required>
-        <FormSelect
-          name="serviceType"
-          options={[
-            { value: "bot", label: "งานเว็บ (เร็ว ราคาถูก)" },
-            { value: "human", label: "งานกดมือ (คุณภาพสูง)" },
-          ]}
-          defaultValue={service?.serviceType || "bot"}
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setServiceMode("bot")}
+            className={`p-4 rounded-xl border-2 transition-all text-left ${
+              serviceMode === "bot"
+                ? "border-brand-primary bg-brand-primary/5"
+                : "border-brand-border/50 hover:border-brand-border"
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                serviceMode === "bot" ? "bg-brand-primary/10" : "bg-brand-bg"
+              }`}>
+                <Bot className={`w-5 h-5 ${serviceMode === "bot" ? "text-brand-primary" : "text-brand-text-light"}`} />
+              </div>
+              <div>
+                <p className={`font-bold ${serviceMode === "bot" ? "text-brand-primary" : "text-brand-text-dark"}`}>
+                  งานเว็บ (Bot)
+                </p>
+                <p className="text-xs text-brand-text-light">เร็ว, ราคาถูก</p>
+              </div>
+            </div>
+            <p className="text-xs text-brand-text-light">
+              ใช้ API Provider ส่งงานอัตโนมัติ
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setServiceMode("human")}
+            className={`p-4 rounded-xl border-2 transition-all text-left ${
+              serviceMode === "human"
+                ? "border-brand-success bg-brand-success/5"
+                : "border-brand-border/50 hover:border-brand-border"
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                serviceMode === "human" ? "bg-brand-success/10" : "bg-brand-bg"
+              }`}>
+                <Users className={`w-5 h-5 ${serviceMode === "human" ? "text-brand-success" : "text-brand-text-light"}`} />
+              </div>
+              <div>
+                <p className={`font-bold ${serviceMode === "human" ? "text-brand-success" : "text-brand-text-dark"}`}>
+                  งานกดมือ (Human)
+                </p>
+                <p className="text-xs text-brand-text-light">คุณภาพสูง</p>
+              </div>
+            </div>
+            <p className="text-xs text-brand-text-light">
+              Worker ทำงานจริง ไม่หลุด
+            </p>
+          </button>
+        </div>
+        <input type="hidden" name="serviceType" value={serviceMode} />
       </FormField>
 
       {/* Visibility */}
@@ -131,29 +194,126 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
         />
       </FormField>
 
-      {/* Pricing Row */}
-      <div className="grid grid-cols-2 gap-4">
-        <FormField label="ต้นทุน (บาท/หน่วย)" required>
-          <FormInput
-            name="costPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0.08"
-            defaultValue={service?.costPrice}
-          />
-        </FormField>
-        <FormField label="ราคาขาย (บาท/หน่วย)" required>
-          <FormInput
-            name="sellPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0.15"
-            defaultValue={service?.sellPrice}
-          />
-        </FormField>
-      </div>
+      {/* Pricing Section - Different UI based on service mode */}
+      {serviceMode === "bot" ? (
+        /* Bot Service - Direct cost input */
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-brand-text-dark">
+            <DollarSign className="w-4 h-4 text-brand-primary" />
+            ราคาบริการ (งานเว็บ)
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="ต้นทุน API (บาท/หน่วย)" required>
+              <FormInput
+                name="costPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.08"
+                value={costPrice || ""}
+                onChange={(e) => setCostPrice(parseFloat(e.target.value) || 0)}
+              />
+              <p className="text-xs text-brand-text-light mt-1">
+                ราคาจาก MeeLike หรือ Provider อื่น
+              </p>
+            </FormField>
+            <FormField label="ราคาขาย (บาท/หน่วย)" required>
+              <FormInput
+                name="sellPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.15"
+                value={sellPrice || ""}
+                onChange={(e) => setSellPrice(parseFloat(e.target.value) || 0)}
+              />
+            </FormField>
+          </div>
+          
+          {/* Profit Calculator - Only for Bot */}
+          {sellPrice > 0 && costPrice > 0 && (
+            <Card className={`p-4 border-none ${profitMargin >= 30 ? "bg-brand-success/5" : profitMargin >= 10 ? "bg-brand-warning/5" : "bg-brand-error/5"}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Calculator className="w-4 h-4 text-brand-text-light" />
+                <span className="text-sm font-bold text-brand-text-dark">คำนวณกำไร</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-xs text-brand-text-light mb-1">ต้นทุน</p>
+                  <p className="text-lg font-bold text-brand-text-dark">
+                    ฿{costPrice.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-brand-text-light mb-1">กำไร/หน่วย</p>
+                  <p className={`text-lg font-bold ${profitPerUnit >= 0 ? "text-brand-success" : "text-brand-error"}`}>
+                    ฿{profitPerUnit.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-brand-text-light mb-1">Margin</p>
+                  <p className={`text-lg font-bold ${
+                    profitMargin >= 30 ? "text-brand-success" : 
+                    profitMargin >= 10 ? "text-brand-warning" : "text-brand-error"
+                  }`}>
+                    {profitMargin.toFixed(0)}%
+                  </p>
+                </div>
+              </div>
+              {profitMargin < 10 && (
+                <div className="flex items-center gap-2 mt-3 p-2 bg-brand-error/10 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-brand-error" />
+                  <span className="text-xs text-brand-error font-medium">
+                    Margin ต่ำเกินไป! แนะนำให้ปรับราคาขาย
+                  </span>
+                </div>
+              )}
+            </Card>
+          )}
+        </div>
+      ) : (
+        /* Human Service - Only sell price, no cost input */
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-brand-text-dark">
+            <Users className="w-4 h-4 text-brand-success" />
+            ราคาบริการ (งานกดมือ)
+          </div>
+          
+          {/* Info about worker rate */}
+          <div className="p-4 bg-brand-info/5 border border-brand-info/20 rounded-xl">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-brand-info shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-brand-text-dark text-sm mb-1">
+                  ค่าจ้าง Worker จะกรอกตอนสร้างงาน
+                </p>
+                <p className="text-xs text-brand-text-light">
+                  ไม่ต้องกรอกต้นทุนตรงนี้ เพราะค่าจ้าง Worker จะกำหนดตอนสร้าง Job ให้ทีม
+                  ซึ่งอาจต่างกันในแต่ละงาน
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <FormField label="ราคาขายลูกค้า (บาท/หน่วย)" required>
+            <FormInput
+              name="sellPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.40"
+              value={sellPrice || ""}
+              onChange={(e) => setSellPrice(parseFloat(e.target.value) || 0)}
+            />
+            <p className="text-xs text-brand-text-light mt-1">
+              ราคาที่ขายให้ลูกค้า (กำไรจะคำนวณตอนสร้างงาน)
+            </p>
+          </FormField>
+          
+          {/* Hidden field for costPrice (set to 0 for human services) */}
+          <input type="hidden" name="costPrice" value="0" />
+        </div>
+      )}
 
       {/* Quantity Row */}
       <div className="grid grid-cols-2 gap-4">

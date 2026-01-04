@@ -104,6 +104,11 @@ export default function NewOrderPage() {
       return;
     }
 
+    // ใช้ workerRate สำหรับ human services, costPrice สำหรับ bot services
+    const effectiveCost = service.serviceType === "human"
+      ? (service.workerRate || 0)
+      : (service.costPrice || 0);
+
     const newItem: OrderItem = {
       id: `item-${Date.now()}`,
       serviceId: service.id,
@@ -114,7 +119,7 @@ export default function NewOrderPage() {
       targetUrl,
       quantity: qty,
       unitPrice: service.sellPrice,
-      costPrice: service.costPrice,
+      costPrice: effectiveCost,
       subtotal: qty * service.sellPrice,
       commentTemplates: service.type === "comment" ? commentTemplates : undefined,
     };

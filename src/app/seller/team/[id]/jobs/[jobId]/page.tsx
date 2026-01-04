@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Badge, Button, Progress, Modal, Input, Textarea } from "@/components/ui";
 import { Container, Section, HStack, VStack } from "@/components/layout";
-import { PageHeader, PlatformIcon, EmptyState, PageSkeleton } from "@/components/shared";
+import { PageHeader, PlatformIcon, EmptyState, PageSkeleton, ShareJobModal } from "@/components/shared";
 import { useTeamJobById, useJobClaimsByTeamJobId, useSellerTeamById } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
 import { getJobStatusLabel, getJobStatusVariant, type TeamJobStatus } from "@/lib/constants/statuses";
@@ -28,6 +28,7 @@ import {
   Edit,
   Trash2,
   Ban,
+  Share2,
 } from "lucide-react";
 
 export default function SellerJobDetailPage() {
@@ -39,6 +40,7 @@ export default function SellerJobDetailPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // Edit form state
   const [editQuantity, setEditQuantity] = useState<number>(0);
@@ -260,6 +262,17 @@ export default function SellerJobDetailPage() {
           </HStack>
 
           <HStack gap={2} className="flex-wrap">
+            {/* Share Button - Always visible */}
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setShowShareModal(true)}
+              className="shadow-sm bg-[#00B900]/5 border-[#00B900]/30 text-[#00B900] hover:bg-[#00B900]/10"
+            >
+              <Share2 className="w-5 h-5 mr-2" />
+              แชร์งาน
+            </Button>
+
             {/* Actions for pending status */}
             {job.status === "pending" && (
               <>
@@ -704,6 +717,24 @@ export default function SellerJobDetailPage() {
             </div>
           </div>
         </Modal>
+
+        {/* Share Job Modal */}
+        <ShareJobModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          job={job ? {
+            id: job.id,
+            serviceName: job.serviceName,
+            platform: job.platform,
+            quantity: job.quantity,
+            completedQuantity: job.completedQuantity,
+            pricePerUnit: job.pricePerUnit,
+            deadline: job.deadline,
+            teamName: team?.name,
+            targetUrl: job.targetUrl,
+          } : null}
+          teamId={teamId}
+        />
 
         {/* Cancel Job Modal */}
         <Modal

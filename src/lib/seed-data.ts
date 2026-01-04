@@ -122,7 +122,7 @@ export function seedServices(): StoreService[] {
       type: "follow",
       serviceType: "human",
       sellPrice: 5.0,
-      costPrice: 3.5,
+      workerRate: 3.5, // ค่าจ้าง Worker
       minQuantity: 50,
       maxQuantity: 5000,
       estimatedTime: "24-72 ชม.",
@@ -161,7 +161,7 @@ export function seedServices(): StoreService[] {
       type: "comment",
       serviceType: "human",
       sellPrice: 15.0,
-      costPrice: 10.0,
+      workerRate: 10.0, // ค่าจ้าง Worker
       minQuantity: 10,
       maxQuantity: 500,
       estimatedTime: "48-96 ชม.",

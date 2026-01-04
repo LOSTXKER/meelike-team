@@ -10,6 +10,7 @@ export { PlanBadge } from "./plan-badge";
 export { StatsGrid, StatsGridCompact } from "./stats-grid";
 export { FilterBar, SegmentedControl } from "./filter-bar";
 export { ClaimJobModal } from "./claim-job-modal";
+export { ShareJobModal } from "./share-job-modal";
 export { ReviewTeamModal } from "./review-team-modal";
 export { LevelBenefitsTable } from "./level-benefits-table";
 export { DailyStreak } from "./daily-streak";

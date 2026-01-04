@@ -125,7 +125,11 @@ export interface StoreService {
   category: Platform;
   type: ServiceType;
   serviceType: ServiceMode;
-  costPrice: number;
+  // Pricing:
+  // - Bot services: ใช้ costPrice (ต้นทุน API)
+  // - Human services: ใช้ workerRate (ค่าจ้าง Worker) - costPrice = 0 หรือ undefined
+  costPrice?: number; // ต้นทุน API (สำหรับ Bot service)
+  workerRate?: number; // ค่าจ้าง Worker ต่อหน่วย (สำหรับ Human service)
   sellPrice: number;
   minQuantity: number;
   maxQuantity: number;

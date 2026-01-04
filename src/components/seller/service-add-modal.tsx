@@ -48,7 +48,6 @@ interface ManualServiceRow {
   description: string;
   category: Platform;
   type: ServiceType;
-  costPrice: number;
   sellPrice: number;
   minQuantity: number;
   maxQuantity: number;
@@ -117,8 +116,7 @@ function createEmptyManualRow(): ManualServiceRow {
     description: "",
     category: "facebook",
     type: "like",
-    costPrice: 0,
-    sellPrice: 0,
+    sellPrice: 0, // ราคาขายลูกค้า
     minQuantity: 100,
     maxQuantity: 10000,
     estimatedTime: "",
@@ -259,7 +257,7 @@ export function ServiceAddModal({
         });
       });
     } else {
-      // Manual services
+      // Manual services - ไม่ต้องกรอก workerRate ตอนสร้างบริการ
       validManualRows.forEach(row => {
         servicesToAdd.push({
           name: row.name,
@@ -267,7 +265,6 @@ export function ServiceAddModal({
           category: row.category,
           type: row.type,
           serviceType: "human",
-          costPrice: row.costPrice,
           sellPrice: row.sellPrice,
           minQuantity: row.minQuantity,
           maxQuantity: row.maxQuantity,
@@ -674,7 +671,10 @@ function ManualServicesTab({
           <div>
             <p className="text-sm font-medium text-purple-900">สร้างบริการงานกดมือ</p>
             <p className="text-xs text-purple-700 mt-0.5">
-              เพิ่มหลายบริการพร้อมกัน กำหนดราคาและรายละเอียดเอง งานจะกระจายให้ทีมคนทำงาน
+              เพิ่มหลายบริการพร้อมกัน กำหนดราคาขายลูกค้า งานจะกระจายให้ทีมคนทำงาน
+            </p>
+            <p className="text-xs text-purple-600 mt-1 font-medium">
+              💡 ค่าจ้าง Worker จะกรอกตอนสร้าง Job (แต่ละงานอาจไม่เท่ากัน)
             </p>
           </div>
         </div>
@@ -740,24 +740,19 @@ function ManualServicesTab({
                />
              </div>
 
-             {/* Row 3: Prices */}
-             <div className="grid grid-cols-2 gap-3">
+             {/* Row 3: Sell Price */}
+             <div>
                <Input
-                 label="ต้นทุน/หน่วย"
+                 label="ราคาขายลูกค้า (บาท/หน่วย)"
                  type="number"
                  step="0.01"
-                 placeholder="0.5"
-                 value={row.costPrice || ""}
-                 onChange={(e) => onUpdateRow(row.id, "costPrice", parseFloat(e.target.value) || 0)}
-               />
-               <Input
-                 label="ราคาขาย/หน่วย"
-                 type="number"
-                 step="0.01"
-                 placeholder="1.0"
+                 placeholder="0.40"
                  value={row.sellPrice || ""}
                  onChange={(e) => onUpdateRow(row.id, "sellPrice", parseFloat(e.target.value) || 0)}
                />
+               <p className="text-xs text-brand-text-light mt-1">
+                 ค่าจ้าง Worker จะกรอกตอนสร้าง Job
+               </p>
              </div>
 
              {/* Row 4: Quantities */}
@@ -788,22 +783,6 @@ function ManualServicesTab({
                />
              </div>
 
-             {/* Profit indicator */}
-             {row.costPrice > 0 && row.sellPrice > 0 && (
-               <div className="pt-3 border-t border-brand-border/30">
-                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                   <span className="text-sm font-medium text-gray-700">กำไรต่อหน่วย</span>
-                   <div className="text-right">
-                     <div className={`text-lg font-bold ${row.sellPrice > row.costPrice ? "text-green-600" : "text-red-600"}`}>
-                       {formatCurrency(row.sellPrice - row.costPrice)}
-                     </div>
-                     <div className={`text-xs font-medium ${row.sellPrice > row.costPrice ? "text-green-600" : "text-red-600"}`}>
-                       {row.sellPrice > row.costPrice ? "+" : ""}{((row.sellPrice - row.costPrice) / row.costPrice * 100).toFixed(1)}%
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             )}
           </div>
         ))}
       </div>

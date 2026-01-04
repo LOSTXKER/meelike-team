@@ -147,7 +147,9 @@ export const sellerApi = {
       category: service.category || "facebook",
       type: service.type || "like",
       serviceType: service.serviceType || "bot",
-      costPrice: service.costPrice || 0,
+      // Bot: ใช้ costPrice, Human: ค่าจ้าง Worker กรอกตอนสร้าง Job
+      costPrice: service.serviceType === "bot" ? (service.costPrice || 0) : undefined,
+      // workerRate ไม่ต้องกรอกตอนสร้างบริการ - จะกรอกตอนสร้าง Job
       sellPrice: service.sellPrice || 0,
       minQuantity: service.minQuantity || 100,
       maxQuantity: service.maxQuantity || 10000,

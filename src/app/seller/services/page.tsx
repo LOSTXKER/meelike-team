@@ -45,22 +45,29 @@ import {
 // ============================================
 
 function exportServicesToCSV(services: StoreService[]) {
-  const data = services.map((service, index) => ({
-    'ลำดับ': index + 1,
-    'ชื่อบริการ': service.name,
-    'รายละเอียด': service.description || '',
-    'แพลตฟอร์ม': PLATFORM_CONFIGS[service.category]?.label || service.category,
-    'ประเภท': SERVICE_TYPE_CONFIGS[service.type]?.labelTh || service.type,
-    'รูปแบบบริการ': service.serviceType === 'bot' ? 'งานเว็บ' : 'งานกดมือ',
-    'ต้นทุน (บาท/หน่วย)': service.costPrice,
-    'ราคาขาย (บาท/หน่วย)': service.sellPrice,
-    'จำนวนขั้นต่ำ': service.minQuantity,
-    'จำนวนสูงสุด': service.maxQuantity,
-    'เวลาส่งมอบ': service.estimatedTime || '',
-    'แสดงในร้าน': service.showInStore ? 'แสดง' : 'ซ่อน',
-    'สถานะ': service.isActive ? 'เปิด' : 'ปิด',
-    'MeeLike Service ID': service.meelikeServiceId || ''
-  }));
+  const data = services.map((service, index) => {
+    // Bot services มี costPrice, Human services กรอก worker rate ตอนสร้าง Job
+    const costDisplay = service.serviceType === 'human' 
+      ? '(กรอกตอนสร้าง Job)' 
+      : (service.costPrice || 0);
+    
+    return {
+      'ลำดับ': index + 1,
+      'ชื่อบริการ': service.name,
+      'รายละเอียด': service.description || '',
+      'แพลตฟอร์ม': PLATFORM_CONFIGS[service.category]?.label || service.category,
+      'ประเภท': SERVICE_TYPE_CONFIGS[service.type]?.labelTh || service.type,
+      'รูปแบบบริการ': service.serviceType === 'bot' ? 'งานเว็บ' : 'งานกดมือ',
+      'ต้นทุน/ค่าจ้าง (บาท/หน่วย)': costDisplay,
+      'ราคาขาย (บาท/หน่วย)': service.sellPrice,
+      'จำนวนขั้นต่ำ': service.minQuantity,
+      'จำนวนสูงสุด': service.maxQuantity,
+      'เวลาส่งมอบ': service.estimatedTime || '',
+      'แสดงในร้าน': service.showInStore ? 'แสดง' : 'ซ่อน',
+      'สถานะ': service.isActive ? 'เปิด' : 'ปิด',
+      'MeeLike Service ID': service.meelikeServiceId || ''
+    };
+  });
 
   const headers = Object.keys(data[0]);
   const csv = [
@@ -118,11 +125,18 @@ export default function ServicesPage() {
     search: ""
   });
 
-  // Use sort hook with custom comparator for profit
+  // Helper to get effective cost (only for bot services)
+  const getEffectiveCost = (service: StoreService) => 
+    service.serviceType === "human" 
+      ? 0 // Human services don't have cost defined here
+      : (service.costPrice || 0);
+
+  // Use sort hook with custom comparator for profit (only meaningful for bot services)
   const { sortedItems, sortBy, sortConfig } = useSort(filteredItems, 
     { key: "name" as keyof StoreService, direction: "asc" },
     {
-      profit: (a, b) => (a.sellPrice - a.costPrice) - (b.sellPrice - b.costPrice)
+      profit: (a, b) => 
+        (a.sellPrice - getEffectiveCost(a)) - (b.sellPrice - getEffectiveCost(b))
     }
   );
 
@@ -218,12 +232,19 @@ export default function ServicesPage() {
     },
     {
       key: "costPrice",
-      label: "ต้นทุน",
+      label: "ต้นทุน/ค่าจ้าง",
       align: "right",
       sortable: true,
-      render: (_, service) => (
-        <span className="text-sm text-brand-text-light">{formatCurrency(service.costPrice)}</span>
-      )
+      render: (_, service) => {
+        if (service.serviceType === "human") {
+          return (
+            <span className="text-xs text-purple-500 italic">กรอกตอนสร้าง Job</span>
+          );
+        }
+        return (
+          <span className="text-sm text-brand-text-light">{formatCurrency(service.costPrice || 0)}</span>
+        );
+      }
     },
     {
       key: "sellPrice",
@@ -239,16 +260,25 @@ export default function ServicesPage() {
       label: "กำไร",
       align: "right",
       sortable: true,
-      render: (_, service) => (
-        <div>
-          <div className="text-sm font-medium text-brand-success">
-            +{formatCurrency(service.sellPrice - service.costPrice)}
+      render: (_, service) => {
+        if (service.serviceType === "human") {
+          return <span className="text-xs text-brand-text-light italic">-</span>;
+        }
+        const cost = service.costPrice || 0;
+        const profit = service.sellPrice - cost;
+        const margin = service.sellPrice > 0 ? (profit / service.sellPrice) * 100 : 0;
+        
+        return (
+          <div>
+            <div className="text-sm font-medium text-brand-success">
+              +{formatCurrency(profit)}
+            </div>
+            <div className="text-[10px] text-brand-success/80">
+              {Math.round(margin)}%
+            </div>
           </div>
-          <div className="text-[10px] text-brand-success/80">
-            {Math.round(((service.sellPrice - service.costPrice) / service.costPrice) * 100)}%
-          </div>
-        </div>
-      )
+        );
+      }
     },
     {
       key: "showInStore",
