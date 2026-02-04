@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Card, Button, Badge, Input, Dialog, Progress, Modal } from "@/components/ui";
 import { Container, Section, VStack, HStack } from "@/components/layout";
+import { KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats } from "@/lib/api/hooks";
@@ -21,7 +22,9 @@ import {
   Sparkles,
   Shield,
   Banknote,
+  ChevronRight,
 } from "lucide-react";
+import { WITHDRAWAL_LIMITS, getKYCLevelLabel, canWithdrawMoney, type KYCLevel } from "@/types";
 
 export default function WithdrawPage() {
   const { user } = useAuthStore();
@@ -35,9 +38,36 @@ export default function WithdrawPage() {
   const [amount, setAmount] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // KYC Modal State
+  const [showKYCRequiredModal, setShowKYCRequiredModal] = useState(false);
+  const [showQuickKYCModal, setShowQuickKYCModal] = useState(false);
+
   const availableBalance = workerStats?.availableBalance || 0;
   const minWithdraw = 100;
   const withdrawFee = levelInfo.fee / 100; // Convert percentage to decimal
+
+  // KYC-based withdrawal limits
+  // Note: Withdraw requires Verified level (ID card + selfie)
+  const kycLevel: KYCLevel = worker?.kyc?.level || 'none';
+  const hasKYC = canWithdrawMoney(kycLevel); // Requires 'verified' level
+  const existingPhone = worker?.phone || '';
+  const dailyLimit = WITHDRAWAL_LIMITS[kycLevel];
+  const todayWithdrawn = 0; // In production, fetch from API
+  const remainingLimit = dailyLimit - todayWithdrawn;
+  const effectiveMaxWithdraw = Math.min(availableBalance, remainingLimit);
+
+  // Handle start KYC from modal - redirect to verification page since Verified requires ID card
+  const handleStartKYC = useCallback(() => {
+    setShowKYCRequiredModal(false);
+    // For Verified level, redirect to full verification page instead of quick modal
+    window.location.href = '/work/profile/verification';
+  }, []);
+
+  // Handle KYC success - allow to proceed
+  const handleKYCSuccess = useCallback(() => {
+    setShowQuickKYCModal(false);
+    // KYC successful, user can now proceed
+  }, []);
 
   const quickAmounts = [100, 200, 500, 1000];
 
@@ -59,6 +89,17 @@ export default function WithdrawPage() {
 
   return (
     <Container size="md">
+      {/* KYC Alert Banner - Show if not Verified */}
+      {!hasKYC && (
+        <KYCAlertBanner 
+          requiredLevel="verified" 
+          userType="worker"
+          message="ต้องยืนยันบัตรประชาชนก่อนถอนเงิน"
+          dismissible={false}
+          className="mb-6"
+        />
+      )}
+
       <Section spacing="md" className="animate-fade-in pb-8">
       {/* Header */}
       <Card className="border-none shadow-lg bg-gradient-to-r from-brand-success/10 to-transparent p-6 relative overflow-hidden">
@@ -142,6 +183,67 @@ export default function WithdrawPage() {
                 </span>
               </div>
             </div>
+          </Card>
+
+          {/* KYC Withdrawal Limit Card */}
+          <Card variant="elevated" className="border-none shadow-lg relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  kycLevel === 'business' ? 'bg-purple-100' :
+                  kycLevel === 'verified' ? 'bg-emerald-100' : 'bg-blue-100'
+                }`}>
+                  <Shield className={`w-5 h-5 ${
+                    kycLevel === 'business' ? 'text-purple-600' :
+                    kycLevel === 'verified' ? 'text-emerald-600' : 'text-blue-600'
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-sm text-brand-text-light">ระดับ KYC</p>
+                  <p className="font-bold text-brand-text-dark">{getKYCLevelLabel(kycLevel)}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-brand-text-light">วงเงินถอน/วัน</p>
+                <p className="font-bold text-brand-text-dark">
+                  {dailyLimit === 999999 ? 'ไม่จำกัด' : `฿${dailyLimit.toLocaleString()}`}
+                </p>
+              </div>
+            </div>
+            
+            {/* Progress bar for daily limit */}
+            {dailyLimit < 999999 && (
+              <div className="mt-4">
+                <div className="flex justify-between text-xs text-brand-text-light mb-1">
+                  <span>ถอนแล้ววันนี้: ฿{todayWithdrawn.toLocaleString()}</span>
+                  <span>เหลือ: ฿{remainingLimit.toLocaleString()}</span>
+                </div>
+                <div className="h-2 bg-brand-bg rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-brand-primary rounded-full transition-all"
+                    style={{ width: `${(todayWithdrawn / dailyLimit) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Upgrade prompt */}
+            {kycLevel !== 'business' && (
+              <Link href="/work/profile/verification" className="block mt-4 p-3 rounded-xl bg-gradient-to-r from-brand-primary/5 to-brand-primary/10 border border-brand-primary/20 hover:border-brand-primary/40 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-brand-primary" />
+                    <span className="text-sm font-medium text-brand-primary">
+                      {kycLevel === 'basic' 
+                        ? 'อัปเกรดเป็น Verified เพื่อถอนได้ ฿10,000/วัน'
+                        : 'อัปเกรดเป็น Business เพื่อถอนไม่จำกัด'
+                      }
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-brand-primary" />
+                </div>
+              </Link>
+            )}
           </Card>
 
           {/* Amount Input Card */}
@@ -228,9 +330,23 @@ export default function WithdrawPage() {
                 </div>
               )}
 
+              {amount && Number(amount) > remainingLimit && Number(amount) <= availableBalance && (
+                <div className="p-3 bg-brand-warning/5 border border-brand-warning/20 rounded-xl flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-brand-warning shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-brand-warning font-medium">
+                      เกินวงเงินถอนรายวัน (฿{dailyLimit.toLocaleString()}/วัน)
+                    </p>
+                    <Link href="/work/profile/verification" className="text-xs text-brand-primary hover:underline">
+                      อัปเกรด KYC เพื่อเพิ่มวงเงิน →
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               <Button
                 onClick={() => setStep(2)}
-                disabled={!amount || Number(amount) < minWithdraw || Number(amount) > availableBalance}
+                disabled={!amount || Number(amount) < minWithdraw || Number(amount) > effectiveMaxWithdraw}
                 size="lg"
                 className="w-full shadow-xl shadow-brand-primary/20 py-4"
               >
@@ -248,6 +364,7 @@ export default function WithdrawPage() {
                 <ul className="text-brand-text-light mt-2 space-y-1">
                   <li>• ยอดถอนขั้นต่ำ ฿{minWithdraw}</li>
                   <li>• ค่าธรรมเนียม {levelInfo.fee}% ตามระดับของคุณ</li>
+                  <li>• วงเงินถอน/วัน: {dailyLimit === 999999 ? 'ไม่จำกัด' : `฿${dailyLimit.toLocaleString()}`} (ระดับ KYC: {getKYCLevelLabel(kycLevel)})</li>
                   <li>• ดำเนินการภายใน 1-2 วันทำการ</li>
                 </ul>
               </div>
@@ -427,6 +544,23 @@ export default function WithdrawPage() {
           </div>
         </div>
       </Modal>
+
+      {/* KYC Required Modal - Show when user doesn't have Verified KYC */}
+      <KYCRequiredModal
+        isOpen={showKYCRequiredModal || (!hasKYC && step === 1)}
+        onClose={() => {
+          setShowKYCRequiredModal(false);
+          if (!hasKYC) {
+            // Go back if user doesn't have KYC
+            window.history.back();
+          }
+        }}
+        onStartKYC={handleStartKYC}
+        requiredLevel="verified"
+        currentLevel={kycLevel}
+        action="withdraw"
+        userType="worker"
+      />
       </Section>
     </Container>
   );

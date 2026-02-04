@@ -14,7 +14,10 @@ import {
   ClipboardList,
   Building2,
   Settings,
+  Shield,
+  ChevronRight,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function WorkerProfilePage() {
   const { user } = useAuthStore();
@@ -76,6 +79,34 @@ export default function WorkerProfilePage() {
 
         {/* Right Column - Forms */}
         <div className="lg:col-span-2 space-y-6">
+          {/* KYC Verification */}
+          <Link href="/work/profile/verification">
+            <Card variant="elevated" className="border-none shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-xl">
+                    <Shield className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-brand-text-dark">ยืนยันตัวตน (KYC)</h2>
+                    <p className="text-xs text-brand-text-light">ยืนยันตัวตนเพื่อเพิ่มวงเงินถอน</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="info" size="sm">Basic</Badge>
+                  <ChevronRight className="w-5 h-5 text-brand-text-light" />
+                </div>
+              </div>
+              <div className="mt-4 p-3 rounded-lg bg-blue-50">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-blue-700">วงเงินถอนปัจจุบัน</span>
+                  <span className="font-semibold text-blue-800">฿1,000/วัน</span>
+                </div>
+                <p className="text-xs text-blue-600 mt-1">อัปเกรดเป็น Verified เพื่อถอนได้ถึง ฿10,000/วัน</p>
+              </div>
+            </Card>
+          </Link>
+
           {/* Basic Info */}
           <Card variant="elevated" className="border-none shadow-lg">
             <h2 className="text-lg font-bold text-brand-text-dark mb-6 flex items-center gap-3 border-b border-brand-border/50 pb-4">

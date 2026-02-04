@@ -21,7 +21,10 @@ import {
   PlanBadge,
   ActionRequired,
   getSellerActionItems,
+  KYCAlertBanner,
+  KYCStatusCard,
 } from "@/components/shared";
+import { meetsKYCRequirement, type KYCLevel } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { useSellerStats, useSellerOrders, useSellerTeams, useTeamPayouts, usePendingReviews } from "@/lib/api/hooks";
 import {
@@ -94,8 +97,23 @@ export default function SellerDashboard() {
     'from-emerald-500 to-emerald-600',
   ];
 
+  // Get KYC level for seller
+  const kycLevel: KYCLevel = seller?.kyc?.level || 'none';
+  const needsKYC = !meetsKYCRequirement(kycLevel, 'basic');
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* ============================================ */}
+      {/* KYC ALERT BANNER - Show if not verified */}
+      {/* ============================================ */}
+      {needsKYC && (
+        <KYCAlertBanner 
+          requiredLevel="basic" 
+          userType="seller"
+          message="ยืนยันตัวตนเพื่อเติมเงินและใช้งานได้เต็มที่"
+        />
+      )}
+
       {/* ============================================ */}
       {/* HEADER SECTION */}
       {/* ============================================ */}
@@ -375,8 +393,13 @@ export default function SellerDashboard() {
           </Card>
         </div>
 
-        {/* Right Column - Seller Rank + Quick Actions + Tips */}
+        {/* Right Column - KYC Status + Seller Rank + Quick Actions + Tips */}
         <div className="space-y-6">
+          {/* KYC Status Card - Show if not fully verified */}
+          {kycLevel !== 'business' && (
+            <KYCStatusCard userType="seller" compact={kycLevel !== 'none'} />
+          )}
+
           {/* Seller Rank Card */}
           {(() => {
             const currentRank = seller?.sellerRank || 'bronze';

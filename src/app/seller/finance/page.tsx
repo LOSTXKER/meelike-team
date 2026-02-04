@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, Badge, Button, Input, Modal, Tabs } from "@/components/ui";
-import { PageHeader, EmptyState } from "@/components/shared";
+import { PageHeader, EmptyState, KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
+import { canTopUp } from "@/types";
 import { useTransactions, useBalance } from "@/lib/api/hooks";
+import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import { canPerformFinancialTransaction, type KYCLevel } from "@/types";
 import {
   Wallet,
   ArrowUpRight,
@@ -25,6 +28,7 @@ import {
   ChevronRight,
   TrendingUp,
   CreditCard,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +46,16 @@ type FilterType = "all" | "income" | "expense" | "topup";
 export default function FinancePage() {
   const { data: allTransactions = [], isLoading, refetch: refetchTransactions } = useTransactions();
   const { data: balance = 0, refetch: refetchBalance } = useBalance();
+  const { user } = useAuthStore();
+
+  // Get KYC level
+  const kycLevel: KYCLevel = user?.seller?.kyc?.level || 'none';
+  const hasKYC = canTopUp(kycLevel);
+  const existingPhone = user?.seller?.phone || '';
+
+  // KYC Modal State
+  const [showKYCRequiredModal, setShowKYCRequiredModal] = useState(false);
+  const [showQuickKYCModal, setShowQuickKYCModal] = useState(false);
 
   // Topup Modal State
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
@@ -54,6 +68,28 @@ export default function FinancePage() {
   // Transaction Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
+
+  // Handle topup button click - check KYC first
+  const handleTopupClick = useCallback(() => {
+    if (!hasKYC) {
+      setShowKYCRequiredModal(true);
+    } else {
+      setIsTopupModalOpen(true);
+    }
+  }, [hasKYC]);
+
+  // Handle start KYC from modal
+  const handleStartKYC = useCallback(() => {
+    setShowKYCRequiredModal(false);
+    setShowQuickKYCModal(true);
+  }, []);
+
+  // Handle KYC success
+  const handleKYCSuccess = useCallback(() => {
+    setShowQuickKYCModal(false);
+    // After KYC success, open topup modal
+    setIsTopupModalOpen(true);
+  }, []);
 
   // Filter transactions
   const filteredTransactions = (allTransactions || []).filter((txn) => {
@@ -106,6 +142,16 @@ export default function FinancePage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* KYC Alert Banner - Show if not verified */}
+      {!hasKYC && (
+        <KYCAlertBanner 
+          requiredLevel="basic" 
+          userType="seller"
+          message="ยืนยันเบอร์โทรเพื่อเติมเงินได้"
+          dismissible={false}
+        />
+      )}
+
       {/* Header */}
       <PageHeader
         title="การเงิน"
@@ -117,6 +163,11 @@ export default function FinancePage() {
           </Button>
         }
       />
+
+      {/* KYC Status Card - Show if not verified */}
+      {!hasKYC && (
+        <KYCStatusCard userType="seller" />
+      )}
 
       {/* Balance Card - Clean Style */}
       <Card className="p-6 border-none shadow-md">
@@ -135,7 +186,7 @@ export default function FinancePage() {
             </div>
           </div>
           <Button
-            onClick={() => setIsTopupModalOpen(true)}
+            onClick={handleTopupClick}
             size="lg"
             leftIcon={<Plus className="w-5 h-5" />}
           >
@@ -503,6 +554,27 @@ export default function FinancePage() {
           </div>
         )}
       </Modal>
+
+      {/* KYC Required Modal */}
+      <KYCRequiredModal
+        isOpen={showKYCRequiredModal}
+        onClose={() => setShowKYCRequiredModal(false)}
+        onStartKYC={handleStartKYC}
+        requiredLevel="basic"
+        currentLevel={kycLevel}
+        action="topup"
+        userType="seller"
+      />
+
+      {/* Quick KYC Modal */}
+      <QuickKYCModal
+        isOpen={showQuickKYCModal}
+        onClose={() => setShowQuickKYCModal(false)}
+        onSuccess={handleKYCSuccess}
+        existingPhone={existingPhone}
+        action="topup"
+      />
+
     </div>
   );
 }

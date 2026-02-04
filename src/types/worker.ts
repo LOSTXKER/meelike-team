@@ -5,6 +5,7 @@
  */
 
 import type { Platform } from "./common";
+import type { KYCData } from "./kyc";
 
 // ===== WORKER LEVEL =====
 export type WorkerLevel = "bronze" | "silver" | "gold" | "platinum" | "vip";
@@ -36,6 +37,9 @@ export interface Worker {
   teamIds: string[];
   createdAt: string;
   lastActiveAt: string;
+  
+  // KYC Verification
+  kyc?: KYCData;
 }
 
 // ===== WORKER ACCOUNT =====
