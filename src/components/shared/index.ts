@@ -75,6 +75,11 @@ export { KYCGate, useKYCGate } from "./KYCGate";
 export { KYCAlertBanner } from "./KYCAlertBanner";
 export { KYCStatusCard } from "./KYCStatusCard";
 
+// Content Guidelines Components
+export { ContentGuidelines, PROHIBITED_CONTENT, PENALTIES } from "./ContentGuidelines";
+export { GuidelinesAgreementModal } from "./GuidelinesAgreementModal";
+export { ReportContentModal } from "./ReportContentModal";
+
 // Types
 export type { StatItem } from "./stats-grid";
 export type { FilterOption } from "./filter-bar";
@@ -92,3 +97,6 @@ export type { QuickKYCModalProps } from "./QuickKYCModal";
 export type { KYCGateProps } from "./KYCGate";
 export type { KYCAlertBannerProps } from "./KYCAlertBanner";
 export type { KYCStatusCardProps } from "./KYCStatusCard";
+export type { ContentGuidelinesProps } from "./ContentGuidelines";
+export type { GuidelinesAgreementModalProps } from "./GuidelinesAgreementModal";
+export type { ReportContentModalProps } from "./ReportContentModal";

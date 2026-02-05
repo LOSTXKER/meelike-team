@@ -23,10 +23,10 @@ import type {
 
 // ===== TEAM API =====
 export const teamApi = {
-  async getTeamById(id: string): Promise<Team | undefined> {
+  async getTeamById(id: string): Promise<Team | null> {
     await delay();
     const teams = getTeamsFromStorage();
-    return teams.find((team) => team.id === id);
+    return teams.find((team) => team.id === id) || null;
   },
 
   async getAllTeams(): Promise<Team[]> {

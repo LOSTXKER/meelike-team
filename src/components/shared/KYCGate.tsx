@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { KYCRequiredModal } from "./KYCRequiredModal";
 import { QuickKYCModal } from "./QuickKYCModal";
 import { useAuthStore } from "@/lib/store";
-import type { KYCLevel } from "@/types";
+import type { KYCLevel, AuthUser } from "@/types";
 
 export interface KYCGateProps {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ export interface KYCGateProps {
 }
 
 // Helper to get current KYC level from user
-function getCurrentKYCLevel(user: ReturnType<typeof useAuthStore>["user"]): KYCLevel {
+function getCurrentKYCLevel(user: AuthUser | null): KYCLevel {
   // Check worker KYC
   if (user?.worker?.kyc?.level) {
     return user.worker.kyc.level;
@@ -58,7 +58,7 @@ export function KYCGate({
 
   const currentLevel = getCurrentKYCLevel(user);
   const hasRequiredLevel = meetsKYCRequirement(currentLevel, requiredLevel);
-  const userType = user?.role || "seller";
+  const userType: "seller" | "worker" = user?.role === "worker" ? "worker" : "seller";
   const existingPhone = user?.seller?.phone || user?.worker?.phone || "";
 
   const handleStartKYC = useCallback(() => {

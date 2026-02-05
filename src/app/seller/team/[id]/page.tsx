@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Button, Badge, Avatar, Skeleton, Progress } from "@/components/ui";
-import { InviteTeamModal, getTeamStats, Breadcrumb } from "@/components/shared";
+import { InviteTeamModal, getTeamStats, Breadcrumb, ContentGuidelines } from "@/components/shared";
 import { getLevelInfo, formatCurrency } from "@/lib/utils";
 import { useSellerTeams, useTeamMembersWithWorkers, usePendingJobClaims, useTeamPayouts } from "@/lib/api/hooks";
 import { 
@@ -391,6 +391,9 @@ export default function TeamDetailPage() {
               </Button>
             </div>
           </Card>
+
+          {/* Content Guidelines Reminder */}
+          <ContentGuidelines variant="card" showPenalties={false} />
         </div>
       </div>
 

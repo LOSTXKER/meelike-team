@@ -210,7 +210,7 @@ export default function AdminKYCPage() {
           <p className="text-brand-text-light">จัดการคำขอยืนยันตัวตน</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="warning" size="lg">
+          <Badge variant="warning" size="md">
             {items.filter(i => i.status === "submitted" || i.status === "reviewing").length} รอตรวจสอบ
           </Badge>
         </div>
@@ -284,7 +284,7 @@ export default function AdminKYCPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-brand-text-dark">{item.userName}</p>
-                      <Badge variant={item.userType === "seller" ? "info" : "secondary"} size="sm">
+                      <Badge variant={item.userType === "seller" ? "info" : "default"} size="sm">
                         {item.userType === "seller" ? "Seller" : "Worker"}
                       </Badge>
                     </div>
@@ -346,7 +346,7 @@ export default function AdminKYCPage() {
                 <p className="text-sm text-brand-text-light">{selectedItem.userEmail}</p>
                 <p className="text-sm text-brand-text-light">{selectedItem.userPhone}</p>
               </div>
-              <Badge variant={selectedItem.userType === "seller" ? "info" : "secondary"}>
+              <Badge variant={selectedItem.userType === "seller" ? "info" : "default"}>
                 {selectedItem.userType === "seller" ? "Seller" : "Worker"}
               </Badge>
             </div>

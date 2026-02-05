@@ -8,7 +8,7 @@ import type { Seller } from "./seller";
 import type { Worker } from "./worker";
 
 // ===== USER ROLE =====
-export type UserRole = "seller" | "worker";
+export type UserRole = "seller" | "worker" | "admin";
 
 // ===== AUTH USER =====
 export interface AuthUser {
@@ -17,4 +17,5 @@ export interface AuthUser {
   role: UserRole;
   seller?: Seller;
   worker?: Worker;
+  isAdmin?: boolean;
 }

@@ -15,7 +15,18 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "./index";
-import type { TeamMember, Worker } from "@/types";
+import type { TeamMember, Worker, Order, StoreService } from "@/types";
+
+// Type for seller stats
+export interface SellerStats {
+  todayRevenue: number;
+  monthRevenue: number;
+  todayOrders: number;
+  monthOrders: number;
+  activeTeamMembers: number;
+  pendingReviews: number;
+  pendingPayouts: number;
+}
 
 // ===== API CALL STATE =====
 
@@ -96,22 +107,22 @@ function useApiCall<T, E = Error>(
 
 // ===== SELLER HOOKS =====
 
-export function useSellerStats(options?: Omit<ApiCallOptions<any>, 'deps'>) {
+export function useSellerStats(options?: Omit<ApiCallOptions<SellerStats>, 'deps'>) {
   return useApiCall(() => api.seller.getStats(), { ...options, deps: [] });
 }
 
-export function useSellerOrders(options?: Omit<ApiCallOptions<any>, 'deps'>) {
+export function useSellerOrders(options?: Omit<ApiCallOptions<Order[]>, 'deps'>) {
   return useApiCall(() => api.seller.getOrders(), { ...options, deps: [] });
 }
 
-export function useSellerOrder(id: string, options?: Omit<ApiCallOptions<any>, 'deps'>) {
+export function useSellerOrder(id: string, options?: Omit<ApiCallOptions<Order | null>, 'deps'>) {
   return useApiCall(
     () => api.seller.getOrderById(id), 
     { ...options, deps: [id], enabled: options?.enabled !== false && !!id }
   );
 }
 
-export function useSellerServices(options?: Omit<ApiCallOptions<any>, 'deps'>) {
+export function useSellerServices(options?: Omit<ApiCallOptions<StoreService[]>, 'deps'>) {
   return useApiCall(() => api.seller.getServices(), { ...options, deps: [] });
 }
 
@@ -126,7 +137,7 @@ export function useSellerTeam() {
 }
 
 export function useSellerTeamById(id: string) {
-  return useApiCall(() => api.seller.getTeamById(id), { deps: [id] });
+  return useApiCall(() => api.team.getTeamById(id), { deps: [id] });
 }
 
 export function useSellerTeamMembers(teamId?: string) {

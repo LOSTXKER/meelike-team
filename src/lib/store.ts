@@ -66,7 +66,7 @@ interface AuthState {
   hasHydrated: boolean;
   
   // Actions
-  login: (email: string, password: string, role: "seller" | "worker") => Promise<boolean>;
+  login: (email: string, password: string, role: "seller" | "worker" | "admin") => Promise<boolean>;
   logout: () => Promise<void>;
   setUser: (user: AuthUser | null) => void;
   setHasHydrated: (state: boolean) => void;
@@ -75,8 +75,9 @@ interface AuthState {
   isAuthenticated: () => boolean;
   isSeller: () => boolean;
   isWorker: () => boolean;
+  isAdmin: () => boolean;
   getUserId: () => string | null;
-  getUserRole: () => "seller" | "worker" | null;
+  getUserRole: () => "seller" | "worker" | "admin" | null;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -87,12 +88,33 @@ export const useAuthStore = create<AuthState>()(
       hasHydrated: false,
       
       // Actions
-      login: async (email: string, _password: string, role: "seller" | "worker") => {
+      login: async (email: string, _password: string, role: "seller" | "worker" | "admin") => {
         set({ isLoading: true });
         
         try {
           // Simulate API call
           await new Promise((resolve) => setTimeout(resolve, 500));
+          
+          // Admin login
+          if (role === "admin") {
+            // For demo, accept any email with "admin" in it or admin@meelike.com
+            const isValidAdmin = email.toLowerCase().includes("admin") || 
+                                 email.toLowerCase() === "admin@meelike.com";
+            
+            if (!isValidAdmin) {
+              set({ isLoading: false });
+              return false;
+            }
+            
+            const user: AuthUser = {
+              id: `admin-${generateId()}`,
+              email,
+              role: "admin",
+              isAdmin: true,
+            };
+            set({ user, isLoading: false });
+            return true;
+          }
           
           if (role === "seller") {
             // Get sellers from storage (including seeded data)
@@ -176,6 +198,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: () => !!get().user,
       isSeller: () => get().user?.role === "seller",
       isWorker: () => get().user?.role === "worker",
+      isAdmin: () => get().user?.role === "admin" || get().user?.isAdmin === true,
       getUserId: () => get().user?.id ?? null,
       getUserRole: () => get().user?.role ?? null,
     }),

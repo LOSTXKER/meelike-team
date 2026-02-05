@@ -80,6 +80,7 @@ export interface WorkerAccount {
 // ===== WORKER JOB (for worker dashboard) =====
 export interface WorkerJob {
   id: string;
+  teamId?: string;
   teamName: string;
   serviceName: string;
   platform: Platform;

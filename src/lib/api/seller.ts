@@ -227,10 +227,10 @@ export const sellerApi = {
     return getOrdersFromStorage();
   },
 
-  async getOrderById(id: string): Promise<Order | undefined> {
+  async getOrderById(id: string): Promise<Order | null> {
     await delay();
     const orders = getOrdersFromStorage();
-    return orders.find((order) => order.id === id);
+    return orders.find((order) => order.id === id) || null;
   },
 
   // Seller มีได้หลายทีม
@@ -250,11 +250,7 @@ export const sellerApi = {
     return sellerTeams[0] || null;
   },
 
-  async getTeamById(id: string): Promise<Team | undefined> {
-    await delay();
-    const teams = getTeamsFromStorage();
-    return teams.find((team) => team.id === id);
-  },
+  // Note: getTeamById was removed - use api.team.getTeamById instead
 
   async getTeamMembers(teamId?: string): Promise<TeamMember[]> {
     await delay();
@@ -1503,5 +1499,84 @@ export const sellerApi = {
 
     order.updatedAt = new Date().toISOString();
     saveOrdersToStorage(orders);
+  },
+
+  // ===== STANDALONE JOB CREATION =====
+
+  async createStandaloneJob(
+    teamId: string,
+    payload: {
+      title?: string;
+      platform: "facebook" | "instagram" | "tiktok" | "youtube" | "twitter";
+      serviceType: "like" | "comment" | "follow" | "share" | "view";
+      targetUrl: string;
+      quantity: number;
+      pricePerUnit: number;
+      instructions?: string;
+      commentTemplates?: string[];
+      deadline?: string;
+      isUrgent?: boolean;
+    }
+  ): Promise<Job> {
+    await delay(600);
+
+    const sellerId = getCurrentSellerId() || "seller-1";
+    const teams = getTeamsFromStorage();
+    const team = teams.find(t => t.id === teamId);
+
+    if (!team) {
+      throw new Error("Team not found");
+    }
+
+    const jobs = getTeamJobsFromStorage();
+    const now = new Date().toISOString();
+    const jobId = `job-${generateId()}`;
+
+    // Generate service name based on platform and type
+    const platformNames: Record<string, string> = {
+      facebook: "Facebook",
+      instagram: "Instagram",
+      tiktok: "TikTok",
+      youtube: "YouTube",
+      twitter: "Twitter/X",
+    };
+    const typeNames: Record<string, string> = {
+      like: "Like",
+      comment: "Comment",
+      follow: "Follow",
+      share: "Share",
+      view: "View",
+    };
+    const serviceName = payload.title || `${platformNames[payload.platform]} ${typeNames[payload.serviceType]}`;
+
+    const newJob: Job = {
+      id: jobId,
+      sellerId,
+      teamId,
+      serviceName,
+      title: payload.title,
+      type: payload.serviceType,
+      platform: payload.platform,
+      targetUrl: payload.targetUrl,
+      quantity: payload.quantity,
+      completedQuantity: 0,
+      claimedQuantity: 0,
+      pricePerUnit: payload.pricePerUnit,
+      totalPayout: payload.quantity * payload.pricePerUnit,
+      instructions: payload.instructions,
+      commentTemplates: payload.commentTemplates,
+      visibility: "all_members",
+      deadline: payload.deadline ? new Date(payload.deadline).toISOString() : undefined,
+      isUrgent: payload.isUrgent || false,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+      teamName: team.name,
+    };
+
+    jobs.push(newJob);
+    saveTeamJobsToStorage(jobs);
+
+    return newJob;
   },
 };

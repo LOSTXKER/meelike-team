@@ -17,9 +17,6 @@ export interface ContactInfo {
   email?: string;
 }
 
-// Alias for backward compatibility
-export type StoreContactInfo = ContactInfo;
-
 // ===== PLATFORM & SERVICE TYPES =====
 export type Platform = "facebook" | "instagram" | "tiktok" | "youtube" | "twitter";
 export type ServiceType = "like" | "comment" | "follow" | "share" | "view";

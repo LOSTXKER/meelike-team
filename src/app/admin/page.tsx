@@ -64,17 +64,19 @@ export default function AdminDashboardPage() {
           </Card>
         </Link>
 
-        <Card className="border-none shadow-md p-5 opacity-50 cursor-not-allowed">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+        <Link href="/admin/users">
+          <Card className="border-none shadow-md p-5 cursor-pointer hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-brand-text-dark">จัดการผู้ใช้</h3>
+                <p className="text-sm text-brand-text-light">ดูและจัดการบัญชีผู้ใช้</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-brand-text-dark">จัดการผู้ใช้</h3>
-              <p className="text-sm text-brand-text-light">Coming soon...</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
       </div>
     </div>
   );

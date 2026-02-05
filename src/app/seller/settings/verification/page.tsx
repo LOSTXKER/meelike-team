@@ -240,7 +240,7 @@ export default function VerificationPage() {
                       <Badge variant="success" size="sm">ผ่านแล้ว</Badge>
                     )}
                     {currentLevel === 'basic' && (
-                      <Badge variant="secondary" size="sm">ต้องผ่าน Verified ก่อน</Badge>
+                      <Badge variant="default" size="sm">ต้องผ่าน Verified ก่อน</Badge>
                     )}
                   </div>
                   <p className="text-sm text-brand-text-light">หนังสือรับรองบริษัท</p>

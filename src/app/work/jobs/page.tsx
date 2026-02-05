@@ -18,16 +18,48 @@ import {
   Target,
   Upload,
   Users,
+  Flag,
+  MoreVertical,
 } from "lucide-react";
+import { ReportContentModal } from "@/components/shared";
+import { Dropdown } from "@/components/ui";
 
 type TabType = "in_progress" | "pending_review" | "completed";
 
 export default function WorkerJobsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("in_progress");
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedJobForReport, setSelectedJobForReport] = useState<{ id: string; title: string; url?: string } | null>(null);
 
   // Use API hook instead of direct mock data import
   const { data: workerJobs, isLoading } = useWorkerJobs();
+
+  const handleReportClick = (job: { id: string; serviceName: string; targetUrl?: string }) => {
+    setSelectedJobForReport({
+      id: job.id,
+      title: job.serviceName,
+      url: job.targetUrl,
+    });
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async (data: { category: string; description: string }) => {
+    if (!selectedJobForReport) return;
+    
+    // Mock API call - in real app, this would call the API
+    console.log("Report submitted:", {
+      jobId: selectedJobForReport.id,
+      jobTitle: selectedJobForReport.title,
+      ...data,
+    });
+    
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    alert("ส่งรายงานเรียบร้อย! ทีมงานจะตรวจสอบภายใน 24 ชั่วโมง");
+    setSelectedJobForReport(null);
+  };
 
   const currentJobs = useMemo(() => {
     if (!workerJobs) return [];
@@ -143,13 +175,34 @@ export default function WorkerJobsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right bg-brand-bg/30 p-2.5 rounded-xl border border-brand-border/30">
-                    <p className="text-2xl font-bold text-brand-primary leading-none">
-                      ฿{(job.quantity * job.pricePerUnit).toFixed(0)}
-                    </p>
-                    <p className="text-xs font-medium text-brand-text-light uppercase tracking-wide mt-1">
-                      ฿{job.pricePerUnit}/หน่วย
-                    </p>
+                  <div className="flex items-start gap-2">
+                    <div className="text-right bg-brand-bg/30 p-2.5 rounded-xl border border-brand-border/30">
+                      <p className="text-2xl font-bold text-brand-primary leading-none">
+                        ฿{(job.quantity * job.pricePerUnit).toFixed(0)}
+                      </p>
+                      <p className="text-xs font-medium text-brand-text-light uppercase tracking-wide mt-1">
+                        ฿{job.pricePerUnit}/หน่วย
+                      </p>
+                    </div>
+                    {/* Report Menu */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Dropdown
+                        trigger={
+                          <button className="p-2 hover:bg-brand-bg rounded-lg transition-colors">
+                            <MoreVertical className="w-5 h-5 text-brand-text-light" />
+                          </button>
+                        }
+                        items={[
+                          {
+                            icon: Flag,
+                            label: "รายงานเนื้อหาไม่เหมาะสม",
+                            onClick: () => handleReportClick(job),
+                            variant: "danger",
+                          },
+                        ]}
+                        align="right"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -243,6 +296,15 @@ export default function WorkerJobsPage() {
           ))
         )}
       </div>
+
+      {/* Report Content Modal */}
+      <ReportContentModal
+        open={showReportModal}
+        onOpenChange={setShowReportModal}
+        onSubmit={handleReportSubmit}
+        jobTitle={selectedJobForReport?.title}
+        jobUrl={selectedJobForReport?.url}
+      />
       </Section>
     </Container>
   );

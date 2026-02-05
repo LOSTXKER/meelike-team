@@ -10,7 +10,6 @@ export type {
   SubscriptionPlan,
   SellerRank,
   ContactInfo,
-  StoreContactInfo,
   Platform,
   ServiceType,
   ServiceMode,
@@ -123,3 +122,21 @@ export {
   getNextLevelRequirements,
   getNextKYCLevel,
 } from "./kyc";
+
+// ===== REPORT TYPES =====
+export type {
+  ReportCategory,
+  ReportStatus,
+  ReportDecision,
+  ContentReport,
+  WorkerReportStats,
+  ReporterCredibility,
+} from "./report";
+
+export {
+  REPORT_CATEGORY_LABELS,
+  REPORT_STATUS_LABELS,
+  getReporterCredibility,
+  canWorkerReport,
+  DEFAULT_WORKER_REPORT_STATS,
+} from "./report";

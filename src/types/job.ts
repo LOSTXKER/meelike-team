@@ -14,6 +14,7 @@ export interface Job {
   id: string;
   sellerId: string;
   teamId: string;           // Required - jobs always belong to a team
+  teamName?: string;        // Denormalized for display
   
   // Order linkage (optional - jobs can exist without orders)
   orderId?: string;
@@ -48,6 +49,7 @@ export interface Job {
   
   // Status & Timing
   status: "pending" | "in_progress" | "pending_review" | "completed" | "cancelled";
+  isUrgent?: boolean;
   deadline?: string;
   createdAt: string;
   updatedAt: string;

@@ -17,6 +17,7 @@ import {
   DollarSign,
   Users,
   Zap,
+  AlertTriangle,
 } from "lucide-react";
 
 // LINE Icon component
@@ -243,6 +244,20 @@ export function ShareJobModal({ isOpen, onClose, job, teamId }: ShareJobModalPro
             rows={8}
             className="bg-brand-bg/30 text-sm font-mono resize-none"
           />
+        </div>
+
+        {/* Content Warning */}
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+          <div className="flex gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-amber-800">คำเตือน: ในฐานะหัวหน้าทีม</p>
+              <p className="text-amber-700 text-xs mt-1">
+                คุณมีหน้าที่ตรวจสอบว่าเนื้อหางานไม่เกี่ยวข้องกับการพนัน, เว็บผิดกฎหมาย, โฆษณาหลอกลวง หรือเนื้อหาผู้ใหญ่ 
+                หากฝ่าฝืนจะถูกระงับบัญชีและริบเงินค้างถอน
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Share Buttons */}

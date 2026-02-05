@@ -21,6 +21,7 @@ import {
   Users,
   DollarSign,
   AlertCircle,
+  AlertTriangle,
   ClipboardList,
   Star,
   XCircle,
@@ -697,6 +698,19 @@ export default function SellerJobDetailPage() {
               <p className="text-2xl font-bold text-brand-primary">
                 ฿{(editQuantity * editPricePerUnit).toFixed(2)}
               </p>
+            </div>
+
+            {/* Content Warning */}
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <div className="flex gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-amber-800">คำเตือน: ตรวจสอบเนื้อหาก่อนบันทึก</p>
+                  <p className="text-amber-700 text-xs mt-1">
+                    ห้ามมอบหมายงานที่เกี่ยวข้องกับการพนัน, เว็บผิดกฎหมาย, โฆษณาหลอกลวง หรือเนื้อหาผู้ใหญ่
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 justify-end pt-4">

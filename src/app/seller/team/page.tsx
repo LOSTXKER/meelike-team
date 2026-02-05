@@ -3,9 +3,9 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Dialog } from "@/components/ui";
+import { Card, Button, Badge, Input, Dialog, Checkbox } from "@/components/ui";
 import { VStack } from "@/components/layout";
-import { PageHeader, EmptyState } from "@/components/shared";
+import { PageHeader, EmptyState, ContentGuidelines, PROHIBITED_CONTENT, PENALTIES } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { useSellerTeams, useTeamPayouts, useTransactions } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
@@ -42,6 +42,7 @@ export default function TeamCenterPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamDescription, setNewTeamDescription] = useState("");
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
 
   // Calculate real earnings data per team
   const getTeamEarnings = (teamId: string) => {
@@ -143,6 +144,11 @@ export default function TeamCenterPage() {
       return;
     }
     
+    if (!guidelinesAccepted) {
+      alert("กรุณายอมรับกฎและข้อห้ามก่อนสร้างทีม");
+      return;
+    }
+    
     try {
       const newTeam = await api.seller.createTeam({
         name: newTeamName,
@@ -154,6 +160,7 @@ export default function TeamCenterPage() {
       setIsCreateModalOpen(false);
       setNewTeamName("");
       setNewTeamDescription("");
+      setGuidelinesAccepted(false);
       
       router.push(`/seller/team/${newTeam.id}`);
     } catch (error) {
@@ -409,7 +416,7 @@ export default function TeamCenterPage() {
       <Dialog
         open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        size="sm"
+        size="md"
       >
         <Dialog.Header>
           <Dialog.Title>สร้างทีมใหม่</Dialog.Title>
@@ -441,6 +448,27 @@ export default function TeamCenterPage() {
                 onChange={(e) => setNewTeamDescription(e.target.value)}
               />
             </div>
+
+            {/* Content Guidelines */}
+            <div className="border-t border-brand-border/50 pt-4">
+              <ContentGuidelines variant="compact" />
+            </div>
+
+            {/* Guidelines Agreement */}
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <Checkbox
+                checked={guidelinesAccepted}
+                onChange={(checked) => setGuidelinesAccepted(checked)}
+                className="mt-1"
+              />
+              <span 
+                className="text-sm text-amber-800 cursor-pointer leading-relaxed"
+                onClick={() => setGuidelinesAccepted(!guidelinesAccepted)}
+              >
+                ข้าพเจ้าได้อ่านและยอมรับกฎข้อห้ามข้างต้น และเข้าใจว่าในฐานะหัวหน้าทีม 
+                ข้าพเจ้าต้องรับผิดชอบร่วมหากสมาชิกในทีมทำผิดกฎ
+              </span>
+            </div>
           </VStack>
         </Dialog.Body>
         
@@ -448,7 +476,7 @@ export default function TeamCenterPage() {
           <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
             ยกเลิก
           </Button>
-          <Button onClick={handleCreateTeam}>
+          <Button onClick={handleCreateTeam} disabled={!guidelinesAccepted}>
             สร้างทีม
           </Button>
         </Dialog.Footer>

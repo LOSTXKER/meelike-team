@@ -23,7 +23,9 @@ import {
   getSellerActionItems,
   KYCAlertBanner,
   KYCStatusCard,
+  ContentGuidelines,
 } from "@/components/shared";
+import { Checkbox } from "@/components/ui";
 import { meetsKYCRequirement, type KYCLevel } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { useSellerStats, useSellerOrders, useSellerTeams, useTeamPayouts, usePendingReviews } from "@/lib/api/hooks";
@@ -57,6 +59,7 @@ export default function SellerDashboard() {
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamDescription, setNewTeamDescription] = useState("");
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useSellerStats();
   const { data: orders, isLoading: ordersLoading } = useSellerOrders();
@@ -84,10 +87,15 @@ export default function SellerDashboard() {
       alert("กรุณาใส่ชื่อทีม");
       return;
     }
+    if (!guidelinesAccepted) {
+      alert("กรุณายอมรับกฎและข้อห้ามก่อนสร้างทีม");
+      return;
+    }
     alert(`สร้างทีม "${newTeamName}" สำเร็จ!`);
     setIsCreateTeamModalOpen(false);
     setNewTeamName("");
     setNewTeamDescription("");
+    setGuidelinesAccepted(false);
   };
 
   const colors = [
@@ -608,6 +616,27 @@ export default function SellerDashboard() {
                 onChange={(e) => setNewTeamDescription(e.target.value)}
               />
             </div>
+
+            {/* Content Guidelines */}
+            <div className="border-t border-brand-border/50 pt-4">
+              <ContentGuidelines variant="compact" />
+            </div>
+
+            {/* Guidelines Agreement */}
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <Checkbox
+                checked={guidelinesAccepted}
+                onChange={(checked) => setGuidelinesAccepted(checked)}
+                className="mt-1"
+              />
+              <span 
+                className="text-sm text-amber-800 cursor-pointer leading-relaxed"
+                onClick={() => setGuidelinesAccepted(!guidelinesAccepted)}
+              >
+                ข้าพเจ้าได้อ่านและยอมรับกฎข้อห้ามข้างต้น และเข้าใจว่าในฐานะหัวหน้าทีม 
+                ข้าพเจ้าต้องรับผิดชอบร่วมหากสมาชิกในทีมทำผิดกฎ
+              </span>
+            </div>
           </VStack>
         </Dialog.Body>
         
@@ -618,7 +647,7 @@ export default function SellerDashboard() {
           >
             ยกเลิก
           </Button>
-          <Button onClick={handleCreateTeam}>
+          <Button onClick={handleCreateTeam} disabled={!guidelinesAccepted}>
             สร้างทีม
           </Button>
         </Dialog.Footer>

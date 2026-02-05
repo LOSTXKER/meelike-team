@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Switch } from "@/components/ui";
 import { Bell, Save } from "lucide-react";
 
 export default function TeamNotificationsPage() {
@@ -25,44 +25,29 @@ export default function TeamNotificationsPage() {
           <p className="text-sm text-brand-text-light mt-1">ตั้งค่าการแจ้งเตือนสำหรับทีม</p>
         </div>
         <div className="p-6 space-y-5">
-          <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
             <div>
               <span className="font-medium text-brand-text-dark">แจ้งเตือนเมื่อมีคำขอเข้าร่วมใหม่</span>
               <p className="text-sm text-brand-text-light">ได้รับการแจ้งเตือนเมื่อ Worker สมัครเข้าทีม</p>
             </div>
-            <div 
-              onClick={() => setNotifyNewRequests(!notifyNewRequests)}
-              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notifyNewRequests ? "bg-brand-primary" : "bg-brand-border"}`}
-            >
-              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notifyNewRequests ? "translate-x-7" : "translate-x-1"}`}></div>
-            </div>
-          </label>
+            <Switch checked={notifyNewRequests} onChange={setNotifyNewRequests} />
+          </div>
           
-          <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
             <div>
               <span className="font-medium text-brand-text-dark">แจ้งเตือนเมื่อมีงานรอตรวจสอบ</span>
               <p className="text-sm text-brand-text-light">ได้รับการแจ้งเตือนเมื่อ Worker ส่งงาน</p>
             </div>
-            <div 
-              onClick={() => setNotifyPendingReview(!notifyPendingReview)}
-              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notifyPendingReview ? "bg-brand-primary" : "bg-brand-border"}`}
-            >
-              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notifyPendingReview ? "translate-x-7" : "translate-x-1"}`}></div>
-            </div>
-          </label>
+            <Switch checked={notifyPendingReview} onChange={setNotifyPendingReview} />
+          </div>
           
-          <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-brand-border/30 hover:bg-brand-bg/30 transition-colors">
             <div>
               <span className="font-medium text-brand-text-dark">สรุปรายวัน</span>
               <p className="text-sm text-brand-text-light">รับสรุปผลงานของทีมทุกวัน</p>
             </div>
-            <div 
-              onClick={() => setDailySummary(!dailySummary)}
-              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${dailySummary ? "bg-brand-primary" : "bg-brand-border"}`}
-            >
-              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${dailySummary ? "translate-x-7" : "translate-x-1"}`}></div>
-            </div>
-          </label>
+            <Switch checked={dailySummary} onChange={setDailySummary} />
+          </div>
         </div>
       </Card>
 

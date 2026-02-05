@@ -84,7 +84,7 @@ export function KYCRequiredModal({
         {/* Current Level */}
         <div className="flex items-center justify-center gap-2 mb-6">
           <span className="text-sm text-brand-text-light">ระดับปัจจุบัน:</span>
-          <Badge variant={currentLevel === "none" ? "secondary" : "info"}>
+          <Badge variant={currentLevel === "none" ? "default" : "info"}>
             {levelInfo[currentLevel].label}
           </Badge>
           <ArrowRight className="w-4 h-4 text-brand-text-light" />

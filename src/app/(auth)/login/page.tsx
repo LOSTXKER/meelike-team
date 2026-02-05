@@ -5,15 +5,15 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, Card } from "@/components/ui";
 import { useAuthStore } from "@/lib/store";
-import { Mail, Lock, Store, User, Sparkles } from "lucide-react";
+import { Mail, Lock, Store, User, Sparkles, Shield } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoading } = useAuthStore();
 
-  const [role, setRole] = useState<"seller" | "worker">(
-    (searchParams.get("role") as "seller" | "worker") || "seller"
+  const [role, setRole] = useState<"seller" | "worker" | "admin">(
+    (searchParams.get("role") as "seller" | "worker" | "admin") || "seller"
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,9 +30,10 @@ function LoginForm() {
 
     const success = await login(email, password, role);
     if (success) {
-      router.push(role === "seller" ? "/seller" : "/work");
+      const redirectPath = role === "seller" ? "/seller" : role === "worker" ? "/work" : "/admin";
+      router.push(redirectPath);
     } else {
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      setError(role === "admin" ? "ข้อมูล Admin ไม่ถูกต้อง" : "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     }
   };
 
@@ -80,6 +81,18 @@ function LoginForm() {
               <User className="w-4 h-4" />
               Worker
             </button>
+            <button
+              type="button"
+              onClick={() => setRole("admin")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all ${
+                role === "admin"
+                  ? "bg-brand-surface text-purple-600 shadow-sm"
+                  : "text-brand-text-light hover:text-brand-text-dark"
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,39 +125,53 @@ function LoginForm() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-brand-text-light">
-              ยังไม่มีบัญชี?{" "}
-              <Link
-                href={`/register?role=${role}`}
-                className="text-brand-primary font-medium hover:underline"
-              >
-                สมัครสมาชิก
-              </Link>
-            </p>
-          </div>
+          {role !== "admin" && (
+            <div className="mt-6 text-center">
+              <p className="text-sm text-brand-text-light">
+                ยังไม่มีบัญชี?{" "}
+                <Link
+                  href={`/register?role=${role}`}
+                  className="text-brand-primary font-medium hover:underline"
+                >
+                  สมัครสมาชิก
+                </Link>
+              </p>
+            </div>
+          )}
 
           {/* Quick Demo Login */}
-          <div className="mt-6 p-4 rounded-lg bg-brand-secondary/10 border border-brand-secondary/30">
+          <div className={`mt-6 p-4 rounded-lg ${
+            role === "admin" 
+              ? "bg-purple-50 border border-purple-200" 
+              : "bg-brand-secondary/10 border border-brand-secondary/30"
+          }`}>
             <p className="text-sm font-medium text-brand-text-dark mb-2">
-              🎮 ทดลองใช้งาน (Demo)
+              {role === "admin" ? "🔐 Admin Demo" : "🎮 ทดลองใช้งาน (Demo)"}
             </p>
             <p className="text-xs text-brand-text-light mb-3">
-              คลิกปุ่มด้านล่างเพื่อเข้าสู่ระบบแบบรวดเร็ว
+              {role === "admin" 
+                ? "ใช้ admin@meelike.com สำหรับทดสอบระบบ Admin"
+                : "คลิกปุ่มด้านล่างเพื่อเข้าสู่ระบบแบบรวดเร็ว"
+              }
             </p>
             <Button
               type="button"
-              variant="secondary"
+              variant={role === "admin" ? "outline" : "secondary"}
               size="sm"
-              className="w-full"
+              className={`w-full ${role === "admin" ? "border-purple-300 text-purple-700 hover:bg-purple-50" : ""}`}
               onClick={async () => {
-                const success = await login("demo@meelike.com", "demo", role);
+                const demoEmail = role === "admin" ? "admin@meelike.com" : "demo@meelike.com";
+                const success = await login(demoEmail, "demo", role);
                 if (success) {
-                  router.push(role === "seller" ? "/seller" : "/work");
+                  const redirectPath = role === "seller" ? "/seller" : role === "worker" ? "/work" : "/admin";
+                  router.push(redirectPath);
                 }
               }}
             >
-              เข้าสู่ระบบ Demo ({role === "seller" ? "Seller" : "Worker"})
+              {role === "admin" 
+                ? "เข้าสู่ระบบ Demo Admin"
+                : `เข้าสู่ระบบ Demo (${role === "seller" ? "Seller" : "Worker"})`
+              }
             </Button>
           </div>
         </Card>

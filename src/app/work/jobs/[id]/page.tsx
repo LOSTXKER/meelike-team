@@ -27,13 +27,16 @@ import {
   DollarSign,
   XCircle,
   Ban,
+  Flag,
 } from "lucide-react";
+import { ReportContentModal } from "@/components/shared";
 
 export default function JobDetailPage() {
   const params = useParams();
   const jobId = params.id as string;
 
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [submitNote, setSubmitNote] = useState("");
   const [proofUrls, setProofUrls] = useState<string[]>([]);
   const [isWorking, setIsWorking] = useState(true);
@@ -110,6 +113,22 @@ export default function JobDetailPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleReportSubmit = async (data: { category: string; description: string }) => {
+    // Mock API call - in real app, this would call the API
+    console.log("Report submitted:", {
+      jobId: job?.id,
+      jobTitle: job?.serviceName,
+      targetUrl: job?.targetUrl,
+      teamId: job?.teamId,
+      ...data,
+    });
+    
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    alert("ส่งรายงานเรียบร้อย! ทีมงานจะตรวจสอบภายใน 24 ชั่วโมง");
   };
 
   return (
@@ -476,6 +495,27 @@ export default function JobDetailPage() {
               ติดต่อทีมงาน
             </Button>
           </Card>
+
+          {/* Report Content Card */}
+          <Card variant="elevated" padding="lg" className="border-none shadow-lg border-red-100 bg-red-50/30">
+            <h3 className="font-bold text-brand-text-dark mb-3 flex items-center gap-2">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Flag className="w-5 h-5 text-red-600" />
+              </div>
+              พบเนื้อหาไม่เหมาะสม?
+            </h3>
+            <p className="text-sm text-brand-text-light mb-4">
+              หากคุณพบว่างานนี้มีเนื้อหาที่เกี่ยวข้องกับการพนัน ผิดกฎหมาย หรือไม่เหมาะสม สามารถรายงานได้
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+              onClick={() => setShowReportModal(true)}
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              รายงานเนื้อหานี้
+            </Button>
+          </Card>
         </div>
       </div>
 
@@ -541,6 +581,15 @@ export default function JobDetailPage() {
             </div>
         </div>
       </Modal>
+
+      {/* Report Content Modal */}
+      <ReportContentModal
+        open={showReportModal}
+        onOpenChange={setShowReportModal}
+        onSubmit={handleReportSubmit}
+        jobTitle={job?.serviceName}
+        jobUrl={job?.targetUrl}
+      />
       </Section>
     </Container>
   );

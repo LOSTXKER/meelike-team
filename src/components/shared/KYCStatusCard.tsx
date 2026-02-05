@@ -240,7 +240,7 @@ export function KYCStatusCard({
       </Link>
 
       {/* Note for withdraw */}
-      {userType === "worker" && currentLevel !== "verified" && currentLevel !== "business" && (
+      {userType === "worker" && currentLevel !== "verified" && (
         <p className="text-xs text-center text-amber-700 mt-3 flex items-center justify-center gap-1">
           <Banknote className="w-3 h-3" />
           ต้องยืนยันบัตรประชาชนก่อนถอนเงิน

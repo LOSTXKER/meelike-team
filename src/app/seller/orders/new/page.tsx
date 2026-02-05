@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Card, Badge, Button, Input, Select, Textarea } from "@/components/ui";
+import { Card, Badge, Button, Input, Select, Textarea, Switch } from "@/components/ui";
 import { HStack } from "@/components/layout";
 import { PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import { useSellerServices, useSellerTeams } from "@/lib/api/hooks";
@@ -21,6 +21,7 @@ import {
   Calculator,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Users,
   Zap,
   ChevronDown,
@@ -498,23 +499,15 @@ export default function NewOrderPage() {
                 {/* Auto Create Jobs Option (only show if has human services) */}
                 {hasHumanService && (
                   <div className="py-4 border-b border-brand-border/50 space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={autoCreateJobs}
-                          onChange={(e) => setAutoCreateJobs(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <Switch checked={autoCreateJobs} onChange={setAutoCreateJobs} />
                       <div className="flex items-center gap-2">
                         <Zap className="w-4 h-4 text-brand-warning" />
-                        <span className="text-sm font-medium text-brand-text-dark group-hover:text-brand-primary transition-colors">
+                        <span className="text-sm font-medium text-brand-text-dark">
                           สร้าง Job ทันที
                         </span>
                       </div>
-                    </label>
+                    </div>
 
                     {autoCreateJobs && (
                       <div className="space-y-3 p-3 bg-brand-bg/50 rounded-xl border border-brand-border/30 animate-fade-in">
@@ -564,6 +557,19 @@ export default function NewOrderPage() {
                             </div>
                           </div>
                         )}
+
+                        {/* Content Warning */}
+                        <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div className="text-xs">
+                              <p className="font-medium text-amber-800">คำเตือน: ตรวจสอบเนื้อหาก่อนส่งงาน</p>
+                              <p className="text-amber-700 mt-0.5">
+                                ห้ามส่งงานที่เกี่ยวกับการพนัน, เว็บผิดกฎหมาย, โฆษณาหลอกลวง
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
