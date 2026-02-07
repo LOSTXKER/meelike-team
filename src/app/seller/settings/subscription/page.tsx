@@ -12,8 +12,6 @@ import {
   Sparkles,
   CreditCard,
   HelpCircle,
-  ChevronDown,
-  ChevronUp,
   Calendar,
   Globe,
   BarChart3,
@@ -96,7 +94,6 @@ export default function SubscriptionPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
     "monthly"
   );
-  const [showFullTable, setShowFullTable] = useState(false);
   const currentPlanConfig = getPlanConfig(currentPlan);
   const currentPlanIndex = PLAN_ORDER.indexOf(currentPlan);
 
@@ -324,109 +321,67 @@ export default function SubscriptionPage() {
 
       {/* ===== Feature Comparison Table ===== */}
       <Card className="border-none shadow-sm overflow-hidden">
-        <button
-          onClick={() => setShowFullTable(!showFullTable)}
-          className="w-full p-4 flex items-center justify-between hover:bg-brand-bg/50 transition-colors"
-        >
-          <div>
-            <p className="font-semibold text-brand-text-dark text-sm text-left">
-              เปรียบเทียบฟีเจอร์ทั้งหมด
-            </p>
-            <p className="text-xs text-brand-text-light text-left">
-              ดูรายละเอียดทุกฟีเจอร์ของแต่ละแพ็คเกจ
-            </p>
-          </div>
-          {showFullTable ? (
-            <ChevronUp className="w-5 h-5 text-brand-text-light" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-brand-text-light" />
-          )}
-        </button>
+        <div className="p-4 border-b border-brand-border/30">
+          <p className="font-semibold text-brand-text-dark text-sm">
+            เปรียบเทียบฟีเจอร์ทั้งหมด
+          </p>
+          <p className="text-xs text-brand-text-light mt-0.5">
+            ดูรายละเอียดทุกฟีเจอร์ของแต่ละแพ็คเกจ
+          </p>
+        </div>
 
-        {showFullTable && (
-          <div className="border-t border-brand-border/30 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-brand-border/30">
-                  <th className="text-left p-3 pl-4 font-medium text-brand-text-light text-xs min-w-[130px]">
-                    ฟีเจอร์
-                  </th>
-                  {PLAN_ORDER.map((planId) => {
-                    const isCurrent = planId === currentPlan;
-                    return (
-                      <th
-                        key={planId}
-                        className={`text-center p-3 text-xs font-semibold min-w-[85px] ${
-                          isCurrent
-                            ? "text-brand-primary bg-brand-primary/5"
-                            : "text-brand-text-dark"
-                        }`}
-                      >
-                        <div>{PLANS[planId].icon}</div>
-                        <div className="mt-0.5">{PLANS[planId].name}</div>
-                        {isCurrent && (
-                          <Badge
-                            variant="info"
-                            size="sm"
-                            className="mt-1 text-[9px]"
-                          >
-                            ปัจจุบัน
-                          </Badge>
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {FEATURE_ROWS.map((row, idx) => (
-                  <tr
-                    key={row.label}
-                    className={
-                      idx < FEATURE_ROWS.length - 1
-                        ? "border-b border-brand-border/15"
-                        : ""
-                    }
-                  >
-                    <td className="p-3 pl-4 text-brand-text-dark text-xs font-medium">
-                      <div className="flex items-center gap-2">
-                        <row.icon className="w-3.5 h-3.5 text-brand-text-light" />
-                        {row.label}
-                      </div>
-                    </td>
-                    {PLAN_ORDER.map((planId) => {
-                      const val = row.getValue(planId);
-                      const isCurrent = planId === currentPlan;
-                      return (
-                        <td
-                          key={planId}
-                          className={`text-center p-3 ${
-                            isCurrent ? "bg-brand-primary/5" : ""
-                          }`}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-brand-border/30">
+                <th className="text-left p-3 pl-4 font-medium text-brand-text-light text-xs min-w-[130px]">
+                  ฟีเจอร์
+                </th>
+                {PLAN_ORDER.map((planId) => {
+                  const isCurrent = planId === currentPlan;
+                  return (
+                    <th
+                      key={planId}
+                      className={`text-center p-3 text-xs font-semibold min-w-[85px] ${
+                        isCurrent
+                          ? "text-brand-primary bg-brand-primary/5"
+                          : "text-brand-text-dark"
+                      }`}
+                    >
+                      <div>{PLANS[planId].icon}</div>
+                      <div className="mt-0.5">{PLANS[planId].name}</div>
+                      {isCurrent && (
+                        <Badge
+                          variant="info"
+                          size="sm"
+                          className="mt-1 text-[9px]"
                         >
-                          {typeof val === "boolean" ? (
-                            val ? (
-                              <Check className="w-4 h-4 text-brand-success mx-auto" />
-                            ) : (
-                              <span className="text-gray-300 text-xs">—</span>
-                            )
-                          ) : (
-                            <span className="text-xs font-medium text-brand-text-dark">
-                              {val}
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-                {/* Price row at bottom */}
-                <tr className="border-t-2 border-brand-border/30 bg-brand-bg/30">
-                  <td className="p-3 pl-4 text-xs font-bold text-brand-text-dark">
-                    ราคา/{billingCycle === "yearly" ? "ปี" : "เดือน"}
+                          ปัจจุบัน
+                        </Badge>
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {FEATURE_ROWS.map((row, idx) => (
+                <tr
+                  key={row.label}
+                  className={
+                    idx < FEATURE_ROWS.length - 1
+                      ? "border-b border-brand-border/15"
+                      : ""
+                  }
+                >
+                  <td className="p-3 pl-4 text-brand-text-dark text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                      <row.icon className="w-3.5 h-3.5 text-brand-text-light" />
+                      {row.label}
+                    </div>
                   </td>
                   {PLAN_ORDER.map((planId) => {
-                    const price = getPrice(planId);
+                    const val = row.getValue(planId);
                     const isCurrent = planId === currentPlan;
                     return (
                       <td
@@ -435,17 +390,47 @@ export default function SubscriptionPage() {
                           isCurrent ? "bg-brand-primary/5" : ""
                         }`}
                       >
-                        <span className="text-sm font-bold text-brand-text-dark">
-                          {price > 0 ? `฿${price.toLocaleString()}` : "ฟรี"}
-                        </span>
+                        {typeof val === "boolean" ? (
+                          val ? (
+                            <Check className="w-4 h-4 text-brand-success mx-auto" />
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )
+                        ) : (
+                          <span className="text-xs font-medium text-brand-text-dark">
+                            {val}
+                          </span>
+                        )}
                       </td>
                     );
                   })}
                 </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+              {/* Price row at bottom */}
+              <tr className="border-t-2 border-brand-border/30 bg-brand-bg/30">
+                <td className="p-3 pl-4 text-xs font-bold text-brand-text-dark">
+                  ราคา/{billingCycle === "yearly" ? "ปี" : "เดือน"}
+                </td>
+                {PLAN_ORDER.map((planId) => {
+                  const price = getPrice(planId);
+                  const isCurrent = planId === currentPlan;
+                  return (
+                    <td
+                      key={planId}
+                      className={`text-center p-3 ${
+                        isCurrent ? "bg-brand-primary/5" : ""
+                      }`}
+                    >
+                      <span className="text-sm font-bold text-brand-text-dark">
+                        {price > 0 ? `฿${price.toLocaleString()}` : "ฟรี"}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {/* ===== FAQ / Trust ===== */}
