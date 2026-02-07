@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Card, Badge, Button, Input, Modal, Tabs } from "@/components/ui";
+import { Card, Badge, Button, Input, Tabs } from "@/components/ui";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+import { Dialog } from "@/components/ui/Dialog";
 import { PageHeader, EmptyState, KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
 import { canTopUp } from "@/types";
 import { useTransactions, useBalance } from "@/lib/api/hooks";
 import { useAuthStore } from "@/lib/store";
+import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { canPerformFinancialTransaction, type KYCLevel } from "@/types";
@@ -47,6 +50,7 @@ export default function FinancePage() {
   const { data: allTransactions = [], isLoading, refetch: refetchTransactions } = useTransactions();
   const { data: balance = 0, refetch: refetchBalance } = useBalance();
   const { user } = useAuthStore();
+  const toast = useToast();
 
   // Get KYC level
   const kycLevel: KYCLevel = user?.seller?.kyc?.level || 'none';
@@ -100,6 +104,9 @@ export default function FinancePage() {
     return matchSearch && matchFilter;
   });
 
+  // Paginate filtered transactions
+  const { paginatedItems: paginatedTransactions, currentPage, totalPages, totalItems, pageSize, setCurrentPage } = usePagination(filteredTransactions, 10);
+
   // Calculate stats
   const totalIncome = (allTransactions || []).filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = (allTransactions || []).filter(t => t.type === "expense").reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -127,7 +134,7 @@ export default function FinancePage() {
       setTopupStep("confirm");
     } catch (error) {
       console.error("Error creating topup transaction:", error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
   };
 
@@ -241,7 +248,7 @@ export default function FinancePage() {
                   { id: "topup", label: "เติมเงิน" },
                 ]}
                 activeTab={filter}
-                onChange={(id) => setFilter(id as FilterType)}
+                onChange={(id) => { setFilter(id as FilterType); setCurrentPage(1); }}
                 variant="pills"
               />
 
@@ -252,7 +259,7 @@ export default function FinancePage() {
                   type="text"
                   placeholder="ค้นหา..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                   className="w-full pl-10 pr-4 py-2 rounded-xl border border-brand-border/50 text-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none"
                 />
               </div>
@@ -271,7 +278,7 @@ export default function FinancePage() {
               />
             </div>
           ) : (
-            filteredTransactions.map((txn) => (
+            paginatedTransactions.map((txn) => (
               <div
                 key={txn.id}
                 className="p-4 flex items-center justify-between gap-4 hover:bg-brand-bg/30 transition-colors"
@@ -346,214 +353,229 @@ export default function FinancePage() {
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        <div className="p-4 border-t border-brand-border/30">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            pageSize={pageSize}
+            totalItems={totalItems}
+          />
+        </div>
       </Card>
 
       {/* Topup Modal */}
-      <Modal
-        isOpen={isTopupModalOpen}
+      <Dialog
+        open={isTopupModalOpen}
         onClose={resetTopup}
-        title={
-          topupStep === "amount"
-            ? "เติมเงินเข้าระบบ"
-            : topupStep === "payment"
-            ? "ชำระเงิน"
-            : "กำลังตรวจสอบ"
-        }
         size="md"
       >
-        {/* Step 1: Select Amount */}
-        {topupStep === "amount" && (
-          <div className="space-y-6">
-            <div className="text-center p-4 bg-brand-bg/50 rounded-xl">
-              <p className="text-sm text-brand-text-light">ยอดเงินปัจจุบัน</p>
-              <p className="text-2xl font-bold text-brand-primary">{formatCurrency(balance || 0)}</p>
-            </div>
-
-            <div>
-              <p className="font-medium text-brand-text-dark mb-3">เลือกจำนวนเงิน</p>
-              <div className="grid grid-cols-3 gap-2">
-                {TOPUP_AMOUNTS.map((amt) => (
-                  <button
-                    key={amt}
-                    onClick={() => {
-                      setTopupAmount(amt);
-                      setCustomAmount("");
-                    }}
-                    className={cn(
-                      "p-3 rounded-xl border transition-all text-center",
-                      topupAmount === amt && !customAmount
-                        ? "border-brand-primary bg-brand-primary text-white"
-                        : "border-brand-border/50 hover:border-brand-primary/50"
-                    )}
-                  >
-                    <span className="font-bold">{formatCurrency(amt)}</span>
-                  </button>
-                ))}
+        <Dialog.Header>
+          <Dialog.Title>
+            {topupStep === "amount"
+              ? "เติมเงินเข้าระบบ"
+              : topupStep === "payment"
+              ? "ชำระเงิน"
+              : "กำลังตรวจสอบ"}
+          </Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          {/* Step 1: Select Amount */}
+          {topupStep === "amount" && (
+            <div className="space-y-6">
+              <div className="text-center p-4 bg-brand-bg/50 rounded-xl">
+                <p className="text-sm text-brand-text-light">ยอดเงินปัจจุบัน</p>
+                <p className="text-2xl font-bold text-brand-primary">{formatCurrency(balance || 0)}</p>
               </div>
-            </div>
 
-            <div>
-              <p className="text-sm text-brand-text-light mb-2">หรือระบุจำนวนเอง</p>
-              <Input
-                type="number"
-                placeholder="ระบุจำนวนเงิน (฿50 - ฿100,000)"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                leftIcon={<span className="text-brand-text-light font-bold">฿</span>}
-              />
-            </div>
-
-            <Button
-              onClick={() => setTopupStep("payment")}
-              disabled={!finalAmount || finalAmount < 50}
-              className="w-full"
-            >
-              ดำเนินการต่อ <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        )}
-
-        {/* Step 2: Payment */}
-        {topupStep === "payment" && (
-          <div className="space-y-6">
-            <div className="text-center p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
-              <p className="text-sm text-brand-text-light">จำนวนที่ต้องชำระ</p>
-              <p className="text-3xl font-bold text-brand-primary">{formatCurrency(finalAmount)}</p>
-            </div>
-
-            {/* Payment Method Selection */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setPaymentMethod("promptpay")}
-                className={cn(
-                  "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
-                  paymentMethod === "promptpay"
-                    ? "border-brand-primary bg-brand-primary/5"
-                    : "border-brand-border/50 hover:border-brand-primary/50"
-                )}
-              >
-                <QrCode className={cn("w-8 h-8", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-light")} />
-                <span className={cn("font-medium", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-dark")}>
-                  PromptPay
-                </span>
-              </button>
-              <button
-                onClick={() => setPaymentMethod("bank")}
-                className={cn(
-                  "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
-                  paymentMethod === "bank"
-                    ? "border-brand-primary bg-brand-primary/5"
-                    : "border-brand-border/50 hover:border-brand-primary/50"
-                )}
-              >
-                <Building2 className={cn("w-8 h-8", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-light")} />
-                <span className={cn("font-medium", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-dark")}>
-                  โอนเงิน
-                </span>
-              </button>
-            </div>
-
-            {/* Payment Details */}
-            <div className="bg-brand-bg/50 rounded-xl p-4">
-              {paymentMethod === "promptpay" ? (
-                <div className="text-center space-y-3">
-                  <div className="bg-white p-4 rounded-xl inline-block">
-                    <QrCode className="w-32 h-32 text-brand-text-dark mx-auto" />
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="font-mono text-lg font-bold">{BANK_INFO.promptpay}</span>
+              <div>
+                <p className="font-medium text-brand-text-dark mb-3">เลือกจำนวนเงิน</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {TOPUP_AMOUNTS.map((amt) => (
                     <button
-                      onClick={() => handleCopy(BANK_INFO.promptpay)}
-                      className="p-1.5 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
+                      key={amt}
+                      onClick={() => {
+                        setTopupAmount(amt);
+                        setCustomAmount("");
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border transition-all text-center",
+                        topupAmount === amt && !customAmount
+                          ? "border-brand-primary bg-brand-primary text-white"
+                          : "border-brand-border/50 hover:border-brand-primary/50"
+                      )}
                     >
-                      {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      <span className="font-bold">{formatCurrency(amt)}</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-                    <div className="w-10 h-10 bg-[#00A950] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      K
-                    </div>
-                    <div>
-                      <p className="text-xs text-brand-text-light">{BANK_INFO.bank}</p>
-                      <p className="font-medium text-brand-text-dark">{BANK_INFO.accountName}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                    <div>
-                      <p className="text-xs text-brand-text-light">เลขที่บัญชี</p>
-                      <p className="font-mono font-bold text-brand-text-dark">{BANK_INFO.accountNumber}</p>
-                    </div>
-                    <button
-                      onClick={() => handleCopy(BANK_INFO.accountNumber.replace(/-/g, ""))}
-                      className="p-2 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
-                    >
-                      {copied ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
 
-            {/* Upload Slip */}
-            <div className="border-2 border-dashed border-brand-border rounded-xl p-6 text-center hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all cursor-pointer">
-              <Upload className="w-8 h-8 text-brand-text-light mx-auto mb-2" />
-              <p className="font-medium text-brand-text-dark">อัพโหลดหลักฐานการโอน</p>
-              <p className="text-xs text-brand-text-light">JPG, PNG ไม่เกิน 5MB</p>
-            </div>
+              <div>
+                <p className="text-sm text-brand-text-light mb-2">หรือระบุจำนวนเอง</p>
+                <Input
+                  type="number"
+                  placeholder="ระบุจำนวนเงิน (฿50 - ฿100,000)"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  leftIcon={<span className="text-brand-text-light font-bold">฿</span>}
+                />
+              </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setTopupStep("amount")} className="flex-1">
-                ย้อนกลับ
-              </Button>
-              <Button onClick={handleTopupSubmit} className="flex-1">
-                แจ้งชำระเงิน
+              <Button
+                onClick={() => setTopupStep("payment")}
+                disabled={!finalAmount || finalAmount < 50}
+                className="w-full"
+              >
+                ดำเนินการต่อ <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 3: Confirmation */}
-        {topupStep === "confirm" && (
-          <div className="text-center space-y-6 py-4">
-            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-              <Clock className="w-10 h-10 text-amber-500" />
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold text-brand-text-dark mb-2">กำลังตรวจสอบยอดเงิน</h3>
-              <p className="text-brand-text-light">
-                ระบบได้รับข้อมูลแล้ว เจ้าหน้าที่จะตรวจสอบและปรับยอดเงินให้ภายใน{" "}
-                <span className="text-brand-primary font-bold">5-15 นาที</span>
-              </p>
-            </div>
-
-            <div className="bg-brand-bg/50 rounded-xl p-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-brand-text-light">จำนวนเงิน</span>
-                <span className="font-bold text-brand-text-dark">{formatCurrency(finalAmount)}</span>
+          {/* Step 2: Payment */}
+          {topupStep === "payment" && (
+            <div className="space-y-6">
+              <div className="text-center p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
+                <p className="text-sm text-brand-text-light">จำนวนที่ต้องชำระ</p>
+                <p className="text-3xl font-bold text-brand-primary">{formatCurrency(finalAmount)}</p>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">สถานะ</span>
-                <Badge variant="warning">รอตรวจสอบ</Badge>
+
+              {/* Payment Method Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setPaymentMethod("promptpay")}
+                  className={cn(
+                    "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
+                    paymentMethod === "promptpay"
+                      ? "border-brand-primary bg-brand-primary/5"
+                      : "border-brand-border/50 hover:border-brand-primary/50"
+                  )}
+                >
+                  <QrCode className={cn("w-8 h-8", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-light")} />
+                  <span className={cn("font-medium", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-dark")}>
+                    PromptPay
+                  </span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod("bank")}
+                  className={cn(
+                    "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
+                    paymentMethod === "bank"
+                      ? "border-brand-primary bg-brand-primary/5"
+                      : "border-brand-border/50 hover:border-brand-primary/50"
+                  )}
+                >
+                  <Building2 className={cn("w-8 h-8", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-light")} />
+                  <span className={cn("font-medium", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-dark")}>
+                    โอนเงิน
+                  </span>
+                </button>
+              </div>
+
+              {/* Payment Details */}
+              <div className="bg-brand-bg/50 rounded-xl p-4">
+                {paymentMethod === "promptpay" ? (
+                  <div className="text-center space-y-3">
+                    <div className="bg-white p-4 rounded-xl inline-block">
+                      <QrCode className="w-32 h-32 text-brand-text-dark mx-auto" />
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="font-mono text-lg font-bold">{BANK_INFO.promptpay}</span>
+                      <button
+                        onClick={() => handleCopy(BANK_INFO.promptpay)}
+                        className="p-1.5 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
+                      >
+                        {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                      <div className="w-10 h-10 bg-[#00A950] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        K
+                      </div>
+                      <div>
+                        <p className="text-xs text-brand-text-light">{BANK_INFO.bank}</p>
+                        <p className="font-medium text-brand-text-dark">{BANK_INFO.accountName}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div>
+                        <p className="text-xs text-brand-text-light">เลขที่บัญชี</p>
+                        <p className="font-mono font-bold text-brand-text-dark">{BANK_INFO.accountNumber}</p>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(BANK_INFO.accountNumber.replace(/-/g, ""))}
+                        className="p-2 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
+                      >
+                        {copied ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Slip */}
+              <div className="border-2 border-dashed border-brand-border rounded-xl p-6 text-center hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all cursor-pointer">
+                <Upload className="w-8 h-8 text-brand-text-light mx-auto mb-2" />
+                <p className="font-medium text-brand-text-dark">อัพโหลดหลักฐานการโอน</p>
+                <p className="text-xs text-brand-text-light">JPG, PNG ไม่เกิน 5MB</p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setTopupStep("amount")} className="flex-1">
+                  ย้อนกลับ
+                </Button>
+                <Button onClick={handleTopupSubmit} className="flex-1">
+                  แจ้งชำระเงิน
+                </Button>
               </div>
             </div>
+          )}
 
-            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl text-left">
-              <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-              <p className="text-xs text-brand-text-light">
-                การชำระเงินของคุณปลอดภัย 100% หากมีปัญหาสามารถติดต่อ Support ได้ตลอด 24 ชม.
-              </p>
+          {/* Step 3: Confirmation */}
+          {topupStep === "confirm" && (
+            <div className="text-center space-y-6 py-4">
+              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+                <Clock className="w-10 h-10 text-amber-500" />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold text-brand-text-dark mb-2">กำลังตรวจสอบยอดเงิน</h3>
+                <p className="text-brand-text-light">
+                  ระบบได้รับข้อมูลแล้ว เจ้าหน้าที่จะตรวจสอบและปรับยอดเงินให้ภายใน{" "}
+                  <span className="text-brand-primary font-bold">5-15 นาที</span>
+                </p>
+              </div>
+
+              <div className="bg-brand-bg/50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-brand-text-light">จำนวนเงิน</span>
+                  <span className="font-bold text-brand-text-dark">{formatCurrency(finalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-text-light">สถานะ</span>
+                  <Badge variant="warning">รอตรวจสอบ</Badge>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl text-left">
+                <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-brand-text-light">
+                  การชำระเงินของคุณปลอดภัย 100% หากมีปัญหาสามารถติดต่อ Support ได้ตลอด 24 ชม.
+                </p>
+              </div>
+
+              <Button onClick={resetTopup} className="w-full">
+                เสร็จสิ้น
+              </Button>
             </div>
-
-            <Button onClick={resetTopup} className="w-full">
-              เสร็จสิ้น
-            </Button>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Dialog.Body>
+      </Dialog>
 
       {/* KYC Required Modal */}
       <KYCRequiredModal

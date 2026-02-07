@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Modal, Button, Badge } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import type { TeamReviewTag } from "@/types";
 import { Star, Send, Eye, EyeOff, Check } from "lucide-react";
 
@@ -92,7 +93,11 @@ export function ReviewTeamModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="รีวิวทีม" size="md">
+    <Dialog open={isOpen} onClose={onClose}>
+      <Dialog.Header>
+        <Dialog.Title>รีวิวทีม</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
       <div className="space-y-6">
         {/* Team Info */}
         <div className="p-4 bg-brand-bg/50 rounded-xl border border-brand-border/50 text-center">
@@ -242,8 +247,9 @@ export function ReviewTeamModal({
           </button>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
+      </div>
+      </Dialog.Body>
+      <Dialog.Footer>
           <Button
             variant="outline"
             onClick={onClose}
@@ -261,8 +267,7 @@ export function ReviewTeamModal({
             <Send className="w-4 h-4 mr-2" />
             ส่งรีวิว
           </Button>
-        </div>
-      </div>
-    </Modal>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

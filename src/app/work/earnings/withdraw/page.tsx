@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Dialog, Progress, Modal } from "@/components/ui";
+import { Card, Button, Badge, Input, Progress } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
@@ -499,11 +500,14 @@ export default function WithdrawPage() {
       )}
 
       {/* Confirm Modal */}
-      <Modal
-        isOpen={showConfirmModal}
+      <Dialog
+        open={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="ยืนยันการถอนเงิน"
       >
+        <Dialog.Header>
+          <Dialog.Title>ยืนยันการถอนเงิน</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
         <div className="space-y-4">
           <div className="p-4 bg-brand-warning/5 border border-brand-warning/20 rounded-xl">
             <p className="text-sm text-brand-text-dark flex items-start gap-2">
@@ -526,8 +530,9 @@ export default function WithdrawPage() {
               <span className="font-medium text-brand-text-dark">{bankAccount.accountNumber}</span>
             </div>
           </div>
-
-          <div className="flex gap-3 pt-2">
+        </div>
+        </Dialog.Body>
+        <Dialog.Footer>
             <Button
               variant="outline"
               className="flex-1 bg-white"
@@ -541,9 +546,8 @@ export default function WithdrawPage() {
             >
               ยืนยันถอนเงิน
             </Button>
-          </div>
-        </div>
-      </Modal>
+        </Dialog.Footer>
+      </Dialog>
 
       {/* KYC Required Modal - Show when user doesn't have Verified KYC */}
       <KYCRequiredModal

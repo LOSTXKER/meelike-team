@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Modal } from "@/components/ui";
+import { Card, Button, Badge, Input } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import {
   Key,
   Copy,
@@ -16,7 +18,9 @@ import {
   Code,
   ExternalLink,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Lock,
+  Save,
 } from "lucide-react";
 
 interface ApiKey {
@@ -50,8 +54,15 @@ const mockApiKeys: ApiKey[] = [
   },
 ];
 
-export default function ApiKeyPage() {
+export default function SecurityPage() {
+  const confirm = useConfirm();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>(mockApiKeys);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [showKey, setShowKey] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
@@ -77,8 +88,8 @@ export default function ApiKeyPage() {
     setNewKeyName("");
   };
 
-  const handleRevokeKey = (id: string) => {
-    if (confirm("คุณต้องการยกเลิก API Key นี้หรือไม่?")) {
+  const handleRevokeKey = async (id: string) => {
+    if (await confirm({ title: "ยืนยัน", message: "คุณต้องการยกเลิก API Key นี้หรือไม่?", variant: "danger", confirmLabel: "ยกเลิก Key" })) {
       setApiKeys(
         apiKeys.map((key) =>
           key.id === id ? { ...key, status: "revoked" as const } : key
@@ -87,8 +98,67 @@ export default function ApiKeyPage() {
     }
   };
 
+  const handleSavePassword = async () => {
+    setIsSavingPassword(true);
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Change Password */}
+      <Card className="border-none shadow-md p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+            <Lock className="w-5 h-5 text-brand-primary" />
+          </div>
+          <div>
+            <h2 className="font-bold text-brand-text-dark">เปลี่ยนรหัสผ่าน</h2>
+            <p className="text-xs text-brand-text-light">ตั้งค่ารหัสผ่านใหม่</p>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <Input
+            label="รหัสผ่านปัจจุบัน"
+            type="password"
+            value={passwordData.currentPassword}
+            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+            leftIcon={<Lock className="w-4 h-4" />}
+          />
+          <div className="grid sm:grid-cols-2 gap-5">
+            <Input
+              label="รหัสผ่านใหม่"
+              type="password"
+              value={passwordData.newPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+              leftIcon={<Lock className="w-4 h-4" />}
+            />
+            <Input
+              label="ยืนยันรหัสผ่านใหม่"
+              type="password"
+              value={passwordData.confirmPassword}
+              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+              leftIcon={<Lock className="w-4 h-4" />}
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSavePassword}
+              isLoading={isSavingPassword}
+              leftIcon={<Save className="w-4 h-4" />}
+              disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+            >
+              เปลี่ยนรหัสผ่าน
+            </Button>
+          </div>
+        </div>
+      </Card>
+
       {/* Header with Create Button */}
       <div className="flex items-center justify-between">
         <div>
@@ -244,72 +314,75 @@ export default function ApiKeyPage() {
       </div>
 
       {/* Create API Key Modal */}
-      <Modal
-        isOpen={showCreateModal}
+      <Dialog
+        open={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           setNewKeyName("");
         }}
-        title="สร้าง API Key ใหม่"
       >
-        <div className="space-y-6">
-          <div>
-            <label className="text-sm font-medium text-brand-text-dark block mb-2">ชื่อ API Key</label>
-            <Input
-              placeholder="เช่น Production, Testing App"
-              value={newKeyName}
-              onChange={(e) => setNewKeyName(e.target.value)}
-            />
-          </div>
+        <Dialog.Header>
+          <Dialog.Title>สร้าง API Key ใหม่</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <div className="space-y-6">
+            <div>
+              <label className="text-sm font-medium text-brand-text-dark block mb-2">ชื่อ API Key</label>
+              <Input
+                placeholder="เช่น Production, Testing App"
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <label className="text-sm font-medium text-brand-text-dark block mb-3">
-              กำหนดสิทธิ์การใช้งาน
-            </label>
-            <div className="space-y-2">
-              {[
-                { key: "orders:read", label: "ดูข้อมูลออเดอร์", checked: true },
-                { key: "orders:write", label: "สร้าง/แก้ไขออเดอร์", checked: true },
-                { key: "services:read", label: "ดูรายการบริการ", checked: true },
-              ].map((perm) => (
-                <label
-                  key={perm.key}
-                  className="flex items-center gap-3 p-3 bg-brand-bg/30 rounded-xl hover:bg-brand-bg cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    defaultChecked={perm.checked}
-                    className="w-4 h-4 rounded border-brand-border text-brand-primary"
-                  />
-                  <div>
-                    <p className="font-medium text-brand-text-dark text-sm">{perm.label}</p>
-                    <code className="text-[10px] text-brand-text-light">{perm.key}</code>
-                  </div>
-                </label>
-              ))}
+            <div>
+              <label className="text-sm font-medium text-brand-text-dark block mb-3">
+                กำหนดสิทธิ์การใช้งาน
+              </label>
+              <div className="space-y-2">
+                {[
+                  { key: "orders:read", label: "ดูข้อมูลออเดอร์", checked: true },
+                  { key: "orders:write", label: "สร้าง/แก้ไขออเดอร์", checked: true },
+                  { key: "services:read", label: "ดูรายการบริการ", checked: true },
+                ].map((perm) => (
+                  <label
+                    key={perm.key}
+                    className="flex items-center gap-3 p-3 bg-brand-bg/30 rounded-xl hover:bg-brand-bg cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      defaultChecked={perm.checked}
+                      className="w-4 h-4 rounded border-brand-border text-brand-primary"
+                    />
+                    <div>
+                      <p className="font-medium text-brand-text-dark text-sm">{perm.label}</p>
+                      <code className="text-[10px] text-brand-text-light">{perm.key}</code>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-
-          <div className="flex gap-3 justify-end pt-4 border-t border-brand-border/30">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowCreateModal(false);
-                setNewKeyName("");
-              }}
-            >
-              ยกเลิก
-            </Button>
-            <Button 
-              onClick={handleCreateKey} 
-              disabled={!newKeyName.trim()}
-              leftIcon={<Key className="w-4 h-4" />}
-            >
-              สร้าง Key
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowCreateModal(false);
+              setNewKeyName("");
+            }}
+          >
+            ยกเลิก
+          </Button>
+          <Button 
+            onClick={handleCreateKey} 
+            disabled={!newKeyName.trim()}
+            leftIcon={<Key className="w-4 h-4" />}
+          >
+            สร้าง Key
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

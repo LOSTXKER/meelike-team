@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Badge, Card } from "@/components/ui";
+import { Pagination, usePagination } from "@/components/ui/pagination";
 import { 
   PageHeader, 
   StatusBadge, 
@@ -76,10 +77,14 @@ export default function OrdersPage() {
     cancelled: orders?.filter((o: { status: string }) => o.status === "cancelled").length || 0,
   }), [orders]);
 
+  // Paginate sorted results
+  const { paginatedItems, currentPage, totalPages, totalItems, pageSize, setCurrentPage } = usePagination(sortedItems, 10);
+
   // Update status filter when clicking
   const handleFilterChange = (newFilter: OrderStatus) => {
     setStatusFilter(newFilter);
     setFilter("status", newFilter);
+    setCurrentPage(1);
   };
 
   // Define columns for GenericDataTable
@@ -266,7 +271,7 @@ export default function OrdersPage() {
               <div className="flex items-center gap-3">
                 <Package className="w-5 h-5 text-brand-primary" />
                 <h2 className="font-bold text-brand-text-dark">รายการออเดอร์</h2>
-                <Badge variant="default" size="sm">{sortedItems.length} รายการ</Badge>
+                <Badge variant="default" size="sm">{totalItems} รายการ</Badge>
               </div>
               <div className="w-full sm:w-auto sm:min-w-[280px]">
                 <div className="relative">
@@ -275,7 +280,7 @@ export default function OrdersPage() {
                     type="text"
                     placeholder="ค้นหาเลขออเดอร์, ชื่อลูกค้า..."
                     value={filters.search as string || ""}
-                    onChange={(e) => setFilter("search", e.target.value)}
+                    onChange={(e) => { setFilter("search", e.target.value); setCurrentPage(1); }}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none text-sm"
                   />
                 </div>
@@ -284,13 +289,24 @@ export default function OrdersPage() {
           </div>
 
           <GenericDataTable
-            data={sortedItems}
+            data={paginatedItems}
             columns={columns}
             onRowClick={(order) => router.push(`/seller/orders/${order.id}`)}
             sortConfig={sortConfig}
             onSort={sortBy}
             emptyMessage="ไม่พบออเดอร์ที่ค้นหา"
           />
+
+          {/* Pagination */}
+          <div className="p-4 border-t border-brand-border/30">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+            />
+          </div>
         </Card>
       </AsyncBoundary>
     </div>

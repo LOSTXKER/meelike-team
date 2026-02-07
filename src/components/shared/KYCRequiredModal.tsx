@@ -1,15 +1,16 @@
 "use client";
 
-import { Modal, Button, Badge } from "@/components/ui";
-import { 
-  Shield, 
-  Phone, 
-  Mail, 
-  CheckCircle, 
+import { Dialog } from "@/components/ui/Dialog";
+import { Button, Badge } from "@/components/ui";
+import {
+  Shield,
+  Phone,
+  CreditCard,
+  Building2,
   AlertTriangle,
   ArrowRight,
-  CreditCard,
-  Building2
+  CheckCircle,
+  Lock,
 } from "lucide-react";
 import Link from "next/link";
 import type { KYCLevel, KYCAction } from "@/types";
@@ -24,18 +25,25 @@ export interface KYCRequiredModalProps {
   userType?: "seller" | "worker";
 }
 
-const levelInfo: Record<KYCLevel, { label: string; icon: React.ReactNode; color: string }> = {
-  none: { label: "ยังไม่ยืนยัน", icon: <AlertTriangle className="w-5 h-5" />, color: "text-gray-500" },
-  basic: { label: "Basic", icon: <Phone className="w-5 h-5" />, color: "text-blue-600" },
-  verified: { label: "Verified", icon: <CreditCard className="w-5 h-5" />, color: "text-emerald-600" },
-  business: { label: "Business", icon: <Building2 className="w-5 h-5" />, color: "text-purple-600" },
+const ACTION_TEXT: Record<KYCAction, string> = {
+  topup: "เติมเงิน",
+  withdraw: "ถอนเงิน",
+  create_team: "สร้างทีม",
+  general: "ดำเนินการต่อ",
 };
 
-const levelRequirements: Record<KYCLevel, string[]> = {
+const LEVEL_CONFIG: Record<KYCLevel, { label: string; icon: React.ElementType; color: string; bgColor: string }> = {
+  none: { label: "ยังไม่ยืนยัน", icon: AlertTriangle, color: "text-gray-500", bgColor: "bg-gray-100" },
+  basic: { label: "Basic", icon: Phone, color: "text-blue-600", bgColor: "bg-blue-50" },
+  verified: { label: "Verified", icon: CreditCard, color: "text-emerald-600", bgColor: "bg-emerald-50" },
+  business: { label: "Business", icon: Building2, color: "text-purple-600", bgColor: "bg-purple-50" },
+};
+
+const LEVEL_REQUIREMENTS: Record<KYCLevel, string[]> = {
   none: [],
   basic: ["ยืนยันเบอร์โทรผ่าน OTP"],
-  verified: ["ยืนยันเบอร์โทรผ่าน OTP", "อัปโหลดบัตรประชาชน", "ถ่าย Selfie คู่บัตร"],
-  business: ["ผ่าน Verified แล้ว", "หนังสือรับรองบริษัท", "เลขประจำตัวผู้เสียภาษี"],
+  verified: ["อัปโหลดบัตรประชาชน", "ถ่าย Selfie คู่บัตร"],
+  business: ["หนังสือรับรองนิติบุคคล", "เลขประจำตัวผู้เสียภาษี"],
 };
 
 export function KYCRequiredModal({
@@ -47,104 +55,87 @@ export function KYCRequiredModal({
   action = "general",
   userType = "seller",
 }: KYCRequiredModalProps) {
-  const actionText = {
-    topup: "เติมเงิน",
-    withdraw: "ถอนเงิน",
-    create_team: "สร้างทีม",
-    general: "ดำเนินการต่อ",
-  };
+  const RequiredIcon = LEVEL_CONFIG[requiredLevel].icon;
 
   const handleStartKYC = () => {
-    if (onStartKYC) {
-      onStartKYC();
-    }
+    onStartKYC?.();
     onClose();
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title=""
-      size="md"
-    >
-      <div className="text-center">
-        {/* Icon */}
-        <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-10 h-10 text-amber-600" />
-        </div>
+    <Dialog open={isOpen} onClose={onClose} size="sm">
+      <Dialog.Body className="pt-6 pb-2">
+        <div className="flex flex-col items-center text-center">
+          {/* Icon */}
+          <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+            <Shield className="w-8 h-8 text-amber-600" />
+          </div>
 
-        {/* Title */}
-        <h2 className="text-xl font-bold text-brand-text-dark mb-2">
-          ต้องยืนยันตัวตนก่อน
-        </h2>
-        <p className="text-sm text-brand-text-light mb-6">
-          เพื่อความปลอดภัยของคุณ กรุณายืนยันตัวตนก่อน{actionText[action]}
-        </p>
-
-        {/* Current Level */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="text-sm text-brand-text-light">ระดับปัจจุบัน:</span>
-          <Badge variant={currentLevel === "none" ? "default" : "info"}>
-            {levelInfo[currentLevel].label}
-          </Badge>
-          <ArrowRight className="w-4 h-4 text-brand-text-light" />
-          <Badge variant="warning">
-            ต้องการ {levelInfo[requiredLevel].label}
-          </Badge>
-        </div>
-
-        {/* Requirements */}
-        <div className="text-left p-4 rounded-lg bg-brand-bg mb-6">
-          <p className="text-sm font-medium text-brand-text-dark mb-3">
-            สิ่งที่ต้องทำ:
+          {/* What triggered the gate */}
+          <h3 className="text-lg font-bold text-brand-text-dark mb-1">
+            ต้องยืนยันตัวตนก่อน{ACTION_TEXT[action]}
+          </h3>
+          <p className="text-sm text-brand-text-light mb-5">
+            ฟีเจอร์นี้ต้องการ KYC ระดับ{" "}
+            <span className="font-semibold">{LEVEL_CONFIG[requiredLevel].label}</span>
           </p>
-          <ul className="space-y-2">
-            {levelRequirements[requiredLevel].map((req, idx) => (
-              <li key={idx} className="flex items-center gap-2 text-sm text-brand-text-light">
-                <div className="w-5 h-5 rounded-full bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-medium text-brand-primary">{idx + 1}</span>
-                </div>
-                {req}
-              </li>
-            ))}
-          </ul>
-        </div>
 
-        {/* Benefits */}
-        {requiredLevel === "basic" && (
-          <div className="text-left p-4 rounded-lg bg-blue-50 border border-blue-100 mb-6">
-            <p className="text-sm font-medium text-blue-800 mb-2">
-              หลังยืนยัน Basic แล้ว:
+          {/* Current → Required */}
+          <div className="flex items-center justify-center gap-3 mb-5 w-full px-4">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+              <Lock className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-brand-text-light">
+                {LEVEL_CONFIG[currentLevel].label}
+              </span>
+            </div>
+            <ArrowRight className="w-5 h-5 text-brand-primary shrink-0" />
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${LEVEL_CONFIG[requiredLevel].bgColor} border ${requiredLevel === 'basic' ? 'border-blue-200' : requiredLevel === 'verified' ? 'border-emerald-200' : 'border-purple-200'}`}>
+              <RequiredIcon className={`w-4 h-4 ${LEVEL_CONFIG[requiredLevel].color}`} />
+              <span className={`text-sm font-medium ${LEVEL_CONFIG[requiredLevel].color}`}>
+                {LEVEL_CONFIG[requiredLevel].label}
+              </span>
+            </div>
+          </div>
+
+          {/* Requirements */}
+          <div className="w-full text-left p-4 rounded-xl bg-brand-bg mb-4">
+            <p className="text-xs font-semibold text-brand-text-light uppercase tracking-wider mb-2">
+              สิ่งที่ต้องทำ
             </p>
-            <ul className="text-xs text-blue-700 space-y-1">
-              {action === "withdraw" && <li>• ถอนเงินได้สูงสุด ฿1,000/วัน</li>}
-              {action === "topup" && <li>• เติมเงินได้ไม่จำกัด</li>}
-              <li>• ใช้เวลาไม่ถึง 1 นาที</li>
+            <ul className="space-y-2">
+              {LEVEL_REQUIREMENTS[requiredLevel].map((req, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center gap-2 text-sm text-brand-text-dark"
+                >
+                  <div className="w-5 h-5 rounded-full bg-brand-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-medium text-brand-primary">
+                      {idx + 1}
+                    </span>
+                  </div>
+                  {req}
+                </li>
+              ))}
             </ul>
           </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1"
-          >
-            ภายหลัง
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleStartKYC}
-            className="flex-1"
-          >
-            <Shield className="w-4 h-4 mr-2" />
-            ยืนยันตัวตน
-          </Button>
+          {requiredLevel === "basic" && (
+            <p className="text-xs text-brand-text-light mb-2">
+              ใช้เวลาไม่ถึง 1 นาที
+            </p>
+          )}
         </div>
-      </div>
-    </Modal>
+      </Dialog.Body>
+      <Dialog.Footer className="justify-center">
+        <Button variant="outline" size="sm" onClick={onClose}>
+          ภายหลัง
+        </Button>
+        <Button variant="primary" size="sm" onClick={handleStartKYC}>
+          <Shield className="w-4 h-4 mr-1.5" />
+          ยืนยันตัวตน
+        </Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }
 

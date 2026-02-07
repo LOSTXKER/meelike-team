@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button, Modal, Select, Badge, Card } from "@/components/ui";
+import { Button, Select, Badge, Card } from "@/components/ui";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+import { Dialog } from "@/components/ui/Dialog";
 import { 
   PageHeader, 
   ServiceTypeBadge,
@@ -18,6 +20,9 @@ import {
   BulkActionsBar,
   type BulkAction 
 } from "@/components/seller";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { useUnsavedChanges } from "@/lib/hooks/useUnsavedChanges";
 import { 
   PLATFORM_CONFIGS, 
   SERVICE_TYPE_CONFIGS,
@@ -96,9 +101,13 @@ function exportServicesToCSV(services: StoreService[]) {
 
 export default function ServicesPage() {
   const { data: servicesData, isLoading, error, refetch } = useSellerServices();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [services, setServices] = useState<StoreService[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<StoreService | null>(null);
+  const { setDirty, setClean } = useUnsavedChanges();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize services
   useEffect(() => {
@@ -139,6 +148,9 @@ export default function ServicesPage() {
         (a.sellPrice - getEffectiveCost(a)) - (b.sellPrice - getEffectiveCost(b))
     }
   );
+
+  // Paginate sorted results
+  const { paginatedItems, currentPage, totalPages, totalItems, pageSize, setCurrentPage } = usePagination(sortedItems, 10);
 
   // Use bulk selection hook
   const { 
@@ -187,7 +199,7 @@ export default function ServicesPage() {
           }
           break;
         case "delete":
-          if (confirm(`ต้องการลบ ${selectedCount} บริการที่เลือกหรือไม่?`)) {
+          if (await confirm({ title: "ยืนยันการลบ", message: `ต้องการลบ ${selectedCount} บริการที่เลือกหรือไม่?`, variant: "danger", confirmLabel: "ลบ" })) {
             for (const id of ids) {
               await api.seller.deleteService(id);
             }
@@ -198,7 +210,7 @@ export default function ServicesPage() {
       clearSelection();
     } catch (error) {
       console.error("Error performing bulk action:", error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
   };
 
@@ -318,7 +330,7 @@ export default function ServicesPage() {
       render: (_, service) => (
         <div className="flex items-center justify-center gap-1">
           <button 
-            onClick={() => { setEditingService(service); setIsEditModalOpen(true); }}
+            onClick={() => { setEditingService(service); setIsEditModalOpen(true); setDirty(); }}
             className="p-2 rounded-lg text-brand-text-light hover:text-brand-primary hover:bg-brand-primary/10" 
             title="แก้ไข"
           >
@@ -326,7 +338,7 @@ export default function ServicesPage() {
           </button>
           <button 
             onClick={async () => {
-              if (confirm(`ต้องการลบบริการ "${service.name}" หรือไม่?`)) {
+              if (await confirm({ title: "ยืนยันการลบ", message: `ต้องการลบบริการ "${service.name}" หรือไม่?`, variant: "danger", confirmLabel: "ลบ" })) {
                 await api.seller.deleteService(service.id);
                 await refetch();
               }
@@ -380,7 +392,7 @@ export default function ServicesPage() {
               ].map((item) => (
                 <button
                   key={item.value}
-                  onClick={() => setFilter("serviceMode", item.value)}
+                  onClick={() => { setFilter("serviceMode", item.value); setCurrentPage(1); }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     filters.serviceMode === item.value
                       ? "bg-white text-brand-text-dark shadow-sm"
@@ -405,7 +417,7 @@ export default function ServicesPage() {
                 ...Object.entries(PLATFORM_CONFIGS).map(([value, config]) => ({ value, label: config.label })),
               ]}
               value={filters.platform as string}
-              onChange={(e) => setFilter("platform", e.target.value)}
+              onChange={(e) => { setFilter("platform", e.target.value); setCurrentPage(1); }}
               className="min-w-[160px]"
             />
 
@@ -428,7 +440,7 @@ export default function ServicesPage() {
                 type="text"
                 placeholder="ค้นหาบริการ..." 
                 value={filters.search as string || ""}
-                onChange={(e) => setFilter("search", e.target.value)}
+                onChange={(e) => { setFilter("search", e.target.value); setCurrentPage(1); }}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-border/50 bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none text-sm"
               />
             </div>
@@ -462,7 +474,7 @@ export default function ServicesPage() {
         {/* Services Table */}
         <Card className="border-none shadow-md overflow-hidden">
           <GenericDataTable
-            data={sortedItems}
+            data={paginatedItems}
             columns={columns}
             selectable
             selectedIds={selectedIds}
@@ -476,6 +488,17 @@ export default function ServicesPage() {
               !service.isActive ? "opacity-60 bg-gray-50/50" : ""
             }
           />
+
+          {/* Pagination */}
+          <div className="p-4 border-t border-brand-border/30">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+            />
+          </div>
         </Card>
       </AsyncBoundary>
 
@@ -483,37 +506,45 @@ export default function ServicesPage() {
       <BulkActionsBar selectedCount={selectedCount} onAction={handleBulkAction} onClear={clearSelection} />
 
       {/* Edit Service Modal */}
-      <Modal 
-        isOpen={isEditModalOpen} 
-        onClose={() => { setIsEditModalOpen(false); setEditingService(null); }}
-        title="แก้ไขบริการ" 
+      <Dialog 
+        open={isEditModalOpen} 
+        onClose={() => { setIsEditModalOpen(false); setEditingService(null); setClean(); }}
         size="lg"
       >
-        <div className="space-y-4" key={editingService?.id || "edit"}>
-          <ServiceForm 
-            service={editingService}
-            onSubmit={async (data) => {
-              if (!editingService) return;
-              
-              try {
-                await api.seller.updateService(editingService.id, data);
-                await refetch();
-                setIsEditModalOpen(false);
-                setEditingService(null);
-                alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
-              } catch (error) {
-                console.error("Error updating service:", error);
-                alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
-              }
-            }}
-          />
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsEditModalOpen(false); setEditingService(null); }}>
-              ยกเลิก
-            </Button>
+        <Dialog.Header>
+          <Dialog.Title>แก้ไขบริการ</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <div className="space-y-4" key={editingService?.id || "edit"}>
+            <ServiceForm 
+              service={editingService}
+              onSubmit={async (data) => {
+                if (!editingService) return;
+                
+                setIsSubmitting(true);
+                try {
+                  await api.seller.updateService(editingService.id, data);
+                  await refetch();
+                  setIsEditModalOpen(false);
+                  setEditingService(null);
+                  setClean();
+                  toast.success("บันทึกการเปลี่ยนแปลงเรียบร้อย");
+                } catch (error) {
+                  console.error("Error updating service:", error);
+                  toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+            />
           </div>
-        </div>
-      </Modal>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsEditModalOpen(false); setEditingService(null); setClean(); }} disabled={isSubmitting}>
+            ยกเลิก
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

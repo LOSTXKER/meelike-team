@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, Button, Input, Badge, Dialog, Modal } from "@/components/ui";
+import { Card, Button, Input, Badge } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
 import {
@@ -363,11 +364,14 @@ export default function WorkerAccountsPage() {
       </Card>
 
       {/* Add Account Modal */}
-      <Modal
-        isOpen={showAddModal}
+      <Dialog
+        open={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="เพิ่มบัญชี Social Media"
       >
+        <Dialog.Header>
+          <Dialog.Title>เพิ่มบัญชี Social Media</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-bold text-brand-text-dark mb-3">
@@ -412,8 +416,9 @@ export default function WorkerAccountsPage() {
               <span>หลังจากเพิ่มบัญชี ระบบจะตรวจสอบภายใน 24 ชั่วโมง เมื่อผ่านการยืนยันแล้วจึงจะจองงานได้</span>
             </p>
           </div>
-
-          <div className="flex gap-3 justify-end pt-2">
+        </div>
+        </Dialog.Body>
+        <Dialog.Footer>
             <Button variant="outline" onClick={() => setShowAddModal(false)} className="bg-white shadow-sm">
               ยกเลิก
             </Button>
@@ -425,9 +430,8 @@ export default function WorkerAccountsPage() {
               <Plus className="w-4 h-4 mr-2" />
               เพิ่มบัญชี
             </Button>
-          </div>
-        </div>
-      </Modal>
+        </Dialog.Footer>
+      </Dialog>
       </Section>
     </Container>
   );

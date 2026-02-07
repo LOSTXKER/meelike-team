@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Input, Skeleton, Modal } from "@/components/ui";
+import { Card, Badge, Button, Input, Skeleton } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState, FilterTabs, Breadcrumb, type PayoutFilterStatus } from "@/components/shared";
 import { useTeamPayouts, useWorkerBalances, useWorkers, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
@@ -20,6 +21,8 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function TeamPayoutsPage() {
   const params = useParams();
@@ -30,6 +33,9 @@ export default function TeamPayoutsPage() {
   const { data: teamPayoutsData, isLoading: isLoadingPayouts, refetch: refetchPayouts } = useTeamPayouts();
   const { data: workerBalancesData, isLoading: isLoadingBalances } = useWorkerBalances();
   const { data: workersData, isLoading: isLoadingWorkers } = useWorkers();
+
+  const toast = useToast();
+  const confirm = useConfirm();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<PayoutFilterStatus>("all");
@@ -65,10 +71,10 @@ export default function TeamPayoutsPage() {
       await refetchPayouts();
       setShowPayModal(false);
       setSelectedPayout(null);
-      alert(`โอนเงิน ฿${selectedPayout.amount} ให้ @${selectedPayout.worker.displayName} เรียบร้อย!`);
+      toast.success(`โอนเงิน ฿${selectedPayout.amount} ให้ @${selectedPayout.worker.displayName} เรียบร้อย!`);
     } catch (error) {
       console.error("Error processing payout:", error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
   };
 
@@ -166,14 +172,14 @@ export default function TeamPayoutsPage() {
             </div>
             <Button
               onClick={async () => {
-                if (confirm(`จ่ายเงินทั้งหมด ${pendingPayouts.length} รายการ รวม ฿${totalPending}?`)) {
+                if (await confirm({ title: "ยืนยัน", message: `จ่ายเงินทั้งหมด ${pendingPayouts.length} รายการ รวม ฿${totalPending}?`, variant: "warning" })) {
                   try {
                     const count = await api.seller.processAllPendingPayouts();
                     await refetchPayouts();
-                    alert(`จ่ายเงิน ${count} รายการเรียบร้อย!`);
+                    toast.success(`จ่ายเงิน ${count} รายการเรียบร้อย!`);
                   } catch (error) {
                     console.error("Error processing payouts:", error);
-                    alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                    toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
                   }
                 }
               }}
@@ -333,76 +339,79 @@ export default function TeamPayoutsPage() {
       </div>
 
       {/* Pay Modal */}
-      <Modal
-        isOpen={showPayModal}
+      <Dialog
+        open={showPayModal}
         onClose={() => {
           setShowPayModal(false);
           setSelectedPayout(null);
         }}
-        title="ยืนยันการจ่ายเงิน"
       >
-        {selectedPayout && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-brand-success/5 border border-brand-success/20 rounded-xl">
-               <div className="p-3 bg-brand-success/10 rounded-full text-brand-success">
-                  <Wallet className="w-6 h-6" />
-               </div>
-               <div>
-                  <h4 className="font-bold text-brand-text-dark">โอนเงินให้ Worker</h4>
-                  <p className="text-sm text-brand-text-light">กรุณาตรวจสอบข้อมูลก่อนโอนเงิน</p>
-               </div>
-            </div>
+        <Dialog.Header>
+          <Dialog.Title>ยืนยันการจ่ายเงิน</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          {selectedPayout && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-brand-success/5 border border-brand-success/20 rounded-xl">
+                 <div className="p-3 bg-brand-success/10 rounded-full text-brand-success">
+                    <Wallet className="w-6 h-6" />
+                 </div>
+                 <div>
+                    <h4 className="font-bold text-brand-text-dark">โอนเงินให้ Worker</h4>
+                    <p className="text-sm text-brand-text-light">กรุณาตรวจสอบข้อมูลก่อนโอนเงิน</p>
+                 </div>
+              </div>
 
-            <div className="space-y-4 bg-brand-bg/50 p-5 rounded-xl border border-brand-border/30">
-               <div className="flex justify-between items-center">
-                  <span className="text-brand-text-light text-sm">ผู้รับเงิน</span>
-                  <div className="text-right">
-                     <p className="font-bold text-brand-text-dark">@{selectedPayout.worker.displayName}</p>
-                     <p className="text-xs text-brand-text-light">{selectedPayout.jobCount} งานที่ทำเสร็จ</p>
-                  </div>
-               </div>
-               
-               <div className="h-px bg-brand-border/50"></div>
-               
-               <div>
-                  <span className="text-brand-text-light text-sm block mb-1">ช่องทางโอนเงิน</span>
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-brand-border/30">
-                     <CreditCard className="w-5 h-5 text-brand-primary" />
-                     <div>
-                        <p className="font-medium text-brand-text-dark text-sm">
-                           {selectedPayout.paymentMethod === "promptpay" ? "PromptPay" : selectedPayout.bankName}
-                        </p>
-                        <p className="font-mono text-sm text-brand-text-light">{selectedPayout.paymentAccount}</p>
-                        {selectedPayout.accountName && <p className="text-xs text-brand-text-light/70">{selectedPayout.accountName}</p>}
-                     </div>
-                  </div>
-               </div>
-               
-               <div className="flex justify-between items-end pt-2">
-                  <span className="text-brand-text-light">ยอดโอนสุทธิ</span>
-                  <span className="text-2xl font-bold text-brand-success">฿{selectedPayout.amount.toLocaleString()}</span>
-               </div>
+              <div className="space-y-4 bg-brand-bg/50 p-5 rounded-xl border border-brand-border/30">
+                 <div className="flex justify-between items-center">
+                    <span className="text-brand-text-light text-sm">ผู้รับเงิน</span>
+                    <div className="text-right">
+                       <p className="font-bold text-brand-text-dark">@{selectedPayout.worker.displayName}</p>
+                       <p className="text-xs text-brand-text-light">{selectedPayout.jobCount} งานที่ทำเสร็จ</p>
+                    </div>
+                 </div>
+                 
+                 <div className="h-px bg-brand-border/50"></div>
+                 
+                 <div>
+                    <span className="text-brand-text-light text-sm block mb-1">ช่องทางโอนเงิน</span>
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-brand-border/30">
+                       <CreditCard className="w-5 h-5 text-brand-primary" />
+                       <div>
+                          <p className="font-medium text-brand-text-dark text-sm">
+                             {selectedPayout.paymentMethod === "promptpay" ? "PromptPay" : selectedPayout.bankName}
+                          </p>
+                          <p className="font-mono text-sm text-brand-text-light">{selectedPayout.paymentAccount}</p>
+                          {selectedPayout.accountName && <p className="text-xs text-brand-text-light/70">{selectedPayout.accountName}</p>}
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="flex justify-between items-end pt-2">
+                    <span className="text-brand-text-light">ยอดโอนสุทธิ</span>
+                    <span className="text-2xl font-bold text-brand-success">฿{selectedPayout.amount.toLocaleString()}</span>
+                 </div>
+              </div>
             </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowPayModal(false);
-                  setSelectedPayout(null);
-                }}
-                className="flex-1"
-              >
-                ยกเลิก
-              </Button>
-              <Button onClick={handleProcessPayout} className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent">
-                <Send className="w-4 h-4 mr-2" />
-                ยืนยันโอนเงิน
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowPayModal(false);
+              setSelectedPayout(null);
+            }}
+            className="flex-1"
+          >
+            ยกเลิก
+          </Button>
+          <Button onClick={handleProcessPayout} className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent">
+            <Send className="w-4 h-4 mr-2" />
+            ยืนยันโอนเงิน
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

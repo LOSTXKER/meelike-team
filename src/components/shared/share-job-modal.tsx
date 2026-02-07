@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Modal, Button, Input, Textarea } from "@/components/ui";
+import { Button, Input, Textarea } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { PlatformIcon } from "@/components/shared";
 import type { Platform } from "@/types";
 import {
@@ -128,12 +129,11 @@ export function ShareJobModal({ isOpen, onClose, job, teamId }: ShareJobModalPro
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="แชร์งานไปกลุ่ม"
-      size="lg"
-    >
+    <Dialog open={isOpen} onClose={onClose}>
+      <Dialog.Header>
+        <Dialog.Title>แชร์งานไปกลุ่ม</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
       <div className="space-y-6">
         {/* Job Preview Card */}
         <div className="p-4 bg-gradient-to-br from-brand-bg to-brand-bg/50 rounded-2xl border border-brand-border/50">
@@ -318,8 +318,9 @@ export function ShareJobModal({ isOpen, onClose, job, teamId }: ShareJobModalPro
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
+      </div>
+      </Dialog.Body>
+      <Dialog.Footer>
           <Button
             variant="outline"
             onClick={onClose}
@@ -334,8 +335,7 @@ export function ShareJobModal({ isOpen, onClose, job, teamId }: ShareJobModalPro
             <LineIcon className="w-5 h-5 mr-2" />
             แชร์ไป LINE
           </Button>
-        </div>
-      </div>
-    </Modal>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

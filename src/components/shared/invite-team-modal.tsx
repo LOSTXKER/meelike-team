@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { Copy, QrCode, RefreshCw, Check } from "lucide-react";
 import { useCopyToClipboard } from "@/lib/hooks";
 import { FormCheckbox } from "./form-section";
@@ -23,12 +24,11 @@ export function InviteTeamModal({ isOpen, onClose, team }: InviteTeamModalProps)
   const [isRecruiting, setIsRecruiting] = useState(team.isRecruiting);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`➕ เชิญสมาชิกเข้าทีม ${team.name}`}
-      size="md"
-    >
+    <Dialog open={isOpen} onClose={onClose}>
+      <Dialog.Header>
+        <Dialog.Title>{`➕ เชิญสมาชิกเข้าทีม ${team.name}`}</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
       <div className="space-y-6">
         {/* Invite Link */}
         <div>
@@ -97,6 +97,7 @@ export function InviteTeamModal({ isOpen, onClose, team }: InviteTeamModalProps)
           />
         </div>
       </div>
-    </Modal>
+      </Dialog.Body>
+    </Dialog>
   );
 }

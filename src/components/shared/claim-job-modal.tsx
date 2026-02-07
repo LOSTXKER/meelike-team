@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Modal, Button, Progress } from "@/components/ui";
+import { Button, Progress } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import type { Platform, ServiceMode } from "@/types";
 import {
@@ -83,12 +84,11 @@ export function ClaimJobModal({
   );
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="จองงาน"
-      size="md"
-    >
+    <Dialog open={isOpen} onClose={onClose}>
+      <Dialog.Header>
+        <Dialog.Title>จองงาน</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
       <div className="space-y-6">
         {/* Job Info Header */}
         <div className="flex items-start gap-4 p-4 bg-brand-bg/50 rounded-xl border border-brand-border/50">
@@ -236,8 +236,9 @@ export function ClaimJobModal({
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
+      </div>
+      </Dialog.Body>
+      <Dialog.Footer>
           <Button
             variant="outline"
             onClick={onClose}
@@ -254,8 +255,7 @@ export function ClaimJobModal({
             <CheckCircle2 className="w-4 h-4 mr-2" />
             ยืนยันจองงาน
           </Button>
-        </div>
-      </div>
-    </Modal>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

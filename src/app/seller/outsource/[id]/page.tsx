@@ -3,9 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Badge, Button, Modal, Textarea } from "@/components/ui";
+import { Card, Badge, Button, Textarea } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { Container, Section, HStack, VStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, EmptyState, PageSkeleton } from "@/components/shared";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { api } from "@/lib/api";
 import type { OutsourceJob, OutsourceBid, Platform } from "@/types";
 import {
@@ -45,6 +48,8 @@ export default function OutsourceDetailPage() {
   const router = useRouter();
   const jobId = params.id as string;
 
+  const toast = useToast();
+  const confirm = useConfirm();
   const [job, setJob] = useState<OutsourceJob | null>(null);
   const [bids, setBids] = useState<OutsourceBid[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,23 +76,23 @@ export default function OutsourceDetailPage() {
   }, [jobId]);
 
   const handleAcceptBid = async (bidId: string) => {
-    if (!confirm("ยืนยันรับ bid นี้? งานจะถูกมอบหมายให้ทีมนี้ทันที")) return;
+    if (!await confirm({ title: "ยืนยัน", message: "ยืนยันรับ bid นี้? งานจะถูกมอบหมายให้ทีมนี้ทันที", variant: "warning" })) return;
 
     setIsProcessing(true);
     try {
       await api.hub.acceptBid(bidId);
-      alert("รับ bid เรียบร้อย! งานถูกมอบหมายให้ทีมแล้ว");
+      toast.success("รับ bid เรียบร้อย! งานถูกมอบหมายให้ทีมแล้ว");
       await loadData();
     } catch (error: any) {
       console.error("Error accepting bid:", error);
-      alert(error.message || "เกิดข้อผิดพลาด");
+      toast.error(error.message || "เกิดข้อผิดพลาด");
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleRejectBid = async (bidId: string) => {
-    if (!confirm("ยืนยันปฏิเสธ bid นี้?")) return;
+    if (!await confirm({ title: "ยืนยัน", message: "ยืนยันปฏิเสธ bid นี้?", variant: "danger", confirmLabel: "ปฏิเสธ" })) return;
 
     setIsProcessing(true);
     try {
@@ -95,7 +100,7 @@ export default function OutsourceDetailPage() {
       await loadData();
     } catch (error: any) {
       console.error("Error rejecting bid:", error);
-      alert(error.message || "เกิดข้อผิดพลาด");
+      toast.error(error.message || "เกิดข้อผิดพลาด");
     } finally {
       setIsProcessing(false);
     }
@@ -105,12 +110,12 @@ export default function OutsourceDetailPage() {
     setIsProcessing(true);
     try {
       await api.hub.cancelOutsourceJob(jobId);
-      alert("ยกเลิกงานเรียบร้อย");
+      toast.success("ยกเลิกงานเรียบร้อย");
       setShowCancelModal(false);
       router.push("/seller/outsource");
     } catch (error: any) {
       console.error("Error cancelling job:", error);
-      alert(error.message || "เกิดข้อผิดพลาด");
+      toast.error(error.message || "เกิดข้อผิดพลาด");
     } finally {
       setIsProcessing(false);
     }
@@ -368,12 +373,14 @@ export default function OutsourceDetailPage() {
         </div>
 
         {/* Cancel Modal */}
-        <Modal
-          isOpen={showCancelModal}
+        <Dialog
+          open={showCancelModal}
           onClose={() => setShowCancelModal(false)}
-          title="ยกเลิกงาน"
         >
-          <div className="space-y-4">
+          <Dialog.Header>
+            <Dialog.Title>ยกเลิกงาน</Dialog.Title>
+          </Dialog.Header>
+          <Dialog.Body>
             <div className="p-4 bg-brand-warning/10 border border-brand-warning/20 rounded-xl">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-brand-warning mt-0.5" />
@@ -385,22 +392,21 @@ export default function OutsourceDetailPage() {
                 </div>
               </div>
             </div>
-
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={() => setShowCancelModal(false)}>
-                ยกเลิก
-              </Button>
-              <Button
-                onClick={handleCancelJob}
-                disabled={isProcessing}
-                isLoading={isProcessing}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                ยืนยันยกเลิก
-              </Button>
-            </div>
-          </div>
-        </Modal>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleCancelJob}
+              disabled={isProcessing}
+              isLoading={isProcessing}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              ยืนยันยกเลิก
+            </Button>
+          </Dialog.Footer>
+        </Dialog>
       </Section>
     </Container>
   );

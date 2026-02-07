@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRequireAuth } from "@/lib/hooks";
 import { SELLER_NAV, USER_MENU_ITEMS, isNavGroup } from "@/lib/constants/navigation";
 import { formatCurrency } from "@/lib/utils";
@@ -27,6 +27,22 @@ export default function SellerLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Keyboard shortcut for search (Ctrl/Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowSearch((prev) => !prev);
+      }
+      if (e.key === "Escape" && showSearch) {
+        setShowSearch(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showSearch]);
 
   const handleLogout = () => {
     router.push("/login");
@@ -94,6 +110,15 @@ export default function SellerLayout({
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
+            {/* Mobile Hamburger Menu */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden p-2.5 hover:bg-brand-bg rounded-xl transition-colors"
+              aria-label="เปิดเมนู"
+            >
+              <Menu className="w-5 h-5 text-brand-text-light" />
+            </button>
+
             {/* Mobile Search Button */}
             <button
               onClick={() => setShowSearch(true)}
@@ -113,9 +138,8 @@ export default function SellerLayout({
             </Link>
 
             {/* Notifications */}
-            <button className="relative p-2.5 hover:bg-brand-bg rounded-xl transition-colors">
+            <button className="relative p-2.5 hover:bg-brand-bg rounded-xl transition-colors" aria-label="การแจ้งเตือน">
               <Bell className="w-5 h-5 text-brand-text-light" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-error rounded-full" />
             </button>
 
             {/* User Menu */}
@@ -436,7 +460,7 @@ export default function SellerLayout({
         <>
           <div
             className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={() => setShowSearch(false)}
+            onClick={() => { setShowSearch(false); setSearchQuery(""); }}
           />
           <div className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-lg mx-auto px-4 z-[70]">
             <div className="bg-white rounded-2xl shadow-2xl border border-brand-border/50 overflow-hidden">
@@ -447,13 +471,57 @@ export default function SellerLayout({
                   placeholder="ค้นหาออเดอร์, บริการ, ทีม..."
                   className="flex-1 bg-transparent border-none outline-none text-brand-text-dark placeholder:text-brand-text-light"
                   autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <kbd className="px-2 py-1 bg-brand-bg rounded text-xs text-brand-text-light border border-brand-border/50">
                   ESC
                 </kbd>
               </div>
-              <div className="p-4 text-center text-sm text-brand-text-light">
-                พิมพ์เพื่อค้นหา...
+              <div className="p-2 max-h-80 overflow-y-auto">
+                {(() => {
+                  const q = searchQuery.toLowerCase().trim();
+                  const links = [
+                    { label: "แดชบอร์ด", href: "/seller", keywords: "dashboard home หน้าแรก" },
+                    { label: "ออเดอร์ทั้งหมด", href: "/seller/orders", keywords: "orders คำสั่งซื้อ" },
+                    { label: "สร้างออเดอร์ใหม่", href: "/seller/orders/new", keywords: "new order สร้าง" },
+                    { label: "บริการ", href: "/seller/services", keywords: "services บริการ" },
+                    { label: "เพิ่มบริการ", href: "/seller/services/new", keywords: "add service เพิ่ม" },
+                    { label: "การเงิน", href: "/seller/finance", keywords: "finance เงิน เติม ถอน" },
+                    { label: "ทีม", href: "/seller/team", keywords: "team ทีม worker" },
+                    { label: "ร้านค้า", href: "/seller/store", keywords: "store ร้าน" },
+                    { label: "ตั้งค่า", href: "/seller/settings", keywords: "settings ตั้งค่า" },
+                    { label: "ยืนยันตัวตน", href: "/seller/settings/verification", keywords: "kyc verify ยืนยัน" },
+                    { label: "ตลาดกลาง Hub", href: "/hub", keywords: "hub ตลาด outsource" },
+                  ];
+                  const filtered = q
+                    ? links.filter(
+                        (l) =>
+                          l.label.toLowerCase().includes(q) ||
+                          l.keywords.includes(q) ||
+                          l.href.includes(q)
+                      )
+                    : links;
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="p-4 text-center text-sm text-brand-text-light">
+                        ไม่พบผลลัพธ์สำหรับ &quot;{searchQuery}&quot;
+                      </div>
+                    );
+                  }
+                  return filtered.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => { setShowSearch(false); setSearchQuery(""); }}
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-brand-bg transition-colors text-sm"
+                    >
+                      <Search className="w-4 h-4 text-brand-text-light shrink-0" />
+                      <span className="text-brand-text-dark font-medium">{link.label}</span>
+                      <span className="text-xs text-brand-text-light ml-auto">{link.href}</span>
+                    </Link>
+                  ));
+                })()}
               </div>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { meetsKYCRequirement } from "@/types/kyc";
 import type { KYCLevel } from "@/types";
+import { useToast } from "@/components/ui/toast";
 import {
   Building2,
   Users,
@@ -40,6 +41,7 @@ export default function TeamCenterPage() {
   const { data: allTransactions } = useTransactions();
   
   const { user } = useAuthStore();
+  const toast = useToast();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("earnings");
@@ -158,12 +160,12 @@ export default function TeamCenterPage() {
 
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) {
-      alert("กรุณาใส่ชื่อทีม");
+      toast.warning("กรุณาใส่ชื่อทีม");
       return;
     }
     
     if (!guidelinesAccepted) {
-      alert("กรุณายอมรับกฎและข้อห้ามก่อนสร้างทีม");
+      toast.warning("กรุณายอมรับกฎและข้อห้ามก่อนสร้างทีม");
       return;
     }
     
@@ -174,7 +176,7 @@ export default function TeamCenterPage() {
       });
       
       await refetch();
-      alert(`สร้างทีม "${newTeamName}" สำเร็จ!`);
+      toast.success(`สร้างทีม "${newTeamName}" สำเร็จ!`);
       setIsCreateModalOpen(false);
       setNewTeamName("");
       setNewTeamDescription("");
@@ -183,7 +185,7 @@ export default function TeamCenterPage() {
       router.push(`/seller/team/${newTeam.id}`);
     } catch (error) {
       console.error("Error creating team:", error);
-      alert("เกิดข้อผิดพลาดในการสร้างทีม กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาดในการสร้างทีม กรุณาลองใหม่อีกครั้ง");
     }
   };
 

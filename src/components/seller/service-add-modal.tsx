@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Modal, Button, Input, Select, Textarea, Badge } from "@/components/ui";
+import { Button, Input, Select, Textarea, Badge } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { PlatformIcon } from "./platform-icon";
 import { ServiceTypeIcon } from "./service-type-icon";
 import { 
@@ -294,12 +295,11 @@ export function ServiceAddModal({
   // ============================================
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="เพิ่มบริการใหม่" 
-      size="xl"
-    >
+    <Dialog open={isOpen} onClose={onClose}>
+      <Dialog.Header>
+        <Dialog.Title>เพิ่มบริการใหม่</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
       <div className="space-y-4">
         {/* Tabs */}
         <div className="flex bg-brand-bg/50 p-1 rounded-xl">
@@ -357,8 +357,9 @@ export function ServiceAddModal({
           />
         )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-brand-border/50">
+      </div>
+      </Dialog.Body>
+      <Dialog.Footer>
           <div className="text-sm text-brand-text-light">
             {activeTab === "web" && selectedServices.size > 0 && (
               <span>เลือก {selectedServices.size} บริการ • กำไร +{markupPercent}%</span>
@@ -383,9 +384,8 @@ export function ServiceAddModal({
               }
             </Button>
           </div>
-        </div>
-      </div>
-    </Modal>
+      </Dialog.Footer>
+    </Dialog>
   );
 }
 

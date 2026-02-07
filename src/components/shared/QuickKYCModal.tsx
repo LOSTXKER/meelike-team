@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Modal, Button, Input } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { OTPInput } from "./OTPInput";
 import { 
   Phone, 
@@ -143,12 +144,8 @@ export function QuickKYCModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title=""
-      size="md"
-    >
+    <Dialog open={isOpen} onClose={handleClose}>
+      <Dialog.Body>
       {/* Step 1: Enter Phone */}
       {step === "phone" && (
         <div className="text-center">
@@ -281,7 +278,8 @@ export function QuickKYCModal({
           </Button>
         </div>
       )}
-    </Modal>
+      </Dialog.Body>
+    </Dialog>
   );
 }
 

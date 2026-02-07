@@ -2,14 +2,17 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Card, Button, Input, Modal } from "@/components/ui";
+import { Card, Button, Input } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { useSellerTeams } from "@/lib/api/hooks";
 import { Trash2, AlertTriangle, X } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function TeamDangerPage() {
   const params = useParams();
   const teamId = params.id as string;
   
+  const toast = useToast();
   const { data: teams } = useSellerTeams();
   
   const currentTeam = useMemo(() => {
@@ -21,7 +24,7 @@ export default function TeamDangerPage() {
 
   const handleDeleteTeam = () => {
     if (deleteConfirm === currentTeam?.name) {
-      alert("ลบทีมเรียบร้อย!");
+      toast.success("ลบทีมเรียบร้อย!");
       setShowDeleteModal(false);
       // Redirect to team list
       window.location.href = "/seller/team";
@@ -58,73 +61,76 @@ export default function TeamDangerPage() {
       </Card>
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
+      <Dialog
+        open={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);
           setDeleteConfirm("");
         }}
-        title="ยืนยันการลบทีม"
       >
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 p-4 bg-brand-error/5 border border-brand-error/20 rounded-xl">
-            <div className="p-3 bg-brand-error/10 rounded-full text-brand-error">
-              <AlertTriangle className="w-6 h-6" />
+        <Dialog.Header>
+          <Dialog.Title>ยืนยันการลบทีม</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-brand-error/5 border border-brand-error/20 rounded-xl">
+              <div className="p-3 bg-brand-error/10 rounded-full text-brand-error">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-brand-error">คำเตือน!</h4>
+                <p className="text-sm text-brand-text-light">การลบทีมจะลบข้อมูลทั้งหมดอย่างถาวร รวมถึง:</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold text-brand-error">คำเตือน!</h4>
-              <p className="text-sm text-brand-text-light">การลบทีมจะลบข้อมูลทั้งหมดอย่างถาวร รวมถึง:</p>
+
+            <ul className="space-y-2 text-sm text-brand-text-light pl-4">
+              <li className="flex items-center gap-2">
+                <X className="w-4 h-4 text-brand-error" />
+                ข้อมูลสมาชิกทั้งหมด
+              </li>
+              <li className="flex items-center gap-2">
+                <X className="w-4 h-4 text-brand-error" />
+                ประวัติงานและการจ่ายเงิน
+              </li>
+              <li className="flex items-center gap-2">
+                <X className="w-4 h-4 text-brand-error" />
+                รีวิวและคะแนน
+              </li>
+            </ul>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-brand-text-dark">
+                พิมพ์ชื่อทีม <span className="font-bold text-brand-error">{currentTeam?.name}</span> เพื่อยืนยัน
+              </label>
+              <Input
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder="พิมพ์ชื่อทีมที่นี่..."
+                className="bg-white"
+              />
             </div>
           </div>
-
-          <ul className="space-y-2 text-sm text-brand-text-light pl-4">
-            <li className="flex items-center gap-2">
-              <X className="w-4 h-4 text-brand-error" />
-              ข้อมูลสมาชิกทั้งหมด
-            </li>
-            <li className="flex items-center gap-2">
-              <X className="w-4 h-4 text-brand-error" />
-              ประวัติงานและการจ่ายเงิน
-            </li>
-            <li className="flex items-center gap-2">
-              <X className="w-4 h-4 text-brand-error" />
-              รีวิวและคะแนน
-            </li>
-          </ul>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-brand-text-dark">
-              พิมพ์ชื่อทีม <span className="font-bold text-brand-error">{currentTeam?.name}</span> เพื่อยืนยัน
-            </label>
-            <Input
-              value={deleteConfirm}
-              onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder="พิมพ์ชื่อทีมที่นี่..."
-              className="bg-white"
-            />
-          </div>
-
-          <div className="flex gap-3 justify-end pt-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowDeleteModal(false);
-                setDeleteConfirm("");
-              }}
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              className="bg-brand-error hover:bg-brand-error/90 border-transparent text-white"
-              onClick={handleDeleteTeam}
-              disabled={deleteConfirm !== currentTeam?.name}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              ลบทีมถาวร
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setDeleteConfirm("");
+            }}
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            className="bg-brand-error hover:bg-brand-error/90 border-transparent text-white"
+            onClick={handleDeleteTeam}
+            disabled={deleteConfirm !== currentTeam?.name}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            ลบทีมถาวร
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

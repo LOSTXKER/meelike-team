@@ -5,11 +5,13 @@ import { useParams } from "next/navigation";
 import { Card, Button, Input, Textarea, Skeleton } from "@/components/ui";
 import { useSellerTeams } from "@/lib/api/hooks";
 import { Save, Upload } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function TeamSettingsGeneralPage() {
   const params = useParams();
   const teamId = params.id as string;
   
+  const toast = useToast();
   const { data: teams, isLoading } = useSellerTeams();
   
   const currentTeam = useMemo(() => {
@@ -55,7 +57,7 @@ export default function TeamSettingsGeneralPage() {
   };
 
   const handleSave = () => {
-    alert("บันทึกการตั้งค่าเรียบร้อย!");
+    toast.success("บันทึกการตั้งค่าเรียบร้อย!");
   };
 
   if (isLoading) {

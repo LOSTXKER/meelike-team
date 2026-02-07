@@ -19,6 +19,8 @@ import {
   Link2,
   Key,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 // LINE Icon component
 const LineIcon = ({ className }: { className?: string }) => (
@@ -40,6 +42,9 @@ export default function LineIntegrationPage() {
   const params = useParams();
   const teamId = params.id as string;
 
+  const toast = useToast();
+  const confirm = useConfirm();
+
   // LINE Messaging API state
   const [messagingStatus, setMessagingStatus] = useState<ConnectionStatus>("disconnected");
   const [messagingConfig, setMessagingConfig] = useState<MessagingConfig>({
@@ -54,9 +59,9 @@ export default function LineIntegrationPage() {
   const handleConnect = () => {
     if (messagingConfig.channelId && messagingConfig.channelSecret && messagingConfig.channelAccessToken) {
       setMessagingStatus("connected");
-      alert("เชื่อมต่อ LINE Messaging API สำเร็จ!");
+      toast.success("เชื่อมต่อ LINE Messaging API สำเร็จ!");
     } else {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      toast.warning("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
   };
 
@@ -65,11 +70,11 @@ export default function LineIntegrationPage() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsTesting(false);
-    alert("ส่งข้อความทดสอบสำเร็จ! 🎉");
+    toast.success("ส่งข้อความทดสอบสำเร็จ!");
   };
 
-  const handleDisconnect = () => {
-    if (confirm("ยืนยันการยกเลิกการเชื่อมต่อ?")) {
+  const handleDisconnect = async () => {
+    if (await confirm({ title: "ยืนยัน", message: "ยืนยันการยกเลิกการเชื่อมต่อ?", variant: "danger", confirmLabel: "ยกเลิกการเชื่อมต่อ" })) {
       setMessagingStatus("disconnected");
       setMessagingConfig({
         channelId: "",

@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   MessageSquare,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 const PLATFORMS: { value: Platform; label: string }[] = [
   { value: "facebook", label: "Facebook" },
@@ -42,6 +43,8 @@ export default function CreateJobPage() {
   const params = useParams();
   const router = useRouter();
   const teamId = params.id as string;
+
+  const toast = useToast();
 
   const { data: team, isLoading: isLoadingTeam } = useSellerTeamById(teamId);
 
@@ -105,11 +108,11 @@ export default function CreateJobPage() {
         isUrgent,
       });
 
-      alert("สร้างงานเรียบร้อยแล้ว!");
+      toast.success("สร้างงานเรียบร้อยแล้ว!");
       router.push(`/seller/team/${teamId}/jobs/${newJob.id}`);
     } catch (error) {
       console.error("Error creating job:", error);
-      alert("เกิดข้อผิดพลาดในการสร้างงาน");
+      toast.error("เกิดข้อผิดพลาดในการสร้างงาน");
     } finally {
       setIsSubmitting(false);
     }

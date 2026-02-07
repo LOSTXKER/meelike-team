@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Badge, Button, Progress, Modal, Input, Textarea } from "@/components/ui";
+import { Card, Badge, Button, Progress, Input, Textarea } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { Container, Section, HStack, VStack } from "@/components/layout";
 import { PageHeader, PlatformIcon, EmptyState, PageSkeleton, ShareJobModal } from "@/components/shared";
 import { useTeamJobById, useJobClaimsByTeamJobId, useSellerTeamById } from "@/lib/api/hooks";
@@ -31,12 +32,17 @@ import {
   Ban,
   Share2,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function SellerJobDetailPage() {
   const params = useParams();
   const router = useRouter();
   const teamId = params.id as string;
   const jobId = params.jobId as string;
+
+  const toast = useToast();
+  const confirm = useConfirm();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -74,16 +80,16 @@ export default function SellerJobDetailPage() {
   }, [claims]);
 
   const handleApproveClaim = async (claimId: string) => {
-    if (!confirm("ยืนยันการอนุมัติงานนี้?")) return;
+    if (!(await confirm({ title: "ยืนยัน", message: "ยืนยันการอนุมัติงานนี้?", variant: "warning" }))) return;
 
     setIsProcessing(true);
     try {
       await api.seller.approveJobClaim(claimId);
       await refetch();
-      alert("อนุมัติงานเรียบร้อย!");
+      toast.success("อนุมัติงานเรียบร้อย!");
     } catch (error) {
       console.error("Error approving claim:", error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -97,10 +103,10 @@ export default function SellerJobDetailPage() {
     try {
       await api.seller.rejectJobClaim(claimId, reason);
       await refetch();
-      alert("ปฏิเสธงานเรียบร้อย");
+      toast.success("ปฏิเสธงานเรียบร้อย");
     } catch (error) {
       console.error("Error rejecting claim:", error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -129,10 +135,10 @@ export default function SellerJobDetailPage() {
       });
       await refetch();
       setShowEditModal(false);
-      alert("แก้ไขงานเรียบร้อย!");
+      toast.success("แก้ไขงานเรียบร้อย!");
     } catch (error: any) {
       console.error("Error editing job:", error);
-      alert(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -141,16 +147,16 @@ export default function SellerJobDetailPage() {
   const handleDeleteJob = async () => {
     if (!job) return;
     
-    if (!confirm("ยืนยันการลบงาน? การดำเนินการนี้ไม่สามารถย้อนกลับได้")) return;
+    if (!(await confirm({ title: "ยืนยัน", message: "ยืนยันการลบงาน? การดำเนินการนี้ไม่สามารถย้อนกลับได้", variant: "danger", confirmLabel: "ลบงาน" }))) return;
 
     setIsProcessing(true);
     try {
       await api.seller.deleteTeamJob(job.id);
-      alert("ลบงานเรียบร้อย!");
+      toast.success("ลบงานเรียบร้อย!");
       router.push(`/seller/team/${teamId}/jobs`);
     } catch (error: any) {
       console.error("Error deleting job:", error);
-      alert(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -171,13 +177,13 @@ export default function SellerJobDetailPage() {
       setShowCancelModal(false);
       
       if (result.payoutAmount > 0) {
-        alert(`ยกเลิกงานเรียบร้อย!\n\nได้สร้าง Payout สำหรับ Worker แล้ว\nจำนวนเงิน: ฿${result.payoutAmount.toFixed(2)}`);
+        toast.success(`ยกเลิกงานเรียบร้อย! ได้สร้าง Payout สำหรับ Worker แล้ว จำนวนเงิน: ฿${result.payoutAmount.toFixed(2)}`);
       } else {
-        alert("ยกเลิกงานเรียบร้อย!");
+        toast.success("ยกเลิกงานเรียบร้อย!");
       }
     } catch (error: any) {
       console.error("Error cancelling job:", error);
-      alert(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      toast.error(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -639,98 +645,101 @@ export default function SellerJobDetailPage() {
         </div>
 
         {/* Edit Job Modal */}
-        <Modal
-          isOpen={showEditModal}
+        <Dialog
+          open={showEditModal}
           onClose={() => setShowEditModal(false)}
-          title="แก้ไขงาน"
         >
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-brand-text-dark mb-2">
-                จำนวน (หน่วย)
-              </label>
-              <Input
-                type="number"
-                value={editQuantity}
-                onChange={(e) => setEditQuantity(Number(e.target.value))}
-                min="1"
-              />
-            </div>
+          <Dialog.Header>
+            <Dialog.Title>แก้ไขงาน</Dialog.Title>
+          </Dialog.Header>
+          <Dialog.Body>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-brand-text-dark mb-2">
+                  จำนวน (หน่วย)
+                </label>
+                <Input
+                  type="number"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(Number(e.target.value))}
+                  min="1"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-brand-text-dark mb-2">
-                ราคาต่อหน่วย (฿)
-              </label>
-              <Input
-                type="number"
-                value={editPricePerUnit}
-                onChange={(e) => setEditPricePerUnit(Number(e.target.value))}
-                min="0"
-                step="0.01"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-brand-text-dark mb-2">
+                  ราคาต่อหน่วย (฿)
+                </label>
+                <Input
+                  type="number"
+                  value={editPricePerUnit}
+                  onChange={(e) => setEditPricePerUnit(Number(e.target.value))}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-brand-text-dark mb-2">
-                คำแนะนำ
-              </label>
-              <Textarea
-                value={editInstructions}
-                onChange={(e) => setEditInstructions(e.target.value)}
-                rows={4}
-                placeholder="คำแนะนำสำหรับ worker..."
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-brand-text-dark mb-2">
+                  คำแนะนำ
+                </label>
+                <Textarea
+                  value={editInstructions}
+                  onChange={(e) => setEditInstructions(e.target.value)}
+                  rows={4}
+                  placeholder="คำแนะนำสำหรับ worker..."
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-brand-text-dark mb-2">
-                กำหนดส่ง
-              </label>
-              <Input
-                type="date"
-                value={editDeadline}
-                onChange={(e) => setEditDeadline(e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-brand-text-dark mb-2">
+                  กำหนดส่ง
+                </label>
+                <Input
+                  type="date"
+                  value={editDeadline}
+                  onChange={(e) => setEditDeadline(e.target.value)}
+                />
+              </div>
 
-            <div className="p-4 bg-brand-bg rounded-xl">
-              <p className="text-sm text-brand-text-light mb-1">รวมค่าจ้างทั้งหมด</p>
-              <p className="text-2xl font-bold text-brand-primary">
-                ฿{(editQuantity * editPricePerUnit).toFixed(2)}
-              </p>
-            </div>
+              <div className="p-4 bg-brand-bg rounded-xl">
+                <p className="text-sm text-brand-text-light mb-1">รวมค่าจ้างทั้งหมด</p>
+                <p className="text-2xl font-bold text-brand-primary">
+                  ฿{(editQuantity * editPricePerUnit).toFixed(2)}
+                </p>
+              </div>
 
-            {/* Content Warning */}
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-              <div className="flex gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-amber-800">คำเตือน: ตรวจสอบเนื้อหาก่อนบันทึก</p>
-                  <p className="text-amber-700 text-xs mt-1">
-                    ห้ามมอบหมายงานที่เกี่ยวข้องกับการพนัน, เว็บผิดกฎหมาย, โฆษณาหลอกลวง หรือเนื้อหาผู้ใหญ่
-                  </p>
+              {/* Content Warning */}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="flex gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-amber-800">คำเตือน: ตรวจสอบเนื้อหาก่อนบันทึก</p>
+                    <p className="text-amber-700 text-xs mt-1">
+                      ห้ามมอบหมายงานที่เกี่ยวข้องกับการพนัน, เว็บผิดกฎหมาย, โฆษณาหลอกลวง หรือเนื้อหาผู้ใหญ่
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowEditModal(false)}
-                disabled={isProcessing}
-              >
-                ยกเลิก
-              </Button>
-              <Button
-                onClick={handleEditJob}
-                disabled={isProcessing}
-                isLoading={isProcessing}
-              >
-                บันทึก
-              </Button>
-            </div>
-          </div>
-        </Modal>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditModal(false)}
+              disabled={isProcessing}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleEditJob}
+              disabled={isProcessing}
+              isLoading={isProcessing}
+            >
+              บันทึก
+            </Button>
+          </Dialog.Footer>
+        </Dialog>
 
         {/* Share Job Modal */}
         <ShareJobModal
@@ -751,96 +760,99 @@ export default function SellerJobDetailPage() {
         />
 
         {/* Cancel Job Modal */}
-        <Modal
-          isOpen={showCancelModal}
+        <Dialog
+          open={showCancelModal}
           onClose={() => setShowCancelModal(false)}
-          title="ยกเลิกงาน"
         >
-          <div className="space-y-4">
-            <div className="p-4 bg-brand-warning/5 border border-brand-warning/20 rounded-xl">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-brand-warning mt-0.5" />
-                <div>
-                  <p className="font-bold text-brand-text-dark mb-1">
-                    ยืนยันการยกเลิกงาน?
-                  </p>
-                  <p className="text-sm text-brand-text-light">
-                    การดำเนินการนี้ไม่สามารถย้อนกลับได้
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment info if applicable */}
-            {job && (job.status === "in_progress" || job.status === "pending_review") && calculateCancelPayment() > 0 && (
-              <div className="p-4 bg-brand-info/5 border border-brand-info/20 rounded-xl">
-                <p className="font-bold text-brand-text-dark mb-3">
-                  ค่าตอบแทนที่ต้องจ่ายให้ Worker:
-                </p>
-                <div className="space-y-2">
-                  {claims?.filter(c => 
-                    (job.status === "in_progress" && c.status === "claimed") ||
-                    (job.status === "pending_review" && c.status === "submitted")
-                  ).map(claim => (
-                    <div key={claim.id} className="flex justify-between items-center text-sm p-2 bg-white rounded-lg">
-                      <span className="text-brand-text-dark">
-                        @{claim.worker?.displayName || "Worker"}
-                        {job.status === "in_progress" && 
-                          ` (${claim.actualQuantity || 0}/${claim.quantity} หน่วย)`
-                        }
-                      </span>
-                      <span className="font-bold text-brand-success">
-                        ฿{(job.status === "in_progress" 
-                          ? (claim.actualQuantity || 0) * job.pricePerUnit
-                          : claim.earnAmount
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between items-center p-3 bg-brand-success/10 rounded-lg border-t-2 border-brand-success">
-                    <span className="font-bold text-brand-text-dark">รวมทั้งหมด</span>
-                    <span className="text-xl font-bold text-brand-success">
-                      ฿{calculateCancelPayment().toFixed(2)}
-                    </span>
+          <Dialog.Header>
+            <Dialog.Title>ยกเลิกงาน</Dialog.Title>
+          </Dialog.Header>
+          <Dialog.Body>
+            <div className="space-y-4">
+              <div className="p-4 bg-brand-warning/5 border border-brand-warning/20 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-brand-warning mt-0.5" />
+                  <div>
+                    <p className="font-bold text-brand-text-dark mb-1">
+                      ยืนยันการยกเลิกงาน?
+                    </p>
+                    <p className="text-sm text-brand-text-light">
+                      การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                    </p>
                   </div>
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-brand-text-dark mb-2">
-                เหตุผล (ถ้ามี)
-              </label>
-              <Textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                rows={3}
-                placeholder="ระบุเหตุผลในการยกเลิกงาน..."
-              />
-            </div>
+              {/* Payment info if applicable */}
+              {job && (job.status === "in_progress" || job.status === "pending_review") && calculateCancelPayment() > 0 && (
+                <div className="p-4 bg-brand-info/5 border border-brand-info/20 rounded-xl">
+                  <p className="font-bold text-brand-text-dark mb-3">
+                    ค่าตอบแทนที่ต้องจ่ายให้ Worker:
+                  </p>
+                  <div className="space-y-2">
+                    {claims?.filter(c => 
+                      (job.status === "in_progress" && c.status === "claimed") ||
+                      (job.status === "pending_review" && c.status === "submitted")
+                    ).map(claim => (
+                      <div key={claim.id} className="flex justify-between items-center text-sm p-2 bg-white rounded-lg">
+                        <span className="text-brand-text-dark">
+                          @{claim.worker?.displayName || "Worker"}
+                          {job.status === "in_progress" && 
+                            ` (${claim.actualQuantity || 0}/${claim.quantity} หน่วย)`
+                          }
+                        </span>
+                        <span className="font-bold text-brand-success">
+                          ฿{(job.status === "in_progress" 
+                            ? (claim.actualQuantity || 0) * job.pricePerUnit
+                            : claim.earnAmount
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center p-3 bg-brand-success/10 rounded-lg border-t-2 border-brand-success">
+                      <span className="font-bold text-brand-text-dark">รวมทั้งหมด</span>
+                      <span className="text-xl font-bold text-brand-success">
+                        ฿{calculateCancelPayment().toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowCancelModal(false)}
-                disabled={isProcessing}
-              >
-                ยกเลิก
-              </Button>
-              <Button
-                onClick={handleCancelJob}
-                disabled={isProcessing}
-                isLoading={isProcessing}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {calculateCancelPayment() > 0 
-                  ? `ยืนยัน - จ่าย ฿${calculateCancelPayment().toFixed(2)}`
-                  : "ยืนยันการยกเลิก"
-                }
-              </Button>
+              <div>
+                <label className="block text-sm font-medium text-brand-text-dark mb-2">
+                  เหตุผล (ถ้ามี)
+                </label>
+                <Textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  rows={3}
+                  placeholder="ระบุเหตุผลในการยกเลิกงาน..."
+                />
+              </div>
             </div>
-          </div>
-        </Modal>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isProcessing}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleCancelJob}
+              disabled={isProcessing}
+              isLoading={isProcessing}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {calculateCancelPayment() > 0 
+                ? `ยืนยัน - จ่าย ฿${calculateCancelPayment().toFixed(2)}`
+                : "ยืนยันการยกเลิก"
+              }
+            </Button>
+          </Dialog.Footer>
+        </Dialog>
       </Section>
     </Container>
   );

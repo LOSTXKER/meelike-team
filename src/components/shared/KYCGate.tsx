@@ -12,33 +12,20 @@ export interface KYCGateProps {
   requiredLevel?: KYCLevel;
   action?: KYCAction;
   onKYCComplete?: () => void;
-  // If true, render children but show modal on interaction
+  /** If true, render children but show modal on interaction */
   renderDisabled?: boolean;
 }
 
-// Helper to get current KYC level from user
 function getCurrentKYCLevel(user: AuthUser | null): KYCLevel {
-  // Check worker KYC
-  if (user?.worker?.kyc?.level) {
-    return user.worker.kyc.level;
-  }
-  // Check seller KYC
-  if (user?.seller?.kyc?.level) {
-    return user.seller.kyc.level;
-  }
-  // Default: none (user only verified email during registration)
+  if (user?.worker?.kyc?.level) return user.worker.kyc.level;
+  if (user?.seller?.kyc?.level) return user.seller.kyc.level;
   return "none";
 }
 
 /**
- * KYCGate - A wrapper component that checks KYC level before allowing actions
- * 
- * Usage:
- * ```tsx
- * <KYCGate requiredLevel="basic" action="withdraw">
- *   <Button onClick={handleWithdraw}>ถอนเงิน</Button>
- * </KYCGate>
- * ```
+ * KYCGate - Always uses modal pattern (no redirect-to-page).
+ * For basic: shows QuickKYC phone modal inline.
+ * For higher: shows KYCRequired modal that directs to verification page.
  */
 export function KYCGate({
   children,
@@ -53,19 +40,22 @@ export function KYCGate({
 
   const currentLevel = getCurrentKYCLevel(user);
   const hasRequiredLevel = meetsKYCRequirement(currentLevel, requiredLevel);
-  const userType: "seller" | "worker" = user?.role === "worker" ? "worker" : "seller";
-  const existingPhone = user?.seller?.contactInfo?.phone || user?.worker?.phone || "";
+  const userType: "seller" | "worker" =
+    user?.role === "worker" ? "worker" : "seller";
+  const existingPhone =
+    user?.seller?.contactInfo?.phone || user?.worker?.phone || "";
 
   const handleStartKYC = useCallback(() => {
     setShowRequiredModal(false);
-    // For basic level, show quick KYC modal (phone verification)
     if (requiredLevel === "basic") {
+      // Inline phone verification — no page redirect
       setShowQuickKYCModal(true);
     } else {
-      // For higher levels, redirect to verification page
-      const verificationUrl = userType === "seller" 
-        ? "/seller/settings/verification" 
-        : "/work/profile/verification";
+      // For verified/business, navigate to verification page
+      const verificationUrl =
+        userType === "seller"
+          ? "/seller/settings/verification"
+          : "/work/profile/verification";
       window.location.href = verificationUrl;
     }
   }, [requiredLevel, userType]);
@@ -80,7 +70,29 @@ export function KYCGate({
     return <>{children}</>;
   }
 
-  // If renderDisabled is true, render children but intercept clicks
+  // Modals shared by both modes
+  const modals = (
+    <>
+      <KYCRequiredModal
+        isOpen={showRequiredModal}
+        onClose={() => setShowRequiredModal(false)}
+        onStartKYC={handleStartKYC}
+        requiredLevel={requiredLevel}
+        currentLevel={currentLevel}
+        action={action}
+        userType={userType}
+      />
+      <QuickKYCModal
+        isOpen={showQuickKYCModal}
+        onClose={() => setShowQuickKYCModal(false)}
+        onSuccess={handleKYCSuccess}
+        existingPhone={existingPhone}
+        action={action}
+      />
+    </>
+  );
+
+  // renderDisabled: render children but intercept clicks
   if (renderDisabled) {
     return (
       <>
@@ -94,29 +106,12 @@ export function KYCGate({
         >
           {children}
         </div>
-
-        <KYCRequiredModal
-          isOpen={showRequiredModal}
-          onClose={() => setShowRequiredModal(false)}
-          onStartKYC={handleStartKYC}
-          requiredLevel={requiredLevel}
-          currentLevel={currentLevel}
-          action={action}
-          userType={userType}
-        />
-
-        <QuickKYCModal
-          isOpen={showQuickKYCModal}
-          onClose={() => setShowQuickKYCModal(false)}
-          onSuccess={handleKYCSuccess}
-          existingPhone={existingPhone}
-          action={action}
-        />
+        {modals}
       </>
     );
   }
 
-  // Default: Show KYC required modal instead of children
+  // Default: show the modal immediately
   return (
     <>
       <KYCRequiredModal
@@ -128,7 +123,6 @@ export function KYCGate({
         action={action}
         userType={userType}
       />
-
       <QuickKYCModal
         isOpen={showQuickKYCModal}
         onClose={() => setShowQuickKYCModal(false)}

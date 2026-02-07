@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ToastContainer } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -48,6 +50,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <MSWProvider>
       <QueryClientProvider client={queryClient}>
         {children}
+        <ToastContainer />
+        <ConfirmDialog />
         {process.env.NODE_ENV === "development" && (
           <ReactQueryDevtools
             initialIsOpen={false}

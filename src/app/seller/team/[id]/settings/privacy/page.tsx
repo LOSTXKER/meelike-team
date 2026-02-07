@@ -13,8 +13,11 @@ import {
   X,
   Save,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function TeamPrivacyPage() {
+  const toast = useToast();
+
   const [isPublic, setIsPublic] = useState(true);
   const [requireApproval, setRequireApproval] = useState(true);
   const [showOnHub, setShowOnHub] = useState(false);
@@ -27,7 +30,7 @@ export default function TeamPrivacyPage() {
   });
 
   const handleSave = () => {
-    alert("บันทึกการตั้งค่าเรียบร้อย!");
+    toast.success("บันทึกการตั้งค่าเรียบร้อย!");
   };
 
   return (

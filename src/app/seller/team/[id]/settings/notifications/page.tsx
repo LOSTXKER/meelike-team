@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { Card, Button, Switch } from "@/components/ui";
 import { Bell, Save } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function TeamNotificationsPage() {
+  const toast = useToast();
+
   const [notifyNewRequests, setNotifyNewRequests] = useState(true);
   const [notifyPendingReview, setNotifyPendingReview] = useState(true);
   const [dailySummary, setDailySummary] = useState(false);
 
   const handleSave = () => {
-    alert("บันทึกการตั้งค่าเรียบร้อย!");
+    toast.success("บันทึกการตั้งค่าเรียบร้อย!");
   };
 
   return (

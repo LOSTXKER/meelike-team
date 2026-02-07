@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button, Badge, Input, Select, Modal } from "@/components/ui";
+import { Card, Button, Badge, Input, Select } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { 
   Shield, 
   Search, 
@@ -320,16 +321,18 @@ export default function AdminKYCPage() {
       </div>
 
       {/* Detail Modal */}
-      <Modal
-        isOpen={isModalOpen}
+      <Dialog
+        open={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
           setSelectedItem(null);
           setRejectionReason("");
         }}
-        title="รายละเอียด KYC"
-        size="lg"
       >
+        <Dialog.Header>
+          <Dialog.Title>รายละเอียด KYC</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
         {selectedItem && (
           <div className="space-y-6">
             {/* User Info Header */}
@@ -507,9 +510,11 @@ export default function AdminKYCPage() {
               </div>
             )}
 
-            {/* Actions */}
-            {(selectedItem.status === "submitted" || selectedItem.status === "reviewing") && (
-              <div className="flex gap-3 pt-4 border-t border-brand-border">
+          </div>
+        )}
+        </Dialog.Body>
+        {selectedItem && (selectedItem.status === "submitted" || selectedItem.status === "reviewing") && (
+          <Dialog.Footer>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -539,12 +544,11 @@ export default function AdminKYCPage() {
                   <CheckCircle className="w-4 h-4 mr-1" />
                   อนุมัติ
                 </Button>
-              </div>
-            )}
-
-            {/* Already Processed */}
-            {(selectedItem.status === "approved" || selectedItem.status === "rejected") && (
-              <div className={`p-4 rounded-lg ${selectedItem.status === "approved" ? "bg-emerald-50" : "bg-red-50"}`}>
+          </Dialog.Footer>
+        )}
+        {selectedItem && (selectedItem.status === "approved" || selectedItem.status === "rejected") && (
+          <Dialog.Footer>
+              <div className={`w-full p-4 rounded-lg ${selectedItem.status === "approved" ? "bg-emerald-50" : "bg-red-50"}`}>
                 <div className="flex items-center gap-2">
                   {selectedItem.status === "approved" ? (
                     <>
@@ -559,10 +563,9 @@ export default function AdminKYCPage() {
                   )}
                 </div>
               </div>
-            )}
-          </div>
+          </Dialog.Footer>
         )}
-      </Modal>
+      </Dialog>
     </div>
   );
 }

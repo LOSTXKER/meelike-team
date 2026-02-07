@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Modal, Button, Input, Select, Badge } from "@/components/ui";
+import { Button, Input, Select, Badge } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { 
   mockMeeLikeServices, 
   meeLikeCategories,
@@ -157,12 +158,11 @@ export function MeeLikeImportModal({
   const availableCount = filteredServices.filter(s => !isAlreadyImported(s.service)).length;
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="นำเข้าบริการจาก MeeLike" 
-      size="xl"
-    >
+    <Dialog open={isOpen} onClose={onClose}>
+      <Dialog.Header>
+        <Dialog.Title>นำเข้าบริการจาก MeeLike</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
       <div className="space-y-4">
         {/* Info Banner */}
         <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
@@ -342,8 +342,9 @@ export function MeeLikeImportModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-brand-border/50">
+      </div>
+      </Dialog.Body>
+      <Dialog.Footer>
           <div className="text-sm text-brand-text-light">
             {selectedServices.size > 0 && (
               <span>
@@ -364,8 +365,7 @@ export function MeeLikeImportModal({
               นำเข้า {selectedServices.size} บริการ
             </Button>
           </div>
-        </div>
-      </div>
-    </Modal>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

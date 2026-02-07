@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Textarea, Skeleton, Modal, Avatar } from "@/components/ui";
+import { Card, Badge, Button, Textarea, Skeleton, Avatar } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { PlatformIcon, EmptyState, Breadcrumb } from "@/components/shared";
 import { usePendingReviews, useWorkers, useTeamJobs, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
@@ -24,11 +25,16 @@ import {
   Eye,
   ShieldCheck,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function TeamReviewPage() {
   const params = useParams();
   const teamId = params.id as string;
   
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -102,10 +108,10 @@ export default function TeamReviewPage() {
       setShowApproveModal(false);
       setSelectedJobId(null);
       
-      alert(`อนุมัติงาน ${selectedJob.serviceName} เรียบร้อย! ระบบจะสร้างรายการจ่ายเงิน ฿${selectedJob.workerPayout} ให้ @${selectedJob.worker.displayName}`);
+      toast.success(`อนุมัติงาน ${selectedJob.serviceName} เรียบร้อย! ระบบจะสร้างรายการจ่ายเงิน ฿${selectedJob.workerPayout} ให้ @${selectedJob.worker.displayName}`);
     } catch (error) {
       console.error("Error approving job:", error);
-      alert("เกิดข้อผิดพลาดในการอนุมัติงาน กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาดในการอนุมัติงาน กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -127,10 +133,10 @@ export default function TeamReviewPage() {
       setSelectedJobId(null);
       setRejectReason("");
       
-      alert(`ปฏิเสธงาน ${selectedJob.serviceName} - ส่งกลับให้ Worker แก้ไข`);
+      toast.success(`ปฏิเสธงาน ${selectedJob.serviceName} - ส่งกลับให้ Worker แก้ไข`);
     } catch (error) {
       console.error("Error rejecting job:", error);
-      alert("เกิดข้อผิดพลาดในการปฏิเสธงาน กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาดในการปฏิเสธงาน กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsProcessing(false);
     }
@@ -178,7 +184,7 @@ export default function TeamReviewPage() {
             <Button
               size="sm"
               onClick={async () => {
-                if (confirm(`อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน? จะสร้างรายการจ่ายเงินรวม ${formatCurrency(totalPayout)}`)) {
+                if (await confirm({ title: "ยืนยัน", message: `อนุมัติทั้งหมด ${pendingReviewJobs.length} งาน? จะสร้างรายการจ่ายเงินรวม ${formatCurrency(totalPayout)}`, variant: "warning" })) {
                   setIsProcessing(true);
                   try {
                     for (const job of pendingReviewJobs) {
@@ -186,10 +192,10 @@ export default function TeamReviewPage() {
                     }
                     await refetchReviews();
                     setLocallyRemovedIds(new Set(pendingReviewJobs.map(j => j.id)));
-                    alert(`อนุมัติงานทั้งหมด ${pendingReviewJobs.length} รายการเรียบร้อย!`);
+                    toast.success(`อนุมัติงานทั้งหมด ${pendingReviewJobs.length} รายการเรียบร้อย!`);
                   } catch (error) {
                     console.error("Error approving all:", error);
-                    alert("เกิดข้อผิดพลาดบางรายการ กรุณาตรวจสอบอีกครั้ง");
+                    toast.error("เกิดข้อผิดพลาดบางรายการ กรุณาตรวจสอบอีกครั้ง");
                   } finally {
                     setIsProcessing(false);
                   }
@@ -417,126 +423,132 @@ export default function TeamReviewPage() {
       </Card>
 
       {/* Approve Modal */}
-      <Modal
-        isOpen={showApproveModal}
+      <Dialog
+        open={showApproveModal}
         onClose={() => {
           setShowApproveModal(false);
           setSelectedJobId(null);
         }}
-        title="ยืนยันการอนุมัติ"
       >
-        {selectedJob && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-brand-success/5 border border-brand-success/20 rounded-xl">
-               <div className="p-3 bg-brand-success/10 rounded-full text-brand-success">
-                  <CheckCircle className="w-6 h-6" />
-               </div>
-               <div>
-                  <h4 className="font-bold text-brand-text-dark">อนุมัติงานนี้?</h4>
-                  <p className="text-sm text-brand-text-light">ระบบจะโอนเงินให้ Worker ทันที</p>
-               </div>
-            </div>
-            
-            <div className="space-y-3 bg-brand-bg/50 p-4 rounded-xl border border-brand-border/30">
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">งาน</span>
-                <span className="font-medium text-brand-text-dark">{selectedJob.serviceName}</span>
+        <Dialog.Header>
+          <Dialog.Title>ยืนยันการอนุมัติ</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          {selectedJob && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-brand-success/5 border border-brand-success/20 rounded-xl">
+                 <div className="p-3 bg-brand-success/10 rounded-full text-brand-success">
+                    <CheckCircle className="w-6 h-6" />
+                 </div>
+                 <div>
+                    <h4 className="font-bold text-brand-text-dark">อนุมัติงานนี้?</h4>
+                    <p className="text-sm text-brand-text-light">ระบบจะโอนเงินให้ Worker ทันที</p>
+                 </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-text-light">Worker</span>
-                <span className="font-medium text-brand-text-dark">@{selectedJob.worker.displayName}</span>
-              </div>
-              <div className="h-px bg-brand-border/50 my-2"></div>
-              <div className="flex justify-between items-center">
-                <span className="text-brand-text-light">ยอดเงินที่โอน</span>
-                <span className="font-bold text-lg text-brand-success">฿{selectedJob.workerPayout}</span>
+              
+              <div className="space-y-3 bg-brand-bg/50 p-4 rounded-xl border border-brand-border/30">
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-text-light">งาน</span>
+                  <span className="font-medium text-brand-text-dark">{selectedJob.serviceName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-text-light">Worker</span>
+                  <span className="font-medium text-brand-text-dark">@{selectedJob.worker.displayName}</span>
+                </div>
+                <div className="h-px bg-brand-border/50 my-2"></div>
+                <div className="flex justify-between items-center">
+                  <span className="text-brand-text-light">ยอดเงินที่โอน</span>
+                  <span className="font-bold text-lg text-brand-success">฿{selectedJob.workerPayout}</span>
+                </div>
               </div>
             </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowApproveModal(false);
-                  setSelectedJobId(null);
-                }}
-                className="flex-1"
-              >
-                ยกเลิก
-              </Button>
-              <Button 
-                onClick={handleApprove} 
-                className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent"
-                disabled={isProcessing}
-                isLoading={isProcessing}
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                {isProcessing ? "กำลังอนุมัติ..." : "ยืนยันอนุมัติ"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowApproveModal(false);
+              setSelectedJobId(null);
+            }}
+            className="flex-1"
+          >
+            ยกเลิก
+          </Button>
+          <Button 
+            onClick={handleApprove} 
+            className="flex-1 bg-brand-success hover:bg-brand-success/90 shadow-lg shadow-brand-success/20 border-transparent"
+            disabled={isProcessing}
+            isLoading={isProcessing}
+          >
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            {isProcessing ? "กำลังอนุมัติ..." : "ยืนยันอนุมัติ"}
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
 
       {/* Reject Modal */}
-      <Modal
-        isOpen={showRejectModal}
+      <Dialog
+        open={showRejectModal}
         onClose={() => {
           setShowRejectModal(false);
           setSelectedJobId(null);
           setRejectReason("");
         }}
-        title="ปฏิเสธงาน"
       >
-        {selectedJob && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="p-3 bg-red-100 rounded-full text-red-600">
-                <AlertCircle className="w-6 h-6" />
+        <Dialog.Header>
+          <Dialog.Title>ปฏิเสธงาน</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          {selectedJob && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="p-3 bg-red-100 rounded-full text-red-600">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-brand-text-dark">ไม่อนุมัติงานนี้?</h4>
+                  <p className="text-sm text-brand-text-light">งานจะถูกส่งกลับให้ Worker แก้ไข</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-brand-text-dark">ไม่อนุมัติงานนี้?</h4>
-                <p className="text-sm text-brand-text-light">งานจะถูกส่งกลับให้ Worker แก้ไข</p>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-brand-text-dark">ระบุเหตุผลที่ปฏิเสธ</label>
+                <Textarea
+                  placeholder="เช่น รูปหลักฐานไม่ชัดเจน, จำนวนยอดไม่ครบ..."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={4}
+                  className="bg-white"
+                />
+                <p className="text-xs text-brand-text-light">* Worker จะเห็นข้อความนี้เพื่อนำไปแก้ไขงาน</p>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-text-dark">ระบุเหตุผลที่ปฏิเสธ</label>
-              <Textarea
-                placeholder="เช่น รูปหลักฐานไม่ชัดเจน, จำนวนยอดไม่ครบ..."
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                rows={4}
-                className="bg-white"
-              />
-              <p className="text-xs text-brand-text-light">* Worker จะเห็นข้อความนี้เพื่อนำไปแก้ไขงาน</p>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setSelectedJobId(null);
-                  setRejectReason("");
-                }}
-                className="flex-1"
-              >
-                ยกเลิก
-              </Button>
-              <Button
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-                onClick={handleReject}
-                disabled={!rejectReason.trim() || isProcessing}
-                isLoading={isProcessing}
-              >
-                <XCircle className="w-4 h-4 mr-2" />
-                {isProcessing ? "กำลังปฏิเสธ..." : "ยืนยันปฏิเสธ"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowRejectModal(false);
+              setSelectedJobId(null);
+              setRejectReason("");
+            }}
+            className="flex-1"
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+            onClick={handleReject}
+            disabled={!rejectReason.trim() || isProcessing}
+            isLoading={isProcessing}
+          >
+            <XCircle className="w-4 h-4 mr-2" />
+            {isProcessing ? "กำลังปฏิเสธ..." : "ยืนยันปฏิเสธ"}
+          </Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

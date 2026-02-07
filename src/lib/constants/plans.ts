@@ -111,6 +111,7 @@ export interface RankConfig {
   feePercent: number; // Platform fee percentage
   color: string;
   description: string;
+  benefits: string[];
 }
 
 export const RANKS: Record<SellerRank, RankConfig> = {
@@ -123,6 +124,10 @@ export const RANKS: Record<SellerRank, RankConfig> = {
     feePercent: 12,
     color: "#CD7F32",
     description: "เริ่มต้น",
+    benefits: [
+      "ค่าธรรมเนียม 12%",
+      "เข้าถึงระบบพื้นฐาน",
+    ],
   },
   silver: {
     id: "silver",
@@ -133,6 +138,11 @@ export const RANKS: Record<SellerRank, RankConfig> = {
     feePercent: 11,
     color: "#C0C0C0",
     description: "ยอดจ้าง ฿20K - ฿50K",
+    benefits: [
+      "ค่าธรรมเนียมลดเหลือ 11%",
+      "แบดจ์ Silver ที่หน้าร้าน",
+      "ลำดับแสดงผลสูงขึ้น",
+    ],
   },
   gold: {
     id: "gold",
@@ -143,6 +153,12 @@ export const RANKS: Record<SellerRank, RankConfig> = {
     feePercent: 10,
     color: "#FFD700",
     description: "ยอดจ้าง ฿50K - ฿150K",
+    benefits: [
+      "ค่าธรรมเนียมลดเหลือ 10%",
+      "แบดจ์ Gold ที่หน้าร้าน",
+      "รายงาน Analytics ขั้นสูง",
+      "ปักหมุดร้านในหมวดหมู่",
+    ],
   },
   platinum: {
     id: "platinum",
@@ -153,6 +169,13 @@ export const RANKS: Record<SellerRank, RankConfig> = {
     feePercent: 9,
     color: "#E5E4E2",
     description: "ยอดจ้าง > ฿150K",
+    benefits: [
+      "ค่าธรรมเนียมต่ำสุด 9%",
+      "แบดจ์ Platinum ที่หน้าร้าน",
+      "ซัพพอร์ตเร่งด่วน (Priority)",
+      "แบนเนอร์โปรโมตฟรี 1 ครั้ง/เดือน",
+      "เข้าถึงฟีเจอร์ก่อนใคร (Early access)",
+    ],
   },
 };
 

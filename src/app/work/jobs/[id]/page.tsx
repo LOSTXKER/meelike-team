@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Progress, Dialog, Textarea, Modal } from "@/components/ui";
+import { Card, Badge, Button, Progress, Textarea } from "@/components/ui";
+import { Dialog } from "@/components/ui/Dialog";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { useWorkerJobs } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
@@ -520,11 +521,14 @@ export default function JobDetailPage() {
       </div>
 
       {/* Submit Modal */}
-      <Modal
-        isOpen={showSubmitModal}
+      <Dialog
+        open={showSubmitModal}
         onClose={() => setShowSubmitModal(false)}
-        title="ส่งงาน"
       >
+        <Dialog.Header>
+          <Dialog.Title>ส่งงาน</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
         <div className="space-y-4">
           <div className="p-4 bg-brand-bg rounded-lg">
             <div className="flex justify-between mb-2">
@@ -569,8 +573,9 @@ export default function JobDetailPage() {
             value={submitNote}
             onChange={(e) => setSubmitNote(e.target.value)}
           />
-
-            <div className="flex gap-3 justify-end">
+        </div>
+        </Dialog.Body>
+        <Dialog.Footer>
               <Button variant="outline" onClick={() => setShowSubmitModal(false)} disabled={isSubmitting}>
                 ยกเลิก
               </Button>
@@ -578,9 +583,8 @@ export default function JobDetailPage() {
                 <Send className="w-4 h-4 mr-2" />
                 {isSubmitting ? "กำลังส่ง..." : "ส่งงาน"}
               </Button>
-            </div>
-        </div>
-      </Modal>
+        </Dialog.Footer>
+      </Dialog>
 
       {/* Report Content Modal */}
       <ReportContentModal

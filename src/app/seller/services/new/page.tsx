@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Card, Button, Input, Select, Badge, Tabs, RadioGroup } from "@/components/ui";
 import { HStack } from "@/components/layout";
 import { PlatformIcon, ServiceTypeIcon } from "@/components/seller";
+import { useToast } from "@/components/ui/toast";
+import { useUnsavedChanges } from "@/lib/hooks/useUnsavedChanges";
 import { api } from "@/lib/api";
 import { 
   mockMeeLikeServices, 
@@ -109,6 +111,8 @@ function createEmptyManualRow(): ManualServiceRow {
 
 export default function NewServicePage() {
   const router = useRouter();
+  const toast = useToast();
+  const { setDirty, setClean } = useUnsavedChanges();
   
   // Mode Selection
   const [selectedMode, setSelectedMode] = useState<ServiceMode>(null);
@@ -176,6 +180,7 @@ export default function NewServicePage() {
       });
     }
     setSelectedServices(newSelection);
+    setDirty();
   };
 
   const updateServicePrice = (serviceId: string, customPrice: number) => {
@@ -195,6 +200,7 @@ export default function NewServicePage() {
       });
       setSelectedServices(newSelection);
     }
+    setDirty();
   };
 
   const resetServicePrice = (serviceId: string) => {
@@ -230,6 +236,7 @@ export default function NewServicePage() {
       });
       setSelectedServices(newSelection);
     }
+    setDirty();
   };
 
   // ============================================
@@ -238,11 +245,13 @@ export default function NewServicePage() {
 
   const addManualRow = () => {
     setManualRows([...manualRows, createEmptyManualRow()]);
+    setDirty();
   };
 
   const removeManualRow = (id: string) => {
     if (manualRows.length <= 1) return;
     setManualRows(manualRows.filter(r => r.id !== id));
+    setDirty();
   };
 
   const duplicateManualRow = (row: ManualServiceRow) => {
@@ -251,12 +260,14 @@ export default function NewServicePage() {
     const newRows = [...manualRows];
     newRows.splice(index + 1, 0, newRow);
     setManualRows(newRows);
+    setDirty();
   };
 
   const updateManualRow = (id: string, field: keyof ManualServiceRow, value: string | number) => {
     setManualRows(manualRows.map(r => 
       r.id === id ? { ...r, [field]: value } : r
     ));
+    setDirty();
   };
 
   const validManualRows = manualRows.filter(r => r.name.trim() !== "");
@@ -315,11 +326,12 @@ export default function NewServicePage() {
       // Save to localStorage via API
       await api.seller.createServices(servicesToAdd);
       
-      alert(`เพิ่ม ${servicesToAdd.length} บริการเรียบร้อย!`);
+      setClean();
+      toast.success(`เพิ่ม ${servicesToAdd.length} บริการเรียบร้อย!`);
       router.push("/seller/services");
     } catch (error) {
       console.error("Error creating services:", error);
-      alert("เกิดข้อผิดพลาดในการเพิ่มบริการ กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาดในการเพิ่มบริการ กรุณาลองใหม่อีกครั้ง");
       setIsSubmitting(false);
     }
   };

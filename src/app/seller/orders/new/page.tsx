@@ -9,6 +9,8 @@ import { PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import { useSellerServices, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
 import type { Platform, ServiceMode } from "@/types";
+import { useToast } from "@/components/ui/toast";
+import { useUnsavedChanges } from "@/lib/hooks/useUnsavedChanges";
 import {
   ArrowLeft,
   Plus,
@@ -55,6 +57,9 @@ export default function NewOrderPage() {
   const { data: mockServices, isLoading } = useSellerServices();
   const { data: teams, isLoading: isLoadingTeams } = useSellerTeams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
+  const { setDirty, setClean } = useUnsavedChanges();
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Customer info
   const [customerName, setCustomerName] = useState("");
@@ -92,7 +97,7 @@ export default function NewOrderPage() {
 
   const handleAddItem = () => {
     if (!selectedService || !targetUrl || !quantity || !mockServices) {
-      alert("กรุณากรอกข้อมูลให้ครบ");
+      toast.warning("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
 
@@ -101,7 +106,7 @@ export default function NewOrderPage() {
 
     const qty = parseInt(quantity);
     if (qty < service.minQuantity || qty > service.maxQuantity) {
-      alert(`จำนวนต้องอยู่ระหว่าง ${service.minQuantity} - ${service.maxQuantity}`);
+      toast.warning(`จำนวนต้องอยู่ระหว่าง ${service.minQuantity} - ${service.maxQuantity}`);
       return;
     }
 
@@ -126,6 +131,7 @@ export default function NewOrderPage() {
     };
 
     setItems([...items, newItem]);
+    setDirty();
     
     // Reset form
     setSelectedService("");
@@ -136,6 +142,7 @@ export default function NewOrderPage() {
 
   const handleRemoveItem = (itemId: string) => {
     setItems(items.filter((item) => item.id !== itemId));
+    setDirty();
   };
 
   const calculateTotal = () => {
@@ -143,24 +150,32 @@ export default function NewOrderPage() {
   };
 
   const handleSubmit = async () => {
-    if (!customerName || !contactValue) {
-      alert("กรุณากรอกข้อมูลลูกค้า");
+    const newErrors: Record<string, string> = {};
+    if (!customerName) {
+      newErrors.customerName = "กรุณากรอกชื่อลูกค้า";
+    }
+    if (!contactValue) {
+      newErrors.contactValue = "กรุณากรอกข้อมูลติดต่อ";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.warning("กรุณากรอกข้อมูลลูกค้าให้ครบ");
       return;
     }
 
     if (items.length === 0) {
-      alert("กรุณาเพิ่มบริการอย่างน้อย 1 รายการ");
+      toast.warning("กรุณาเพิ่มบริการอย่างน้อย 1 รายการ");
       return;
     }
 
     // Validate auto create jobs settings
     if (autoCreateJobs && hasHumanService) {
       if (!selectedTeamId) {
-        alert("กรุณาเลือกทีมสำหรับสร้าง Job");
+        toast.warning("กรุณาเลือกทีมสำหรับสร้าง Job");
         return;
       }
       if (!jobPayRate || parseFloat(jobPayRate) <= 0) {
-        alert("กรุณาระบุค่าจ้างต่อหน่วย");
+        toast.warning("กรุณาระบุค่าจ้างต่อหน่วย");
         return;
       }
     }
@@ -203,11 +218,12 @@ export default function NewOrderPage() {
         ? `สร้างออเดอร์ ${newOrder.orderNumber} และสร้าง Job ให้ทีมเรียบร้อย!\nยอดรวม: ฿${newOrder.total.toLocaleString()}`
         : `สร้างออเดอร์ ${newOrder.orderNumber} เรียบร้อย!\nยอดรวม: ฿${newOrder.total.toLocaleString()}\n\n⚠️ อย่าลืมไปส่งคำสั่งซื้อในหน้า Order Detail`;
       
-      alert(successMessage);
+      toast.success(successMessage);
+      setClean();
       router.push(`/seller/orders/${newOrder.id}`);
     } catch (error) {
       console.error("Error creating order:", error);
-      alert("เกิดข้อผิดพลาดในการสร้างออเดอร์ กรุณาลองใหม่อีกครั้ง");
+      toast.error("เกิดข้อผิดพลาดในการสร้างออเดอร์ กรุณาลองใหม่อีกครั้ง");
       setIsSubmitting(false);
     }
   };
@@ -257,13 +273,21 @@ export default function NewOrderPage() {
                 label="ชื่อลูกค้า *"
                 placeholder="เช่น คุณสมชาย"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => {
+                  setCustomerName(e.target.value);
+                  setDirty();
+                  if (errors.customerName) setErrors((prev) => ({ ...prev, customerName: "" }));
+                }}
+                error={errors.customerName}
                 className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
               <Select
                 label="ช่องทางติดต่อ"
                 value={contactType}
-                onChange={(e) => setContactType(e.target.value)}
+                onChange={(e) => {
+                  setContactType(e.target.value);
+                  setDirty();
+                }}
                 options={contactTypes}
                 className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
@@ -277,7 +301,12 @@ export default function NewOrderPage() {
                     : "ข้อมูลติดต่อ"
                 }
                 value={contactValue}
-                onChange={(e) => setContactValue(e.target.value)}
+                onChange={(e) => {
+                  setContactValue(e.target.value);
+                  setDirty();
+                  if (errors.contactValue) setErrors((prev) => ({ ...prev, contactValue: "" }));
+                }}
+                error={errors.contactValue}
                 className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
               />
               <div className="sm:col-span-2">
@@ -285,7 +314,10 @@ export default function NewOrderPage() {
                   label="หมายเหตุ (ถ้ามี)"
                   placeholder="หมายเหตุจากลูกค้า..."
                   value={customerNote}
-                  onChange={(e) => setCustomerNote(e.target.value)}
+                  onChange={(e) => {
+                    setCustomerNote(e.target.value);
+                    setDirty();
+                  }}
                   rows={2}
                   className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
                 />
@@ -590,6 +622,7 @@ export default function NewOrderPage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || items.length === 0}
+                  isLoading={isSubmitting}
                   className="w-full mt-2 h-12 text-base rounded-xl shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                   size="lg"
                 >

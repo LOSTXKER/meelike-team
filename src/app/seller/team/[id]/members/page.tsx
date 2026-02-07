@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Card, Badge, Button, Input, Select, Modal, Skeleton } from "@/components/ui";
+import { Card, Badge, Button, Input, Select, Skeleton } from "@/components/ui";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+import { Dialog } from "@/components/ui/Dialog";
 import { 
   EmptyState, 
   InviteTeamModal, 
@@ -29,11 +31,16 @@ import {
   Crown,
   Briefcase,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function TeamMembersPage() {
   const params = useParams();
   const teamId = params.id as string;
   
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | TeamRole>("all");
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -57,6 +64,9 @@ export default function TeamMembersPage() {
       return matchSearch && matchRole;
     });
   }, [members, searchQuery, roleFilter]);
+
+  // Paginate filtered members
+  const { paginatedItems: paginatedMembers, currentPage, totalPages, totalItems, pageSize, setCurrentPage } = usePagination(filteredMembers, 10);
 
   const selectedMember = useMemo(() => {
     return members?.find((m) => m.worker.id === selectedMemberId);
@@ -243,7 +253,7 @@ export default function TeamMembersPage() {
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <Select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as "all" | TeamRole)}
+            onChange={(e) => { setRoleFilter(e.target.value as "all" | TeamRole); setCurrentPage(1); }}
             className="min-w-[160px] border-brand-border/50"
           >
             <option value="all">ทุกบทบาท</option>
@@ -256,7 +266,7 @@ export default function TeamMembersPage() {
           <Input
             placeholder="ค้นหาสมาชิก..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             className="w-full border-brand-border/50 bg-brand-bg/50 focus:bg-white !py-2.5 !rounded-xl"
             leftIcon={<Search className="w-4 h-4 text-brand-text-light" />}
           />
@@ -265,7 +275,7 @@ export default function TeamMembersPage() {
 
       {/* Members List */}
       <DataTable
-        data={filteredMembers}
+        data={paginatedMembers}
         columns={columns}
         keyExtractor={(member) => member.worker.id}
         emptyState={{
@@ -284,6 +294,15 @@ export default function TeamMembersPage() {
         }}
       />
 
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+      />
+
       {/* Invite Modal */}
       {currentTeam && (
         <InviteTeamModal
@@ -294,95 +313,101 @@ export default function TeamMembersPage() {
       )}
 
       {/* Member Detail Modal */}
-      <Modal
-        isOpen={showMemberModal}
+      <Dialog
+        open={showMemberModal}
         onClose={() => {
           setShowMemberModal(false);
           setSelectedMemberId(null);
         }}
-        title="จัดการสมาชิก"
         size="md"
       >
-        {selectedMember && (
-          <div className="space-y-6">
-            {/* Member Info */}
-            <div className="flex items-center gap-4 p-4 bg-brand-bg/50 rounded-xl border border-brand-border/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-primary-dark rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                {selectedMember.worker.displayName.charAt(0)}
+        <Dialog.Header>
+          <Dialog.Title>จัดการสมาชิก</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          {selectedMember && (
+            <div className="space-y-6">
+              {/* Member Info */}
+              <div className="flex items-center gap-4 p-4 bg-brand-bg/50 rounded-xl border border-brand-border/30">
+                <div className="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-primary-dark rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                  {selectedMember.worker.displayName.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-brand-text-dark">@{selectedMember.worker.displayName}</h3>
+                  <div className="flex items-center gap-3 text-sm text-brand-text-light mt-1">
+                    <Badge variant={TEAM_ROLES[selectedMember.role as TeamRoleType]?.variant || "default"} size="sm">
+                      {TEAM_ROLES[selectedMember.role as TeamRoleType]?.labelTh || selectedMember.role}
+                    </Badge>
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
+                      {selectedMember.worker.rating}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg text-brand-text-dark">@{selectedMember.worker.displayName}</h3>
-                <div className="flex items-center gap-3 text-sm text-brand-text-light mt-1">
-                  <Badge variant={TEAM_ROLES[selectedMember.role as TeamRoleType]?.variant || "default"} size="sm">
-                    {TEAM_ROLES[selectedMember.role as TeamRoleType]?.labelTh || selectedMember.role}
-                  </Badge>
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 text-brand-warning fill-brand-warning" />
-                    {selectedMember.worker.rating}
-                  </span>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
+                  <p className="text-xl font-bold text-brand-text-dark">{selectedMember.worker.totalJobsCompleted}</p>
+                  <p className="text-xs text-brand-text-light">งานเสร็จ</p>
+                </div>
+                <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
+                  <p className="text-xl font-bold text-brand-success">฿{selectedMember.totalEarned?.toLocaleString() || 0}</p>
+                  <p className="text-xs text-brand-text-light">รายได้รวม</p>
+                </div>
+                <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
+                  <p className="text-xl font-bold text-brand-text-dark uppercase">{selectedMember.worker.level}</p>
+                  <p className="text-xs text-brand-text-light">ระดับ</p>
+                </div>
+              </div>
+
+              {/* Role Change */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-brand-text-dark">เปลี่ยนบทบาท</label>
+                <Select 
+                  defaultValue={selectedMember.role} 
+                  className="w-full"
+                  id={`role-select-${selectedMember.id}`}
+                >
+                  <option value="lead">หัวหน้าทีม</option>
+                  <option value="assistant">ผู้ช่วย</option>
+                  <option value="worker">Worker</option>
+                </Select>
+              </div>
+
+              {/* Contact Info */}
+              <div className="space-y-3 pt-4 border-t border-brand-border/30">
+                <h4 className="font-medium text-brand-text-dark text-sm">ข้อมูลติดต่อ</h4>
+                <div className="flex items-center gap-3 text-sm text-brand-text-light">
+                  <Mail className="w-4 h-4" />
+                  <span>worker@example.com</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-brand-text-light">
+                  <Phone className="w-4 h-4" />
+                  <span>08x-xxx-xxxx</span>
                 </div>
               </div>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
-                <p className="text-xl font-bold text-brand-text-dark">{selectedMember.worker.totalJobsCompleted}</p>
-                <p className="text-xs text-brand-text-light">งานเสร็จ</p>
-              </div>
-              <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
-                <p className="text-xl font-bold text-brand-success">฿{selectedMember.totalEarned?.toLocaleString() || 0}</p>
-                <p className="text-xs text-brand-text-light">รายได้รวม</p>
-              </div>
-              <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
-                <p className="text-xl font-bold text-brand-text-dark uppercase">{selectedMember.worker.level}</p>
-                <p className="text-xs text-brand-text-light">ระดับ</p>
-              </div>
-            </div>
-
-            {/* Role Change */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-text-dark">เปลี่ยนบทบาท</label>
-              <Select 
-                defaultValue={selectedMember.role} 
-                className="w-full"
-                id={`role-select-${selectedMember.id}`}
-              >
-                <option value="lead">หัวหน้าทีม</option>
-                <option value="assistant">ผู้ช่วย</option>
-                <option value="worker">Worker</option>
-              </Select>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-3 pt-4 border-t border-brand-border/30">
-              <h4 className="font-medium text-brand-text-dark text-sm">ข้อมูลติดต่อ</h4>
-              <div className="flex items-center gap-3 text-sm text-brand-text-light">
-                <Mail className="w-4 h-4" />
-                <span>worker@example.com</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-brand-text-light">
-                <Phone className="w-4 h-4" />
-                <span>08x-xxx-xxxx</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-brand-border/30">
+          )}
+        </Dialog.Body>
+        <Dialog.Footer>
+          {selectedMember && (
+            <>
               <Button
                 variant="outline"
                 className="flex-1 border-brand-error/20 text-brand-error hover:bg-brand-error/5"
                 onClick={async () => {
-                  if (confirm(`ลบ @${selectedMember.worker.displayName} ออกจากทีม?`)) {
+                  if (await confirm({ title: "ยืนยัน", message: `ลบ @${selectedMember.worker.displayName} ออกจากทีม?`, variant: "danger", confirmLabel: "นำออก" })) {
                     try {
                       await api.seller.removeTeamMember(teamId, selectedMember.workerId);
                       await refetchMembers();
                       setShowMemberModal(false);
                       setSelectedMemberId(null);
-                      alert("ลบสมาชิกออกจากทีมแล้ว");
+                      toast.success("ลบสมาชิกออกจากทีมแล้ว");
                     } catch (error) {
                       console.error("Error removing member:", error);
-                      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
                     }
                   }
                 }}
@@ -400,23 +425,23 @@ export default function TeamMembersPage() {
                     if (newRole !== selectedMember.role) {
                       await api.seller.updateTeamMemberRole(teamId, selectedMember.workerId, newRole);
                       await refetchMembers();
-                      alert("อัปเดตบทบาทเรียบร้อย");
+                      toast.success("อัปเดตบทบาทเรียบร้อย");
                     }
                     
                     setShowMemberModal(false);
                     setSelectedMemberId(null);
                   } catch (error) {
                     console.error("Error updating member:", error);
-                    alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+                    toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
                   }
                 }}
               >
                 บันทึก
               </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+            </>
+          )}
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

@@ -32,3 +32,4 @@ export { Switch } from "./Switch";
 export { Checkbox } from "./Checkbox";
 export { RadioGroup } from "./Radio";
 export { Dialog } from "./Dialog";
+export { Pagination, usePagination } from "./pagination";
