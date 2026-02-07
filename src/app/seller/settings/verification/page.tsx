@@ -191,167 +191,211 @@ export default function VerificationPage() {
   // ===== OVERVIEW =====
 
   if (view === "overview") {
-    // Find the current step config for the hero card
-    const currentStepConfig = STEPS.find(
-      (s) => s.level === currentLevel
-    );
-    const currentWithdrawLimit =
-      currentLevel === "none"
-        ? "฿0"
-        : currentLevel === "basic"
-          ? "฿1,000"
-          : currentLevel === "verified"
-            ? "฿10,000"
-            : "ไม่จำกัด";
     const currentLevelLabel =
       currentLevel === "none"
         ? "ยังไม่ยืนยัน"
         : currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1);
 
+    // Find the next available step
+    const nextStep = STEPS.find(
+      (s) => getStepStatus(s.level, currentLevel) === "available"
+    );
+
+    // Feature comparison data - shows what each level unlocks
+    const FEATURE_ROWS: {
+      label: string;
+      icon: React.ElementType;
+      none: string | boolean;
+      basic: string | boolean;
+      verified: string | boolean;
+      business: string | boolean;
+    }[] = [
+      {
+        label: "วงเงินถอน/วัน",
+        icon: Sparkles,
+        none: "฿0",
+        basic: "฿1,000",
+        verified: "฿10,000",
+        business: "ไม่จำกัด",
+      },
+      { label: "เติมเงิน", icon: Sparkles, none: false, basic: true, verified: true, business: true },
+      { label: "รับออเดอร์", icon: Sparkles, none: false, basic: true, verified: true, business: true },
+      { label: "ถอนเงิน", icon: Sparkles, none: false, basic: false, verified: true, business: true },
+      { label: "สร้างทีม", icon: Sparkles, none: false, basic: false, verified: true, business: true },
+      { label: "โพสต์งานใน Hub", icon: Sparkles, none: false, basic: false, verified: true, business: true },
+      { label: "ออกใบกำกับภาษี", icon: Sparkles, none: false, basic: false, verified: false, business: true },
+      { label: "API สำหรับธุรกิจ", icon: Sparkles, none: false, basic: false, verified: false, business: true },
+    ];
+
     return (
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-brand-text-dark">
-              ยืนยันตัวตน (KYC)
-            </h1>
-            <p className="text-sm text-brand-text-light">
-              ยืนยันตัวตนเพิ่มเติมเพื่อปลดล็อกฟีเจอร์และวงเงิน
-            </p>
-          </div>
-          <Badge
-            variant={
-              currentLevel === "business"
-                ? "success"
-                : currentLevel === "none"
-                  ? "warning"
-                  : "info"
-            }
-            className="text-sm"
-          >
-            {currentLevelLabel}
-          </Badge>
+        <div>
+          <h1 className="text-xl font-bold text-brand-text-dark">
+            ยืนยันตัวตน (KYC)
+          </h1>
+          <p className="text-sm text-brand-text-light mt-0.5">
+            ยืนยันตัวตนเพื่อปลดล็อกฟีเจอร์การใช้งาน
+          </p>
         </div>
 
-        {/* ===== Hero Status Card ===== */}
-        <Card className="border-none shadow-md overflow-hidden">
-          <div
-            className="p-5"
-            style={{
-              background: currentStepConfig
-                ? `linear-gradient(135deg, ${currentStepConfig.bgColor === "bg-blue-50" ? "#eff6ff" : currentStepConfig.bgColor === "bg-emerald-50" ? "#ecfdf5" : currentStepConfig.bgColor === "bg-purple-50" ? "#faf5ff" : "#f9fafb"}15, white)`
-                : undefined,
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                  currentStepConfig
-                    ? `${currentStepConfig.bgColor} ${currentStepConfig.color}`
-                    : "bg-gray-100 text-gray-400"
-                }`}
-              >
-                {currentStepConfig ? (
-                  <currentStepConfig.icon className="w-7 h-7" />
-                ) : (
-                  <Shield className="w-7 h-7" />
-                )}
+        {/* ===== Value Proposition Hero ===== */}
+        {currentLevel !== "business" && nextStep && (
+          <Card className="border-none shadow-lg overflow-hidden bg-gradient-to-br from-brand-primary/5 via-white to-brand-primary/[0.02]">
+            <div className="p-5 sm:p-6">
+              {/* What you can't do yet */}
+              <div className="flex items-start gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                  <Shield className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-brand-text-dark text-base">
+                    {currentLevel === "none"
+                      ? "คุณยังใช้งานได้จำกัด"
+                      : currentLevel === "basic"
+                        ? "ปลดล็อกฟีเจอร์เพิ่มเติม"
+                        : "อัปเกรดเป็น Business"}
+                  </p>
+                  <p className="text-sm text-brand-text-light mt-0.5">
+                    {currentLevel === "none"
+                      ? "ยืนยันเบอร์โทรเพื่อเริ่มรับออเดอร์และเติมเงิน"
+                      : currentLevel === "basic"
+                        ? "ยืนยันตัวตนเพื่อถอนเงิน สร้างทีม และโพสต์งาน"
+                        : "อัปเกรดเป็นนิติบุคคลเพื่อวงเงินไม่จำกัด"}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-[11px] font-medium text-brand-text-light uppercase tracking-wider">
-                  ระดับปัจจุบัน
+
+              {/* Locked features preview */}
+              <div className="bg-white/80 rounded-xl border border-brand-border/50 p-4 mb-5">
+                <p className="text-xs font-semibold text-brand-text-light uppercase tracking-wider mb-3">
+                  สิ่งที่คุณจะได้เมื่อยืนยัน {nextStep.label}
                 </p>
-                <p className="text-xl font-bold text-brand-text-dark">
-                  {currentLevelLabel}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[11px] font-medium text-brand-text-light uppercase tracking-wider">
-                  วงเงินถอน/วัน
-                </p>
-                <p className="text-xl font-bold text-brand-text-dark">
-                  {currentWithdrawLimit}
-                </p>
-              </div>
-            </div>
-          </div>
-          {/* Segmented progress bar with level labels */}
-          <div className="px-5 pb-4 pt-2">
-            <div className="flex gap-1.5">
-              {STEPS.map((step) => {
-                const status = getStepStatus(step.level, currentLevel);
-                return (
-                  <div key={step.level} className="flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {nextStep.benefits.map((b) => (
                     <div
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        status === "completed"
-                          ? "bg-brand-success"
-                          : status === "available"
-                            ? "bg-brand-primary/30 animate-pulse"
-                            : "bg-gray-100"
-                      }`}
-                    />
-                    <p
-                      className={`text-[10px] mt-1 text-center font-medium ${
-                        status === "completed"
-                          ? "text-brand-success"
-                          : status === "available"
-                            ? "text-brand-primary"
-                            : "text-brand-text-light/50"
-                      }`}
+                      key={b}
+                      className="flex items-center gap-2.5 p-2.5 rounded-lg bg-brand-success/5 border border-brand-success/10"
                     >
-                      {step.label}
-                    </p>
+                      <div className="w-6 h-6 rounded-full bg-brand-success/15 flex items-center justify-center shrink-0">
+                        <Check className="w-3.5 h-3.5 text-brand-success" />
+                      </div>
+                      <span className="text-sm font-medium text-brand-text-dark">
+                        {b}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-brand-primary/5 border border-brand-primary/10">
+                    <div className="w-6 h-6 rounded-full bg-brand-primary/15 flex items-center justify-center shrink-0">
+                      <ArrowRight className="w-3.5 h-3.5 text-brand-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-brand-primary">
+                      วงเงินถอนเพิ่มเป็น {nextStep.withdrawLimit}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </Card>
+                </div>
+              </div>
 
-        {/* ===== Level Cards (always expanded, no accordion) ===== */}
-        <div className="space-y-4">
-          {STEPS.map((step) => {
-            const status = getStepStatus(step.level, currentLevel);
-            const Icon = step.icon;
-
-            return (
-              <Card
-                key={step.level}
-                className={`overflow-hidden transition-all ${
-                  status === "completed"
-                    ? "border-brand-success/30 bg-brand-success/[0.02]"
-                    : status === "available"
-                      ? `border-2 ${step.borderColor} shadow-md`
-                      : "border-dashed border-gray-200 opacity-60"
-                }`}
+              {/* CTA */}
+              <Button
+                size="lg"
+                className="w-full text-base"
+                onClick={() => handleStepAction(nextStep, "available")}
               >
-                {/* Card header row */}
-                <div className="p-4 flex items-center gap-3">
-                  {/* Icon */}
+                <Sparkles className="w-5 h-5 mr-2" />
+                {nextStep.level === "basic"
+                  ? "ยืนยันเบอร์โทร — ใช้เวลา 1 นาที"
+                  : nextStep.level === "verified"
+                    ? "เริ่มยืนยันตัวตน — ใช้เวลา 5 นาที"
+                    : "อัปเกรดเป็น Business"}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+
+              {/* Requirements hint */}
+              <div className="flex items-center justify-center gap-4 mt-3">
+                {nextStep.requirements.map((r, idx) => (
+                  <span
+                    key={idx}
+                    className="text-xs text-brand-text-light flex items-center gap-1"
+                  >
+                    <span className="w-4 h-4 rounded-full bg-gray-100 inline-flex items-center justify-center text-[10px] font-medium text-gray-500">
+                      {idx + 1}
+                    </span>
+                    {r}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* All verified badge */}
+        {currentLevel === "business" && (
+          <Card className="border-brand-success/30 bg-brand-success/5 shadow-md">
+            <div className="p-5 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-brand-success/15 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-brand-success" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-brand-success">
+                  ยืนยันครบทุกระดับแล้ว!
+                </p>
+                <p className="text-sm text-brand-text-light">
+                  คุณสามารถใช้งานฟีเจอร์ทั้งหมดได้อย่างเต็มที่
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* ===== Progress Steps ===== */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-brand-border/50">
+            <p className="font-semibold text-brand-text-dark text-sm">
+              ระดับการยืนยัน
+            </p>
+          </div>
+          <div className="divide-y divide-brand-border/30">
+            {STEPS.map((step, idx) => {
+              const status = getStepStatus(step.level, currentLevel);
+              const Icon = step.icon;
+
+              return (
+                <div
+                  key={step.level}
+                  className={`p-4 flex items-center gap-3 transition-colors ${
+                    status === "available"
+                      ? "bg-brand-primary/[0.03]"
+                      : ""
+                  }`}
+                >
+                  {/* Step number / check */}
                   <div
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${
                       status === "completed"
-                        ? "bg-brand-success/10 text-brand-success"
+                        ? "bg-brand-success text-white"
                         : status === "available"
-                          ? `${step.bgColor} ${step.color}`
+                          ? "bg-brand-primary text-white"
                           : "bg-gray-100 text-gray-400"
                     }`}
                   >
                     {status === "completed" ? (
-                      <CheckCircle className="w-5 h-5" />
-                    ) : status === "locked" ? (
-                      <Lock className="w-5 h-5" />
+                      <Check className="w-4 h-4" />
                     ) : (
-                      <Icon className="w-5 h-5" />
+                      idx + 1
                     )}
                   </div>
 
-                  {/* Title + tagline */}
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-brand-text-dark">
+                      <span
+                        className={`font-semibold text-sm ${
+                          status === "locked"
+                            ? "text-brand-text-light/60"
+                            : "text-brand-text-dark"
+                        }`}
+                      >
                         {step.label}
                       </span>
                       {status === "completed" && (
@@ -364,114 +408,176 @@ export default function VerificationPage() {
                           ถัดไป
                         </Badge>
                       )}
-                      {status === "locked" && (
-                        <Badge variant="default" size="sm">
-                          ล็อก
-                        </Badge>
-                      )}
                     </div>
-                    <p className="text-xs text-brand-text-light mt-0.5">
-                      {step.tagline}
+                    <p
+                      className={`text-xs mt-0.5 ${
+                        status === "locked"
+                          ? "text-brand-text-light/40"
+                          : "text-brand-text-light"
+                      }`}
+                    >
+                      {step.tagline} — วงเงินถอน {step.withdrawLimit}
                     </p>
                   </div>
 
-                  {/* Withdraw limit */}
-                  <div className="text-right shrink-0">
-                    <p className="text-[10px] text-brand-text-light">วงเงินถอน</p>
-                    <p className="text-sm font-bold text-brand-text-dark">
-                      {step.withdrawLimit}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Benefits + Requirements */}
-                <div className="px-4 pb-4 space-y-3">
-                  {/* Benefits as pill tags */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {step.benefits.map((b) => (
-                      <span
-                        key={b}
-                        className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full ${
-                          status === "completed"
-                            ? "bg-brand-success/10 text-brand-success"
-                            : status === "available"
-                              ? `${step.bgColor} ${step.color}`
-                              : "bg-gray-50 text-brand-text-light/70"
-                        }`}
-                      >
-                        <Check className="w-3 h-3" />
-                        {b}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Requirements */}
-                  {status !== "completed" && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {step.requirements.map((r, idx) => (
-                        <span
-                          key={idx}
-                          className="flex items-center gap-1.5 text-xs text-brand-text-light"
-                        >
-                          <span className="w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-medium text-gray-500 shrink-0">
-                            {idx + 1}
-                          </span>
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* CTA for available step */}
+                  {/* Action */}
                   {status === "available" && (
                     <Button
-                      className="w-full"
+                      size="sm"
                       onClick={() => handleStepAction(step, status)}
                     >
-                      <Sparkles className="w-4 h-4 mr-1.5" />
-                      {step.level === "basic"
-                        ? "ยืนยันเบอร์โทร"
-                        : step.level === "verified"
-                          ? "เริ่มยืนยันตัวตน"
-                          : "อัปเกรด Business"}
-                      <ArrowRight className="w-4 h-4 ml-1.5" />
+                      ยืนยัน
+                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
                     </Button>
                   )}
+                  {status === "locked" && (
+                    <Lock className="w-4 h-4 text-gray-300 shrink-0" />
+                  )}
+                  {status === "completed" && (
+                    <CheckCircle className="w-5 h-5 text-brand-success shrink-0" />
+                  )}
                 </div>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* ===== Info Section ===== */}
-        <Card className="border-none shadow-sm bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-              <Info className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-brand-text-dark mb-1.5">
-                ทำไมต้องยืนยันตัวตน?
-              </p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {[
-                  "ป้องกันการฉ้อโกง",
-                  "เพิ่มวงเงินถอน",
-                  "สร้างความน่าเชื่อถือ",
-                  "ปฏิบัติตาม PDPA/AML",
-                ].map((reason) => (
-                  <span
-                    key={reason}
-                    className="flex items-center gap-1 text-xs text-blue-700"
-                  >
-                    <Check className="w-3 h-3 text-blue-500" />
-                    {reason}
-                  </span>
-                ))}
-              </div>
-            </div>
+              );
+            })}
           </div>
         </Card>
+
+        {/* ===== Feature Comparison Table ===== */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-brand-border/50">
+            <p className="font-semibold text-brand-text-dark text-sm">
+              เปรียบเทียบสิทธิประโยชน์แต่ละระดับ
+            </p>
+            <p className="text-xs text-brand-text-light mt-0.5">
+              ยิ่งยืนยันมาก ยิ่งใช้งานได้มาก
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              {/* Header */}
+              <thead>
+                <tr className="border-b border-brand-border/30">
+                  <th className="text-left p-3 pl-4 font-medium text-brand-text-light text-xs min-w-[140px]">
+                    ฟีเจอร์
+                  </th>
+                  {(["none", "basic", "verified", "business"] as const).map(
+                    (level) => {
+                      const isCurrentLevel = level === currentLevel;
+                      return (
+                        <th
+                          key={level}
+                          className={`text-center p-3 text-xs font-semibold min-w-[80px] ${
+                            isCurrentLevel
+                              ? "text-brand-primary bg-brand-primary/5"
+                              : "text-brand-text-light"
+                          }`}
+                        >
+                          <div>
+                            {level === "none"
+                              ? "ไม่ยืนยัน"
+                              : level.charAt(0).toUpperCase() + level.slice(1)}
+                          </div>
+                          {isCurrentLevel && (
+                            <span className="text-[10px] font-normal text-brand-primary">
+                              (ปัจจุบัน)
+                            </span>
+                          )}
+                        </th>
+                      );
+                    }
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_ROWS.map((row, idx) => (
+                  <tr
+                    key={row.label}
+                    className={
+                      idx < FEATURE_ROWS.length - 1
+                        ? "border-b border-brand-border/20"
+                        : ""
+                    }
+                  >
+                    <td className="p-3 pl-4 text-brand-text-dark font-medium text-xs">
+                      {row.label}
+                    </td>
+                    {(["none", "basic", "verified", "business"] as const).map(
+                      (level) => {
+                        const val = row[level];
+                        const isCurrentLevel = level === currentLevel;
+                        return (
+                          <td
+                            key={level}
+                            className={`text-center p-3 ${
+                              isCurrentLevel ? "bg-brand-primary/5" : ""
+                            }`}
+                          >
+                            {typeof val === "boolean" ? (
+                              val ? (
+                                <Check className="w-4 h-4 text-brand-success mx-auto" />
+                              ) : (
+                                <span className="text-gray-300">—</span>
+                              )
+                            ) : (
+                              <span className="text-xs font-semibold text-brand-text-dark">
+                                {val}
+                              </span>
+                            )}
+                          </td>
+                        );
+                      }
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* ===== Trust Signals ===== */}
+        <div className="grid sm:grid-cols-3 gap-3">
+          {[
+            {
+              icon: Shield,
+              title: "ปลอดภัย",
+              desc: "ข้อมูลเข้ารหัสและเก็บตาม PDPA",
+              color: "text-blue-600",
+              bg: "bg-blue-50",
+            },
+            {
+              icon: Clock,
+              title: "รวดเร็ว",
+              desc: "Basic ใช้เวลา 1 นาที, Verified 5 นาที",
+              color: "text-emerald-600",
+              bg: "bg-emerald-50",
+            },
+            {
+              icon: CheckCircle,
+              title: "น่าเชื่อถือ",
+              desc: "ลูกค้าเห็นแบดจ์ยืนยันที่ร้านคุณ",
+              color: "text-purple-600",
+              bg: "bg-purple-50",
+            },
+          ].map((item) => (
+            <Card
+              key={item.title}
+              className="border-none shadow-sm p-4 text-center"
+            >
+              <div
+                className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center mx-auto mb-2.5`}
+              >
+                <item.icon className={`w-5 h-5 ${item.color}`} />
+              </div>
+              <p className="font-semibold text-brand-text-dark text-sm">
+                {item.title}
+              </p>
+              <p className="text-xs text-brand-text-light mt-0.5">
+                {item.desc}
+              </p>
+            </Card>
+          ))}
+        </div>
 
         {/* QuickKYC Phone Modal */}
         <QuickKYCModal
