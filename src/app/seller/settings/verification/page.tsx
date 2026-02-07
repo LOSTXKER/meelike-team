@@ -21,20 +21,11 @@ import {
   Info,
 } from "lucide-react";
 import Link from "next/link";
-import type { KYCLevel, KYCStatus } from "@/types";
+import { DEFAULT_KYC_DATA } from "@/types";
+import type { KYCLevel } from "@/types";
 
 type VerificationView = 'overview' | 'verified' | 'business';
 type VerificationStep = 'id_card' | 'selfie' | 'review';
-
-// Mock KYC data - in production, this would come from the user's profile
-const mockKYCData = {
-  level: 'basic' as KYCLevel,
-  status: 'approved' as KYCStatus,
-  phoneVerified: true,
-  emailVerified: true,
-  phoneVerifiedAt: '2024-01-15T10:30:00Z',
-  emailVerifiedAt: '2024-01-15T10:35:00Z',
-};
 
 const LEVEL_INFO = {
   none: {
@@ -81,7 +72,7 @@ export default function VerificationPage() {
   });
   const [certFile, setCertFile] = useState<File | null>(null);
 
-  const kyc = mockKYCData; // In production: user?.seller?.kyc || mockKYCData
+  const kyc = user?.seller?.kyc || DEFAULT_KYC_DATA;
   const currentLevel = kyc.level;
   const levelInfo = LEVEL_INFO[currentLevel];
 
@@ -189,8 +180,8 @@ export default function VerificationPage() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl ${currentLevel !== 'basic' ? 'bg-brand-success/10' : 'bg-emerald-50'} flex items-center justify-center`}>
-                  {currentLevel !== 'basic' ? (
+                <div className={`w-12 h-12 rounded-xl ${(currentLevel === 'verified' || currentLevel === 'business') ? 'bg-brand-success/10' : 'bg-emerald-50'} flex items-center justify-center`}>
+                  {(currentLevel === 'verified' || currentLevel === 'business') ? (
                     <CheckCircle className="w-6 h-6 text-brand-success" />
                   ) : (
                     <CreditCard className="w-6 h-6 text-emerald-600" />
@@ -199,7 +190,7 @@ export default function VerificationPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-brand-text-dark">Verified</p>
-                    {currentLevel !== 'basic' && (
+                    {(currentLevel === 'verified' || currentLevel === 'business') && (
                       <Badge variant="success" size="sm">ผ่านแล้ว</Badge>
                     )}
                   </div>

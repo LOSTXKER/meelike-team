@@ -4,12 +4,13 @@ import { useState, useCallback } from "react";
 import { KYCRequiredModal } from "./KYCRequiredModal";
 import { QuickKYCModal } from "./QuickKYCModal";
 import { useAuthStore } from "@/lib/store";
-import type { KYCLevel, AuthUser } from "@/types";
+import { meetsKYCRequirement } from "@/types/kyc";
+import type { KYCLevel, KYCAction, AuthUser } from "@/types";
 
 export interface KYCGateProps {
   children: React.ReactNode;
   requiredLevel?: KYCLevel;
-  action?: "topup" | "withdraw" | "general";
+  action?: KYCAction;
   onKYCComplete?: () => void;
   // If true, render children but show modal on interaction
   renderDisabled?: boolean;
@@ -27,12 +28,6 @@ function getCurrentKYCLevel(user: AuthUser | null): KYCLevel {
   }
   // Default: none (user only verified email during registration)
   return "none";
-}
-
-// Helper to check if KYC level meets requirement
-function meetsKYCRequirement(currentLevel: KYCLevel, requiredLevel: KYCLevel): boolean {
-  const levelOrder: KYCLevel[] = ["none", "basic", "verified", "business"];
-  return levelOrder.indexOf(currentLevel) >= levelOrder.indexOf(requiredLevel);
 }
 
 /**
@@ -59,7 +54,7 @@ export function KYCGate({
   const currentLevel = getCurrentKYCLevel(user);
   const hasRequiredLevel = meetsKYCRequirement(currentLevel, requiredLevel);
   const userType: "seller" | "worker" = user?.role === "worker" ? "worker" : "seller";
-  const existingPhone = user?.seller?.phone || user?.worker?.phone || "";
+  const existingPhone = user?.seller?.contactInfo?.phone || user?.worker?.phone || "";
 
   const handleStartKYC = useCallback(() => {
     setShowRequiredModal(false);
@@ -89,7 +84,14 @@ export function KYCGate({
   if (renderDisabled) {
     return (
       <>
-        <div onClick={() => setShowRequiredModal(true)}>
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setShowRequiredModal(true);
+          }}
+          className="[&>*]:pointer-events-none"
+        >
           {children}
         </div>
 

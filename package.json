@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
@@ -16,7 +18,11 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.9"
+  },
+  "msw": {
+    "workerDirectory": ["public"]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -25,6 +31,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "msw": "^2.12.9",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

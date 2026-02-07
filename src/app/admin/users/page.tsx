@@ -40,7 +40,7 @@ interface UserData {
   createdAt: string;
   lastActiveAt: string;
   // Seller specific
-  storeName?: string;
+  shopName?: string;
   totalOrders?: number;
   totalRevenue?: number;
   // Worker specific
@@ -61,7 +61,7 @@ const MOCK_USERS: UserData[] = [
     kycLevel: "verified",
     createdAt: "2024-01-15",
     lastActiveAt: "2024-02-05",
-    storeName: "ร้านสมชายออนไลน์",
+    shopName: "ร้านสมชายออนไลน์",
     totalOrders: 156,
     totalRevenue: 245000,
   },
@@ -88,7 +88,7 @@ const MOCK_USERS: UserData[] = [
     kycLevel: "basic",
     createdAt: "2024-01-20",
     lastActiveAt: "2024-02-04",
-    storeName: "วิชัย Shop",
+    shopName: "วิชัย Shop",
     totalOrders: 45,
     totalRevenue: 67500,
   },
@@ -129,7 +129,7 @@ const MOCK_USERS: UserData[] = [
     kycLevel: "business",
     createdAt: "2023-12-01",
     lastActiveAt: "2024-02-05",
-    storeName: "Thanakorn Enterprise",
+    shopName: "Thanakorn Enterprise",
     totalOrders: 520,
     totalRevenue: 1250000,
   },
@@ -165,7 +165,7 @@ export default function AdminUsersPage() {
       return (
         user.name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
-        user.storeName?.toLowerCase().includes(query)
+        user.shopName?.toLowerCase().includes(query)
       );
     }
     return true;
@@ -324,8 +324,8 @@ export default function AdminUsersPage() {
                           <div>
                             <p className="font-medium text-brand-text-dark">{user.name}</p>
                             <p className="text-sm text-brand-text-light">{user.email}</p>
-                            {user.storeName && (
-                              <p className="text-xs text-purple-600">{user.storeName}</p>
+                            {user.shopName && (
+                              <p className="text-xs text-purple-600">{user.shopName}</p>
                             )}
                           </div>
                         </div>
@@ -454,7 +454,7 @@ export default function AdminUsersPage() {
                       <p className="text-sm text-green-600">รายได้รวม</p>
                     </div>
                     <div className="p-4 bg-blue-50 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-blue-700">{selectedUser.storeName}</p>
+                      <p className="text-2xl font-bold text-blue-700">{selectedUser.shopName}</p>
                       <p className="text-sm text-blue-600">ชื่อร้านค้า</p>
                     </div>
                   </div>

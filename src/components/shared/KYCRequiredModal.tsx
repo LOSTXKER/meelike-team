@@ -12,7 +12,7 @@ import {
   Building2
 } from "lucide-react";
 import Link from "next/link";
-import type { KYCLevel } from "@/types";
+import type { KYCLevel, KYCAction } from "@/types";
 
 export interface KYCRequiredModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export interface KYCRequiredModalProps {
   onStartKYC?: () => void;
   requiredLevel?: KYCLevel;
   currentLevel?: KYCLevel;
-  action?: "topup" | "withdraw" | "general";
+  action?: KYCAction;
   userType?: "seller" | "worker";
 }
 
@@ -50,6 +50,7 @@ export function KYCRequiredModal({
   const actionText = {
     topup: "เติมเงิน",
     withdraw: "ถอนเงิน",
+    create_team: "สร้างทีม",
     general: "ดำเนินการต่อ",
   };
 

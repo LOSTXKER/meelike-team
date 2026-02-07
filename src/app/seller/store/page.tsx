@@ -150,13 +150,13 @@ export default function StorePage() {
   const [activeSettingSection, setActiveSettingSection] = useState<SettingSection>("info");
   
   const [storeData, setStoreData] = useState({
-    storeName: seller?.storeName || seller?.displayName || "ร้านของฉัน",
-    storeSlug: seller?.storeSlug || seller?.slug || "my-store",
+    storeName: seller?.name || seller?.displayName || "ร้านของฉัน",
+    storeSlug: seller?.slug || "my-store",
     bio: seller?.bio || seller?.description || "บริการ Social Media Marketing คุณภาพสูง",
   });
 
   const [selectedTheme, setSelectedTheme] = useState<StoreTheme>(
-    seller?.storeTheme || "meelike"
+    seller?.theme || "meelike"
   );
 
   const [featuredServices, setFeaturedServices] = useState<string[]>([

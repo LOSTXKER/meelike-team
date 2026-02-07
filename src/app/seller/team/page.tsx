@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, Button, Badge, Input, Dialog, Checkbox } from "@/components/ui";
 import { VStack } from "@/components/layout";
-import { PageHeader, EmptyState, ContentGuidelines, PROHIBITED_CONTENT, PENALTIES } from "@/components/shared";
+import { PageHeader, EmptyState, ContentGuidelines, KYCRequiredModal, PROHIBITED_CONTENT, PENALTIES } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { useSellerTeams, useTeamPayouts, useTransactions } from "@/lib/api/hooks";
+import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { meetsKYCRequirement } from "@/types/kyc";
+import type { KYCLevel } from "@/types";
 import {
   Building2,
   Users,
@@ -36,13 +39,28 @@ export default function TeamCenterPage() {
   const { data: allPayouts } = useTeamPayouts();
   const { data: allTransactions } = useTransactions();
   
+  const { user } = useAuthStore();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("earnings");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showKYCModal, setShowKYCModal] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamDescription, setNewTeamDescription] = useState("");
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
+
+  // KYC verification check
+  const currentKYCLevel: KYCLevel = user?.seller?.kyc?.level || "none";
+  const isKYCVerified = meetsKYCRequirement(currentKYCLevel, "verified");
+
+  const handleOpenCreateModal = () => {
+    if (!isKYCVerified) {
+      setShowKYCModal(true);
+      return;
+    }
+    setIsCreateModalOpen(true);
+  };
 
   // Calculate real earnings data per team
   const getTeamEarnings = (teamId: string) => {
@@ -186,7 +204,7 @@ export default function TeamCenterPage() {
         description="จัดการและติดตามผลงานทุกทีมในที่เดียว"
         icon={Building2}
         action={
-          <Button onClick={() => setIsCreateModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
+          <Button onClick={handleOpenCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
             สร้างทีมใหม่
           </Button>
         }
@@ -403,7 +421,7 @@ export default function TeamCenterPage() {
             description={searchQuery || filterBy !== "all" ? "ลองเปลี่ยนคำค้นหาหรือตัวกรอง" : "สร้างทีมแรกเพื่อเริ่มจัดการ Worker"}
             action={
               !searchQuery && filterBy === "all" && (
-                <Button onClick={() => setIsCreateModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
+                <Button onClick={handleOpenCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
                   สร้างทีมแรก
                 </Button>
               )
@@ -411,6 +429,20 @@ export default function TeamCenterPage() {
           />
         </Card>
       )}
+
+      {/* KYC Required Modal */}
+      <KYCRequiredModal
+        isOpen={showKYCModal}
+        onClose={() => setShowKYCModal(false)}
+        onStartKYC={() => {
+          setShowKYCModal(false);
+          router.push("/seller/settings/verification");
+        }}
+        requiredLevel="verified"
+        currentLevel={currentKYCLevel}
+        action="create_team"
+        userType="seller"
+      />
 
       {/* Create Team Dialog */}
       <Dialog

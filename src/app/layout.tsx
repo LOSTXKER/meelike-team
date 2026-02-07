@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ErrorBoundary } from "@/components/shared";
+import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
   title: "MeeLike Seller - แพลตฟอร์มครบวงจรสำหรับธุรกิจ Social Media",
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body className="antialiased">
-        <ErrorBoundary showDetails={process.env.NODE_ENV === "development"}>
-          {children}
-        </ErrorBoundary>
+        <Providers>
+          <ErrorBoundary showDetails={process.env.NODE_ENV === "development"}>
+            {children}
+          </ErrorBoundary>
+        </Providers>
       </body>
     </html>
   );

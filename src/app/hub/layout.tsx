@@ -98,7 +98,7 @@ export default function HubLayout({
                       <User className="w-4 h-4 text-brand-primary" />
                     </div>
                     <span className="hidden sm:block text-sm font-medium text-brand-text-dark">
-                      {user?.seller?.storeName || user?.worker?.displayName || "ผู้ใช้"}
+                      {user?.seller?.name || user?.worker?.displayName || "ผู้ใช้"}
                     </span>
                   </Link>
                 </>

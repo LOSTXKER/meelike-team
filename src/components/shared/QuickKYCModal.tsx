@@ -11,13 +11,14 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react";
+import type { KYCAction } from "@/types";
 
 export interface QuickKYCModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   existingPhone?: string;
-  action?: "topup" | "withdraw" | "general";
+  action?: KYCAction;
 }
 
 type QuickKYCStep = "phone" | "otp" | "success";
@@ -53,9 +54,10 @@ export function QuickKYCModal({
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const actionText = {
+  const actionText: Record<KYCAction, string> = {
     topup: "เติมเงิน",
     withdraw: "ถอนเงิน",
+    create_team: "สร้างทีม",
     general: "ดำเนินการ",
   };
 

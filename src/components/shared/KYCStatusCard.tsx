@@ -56,7 +56,7 @@ const KYC_LEVELS: KYCLevelInfo[] = [
     label: "Verified",
     description: "บัตรประชาชน + Selfie",
     icon: <CreditCard className="w-5 h-5" />,
-    benefits: ["ถอนเงินได้สูงสุด ฿10,000/วัน"],
+    benefits: ["ถอนเงินได้สูงสุด ฿10,000/วัน", "สร้างทีมได้"],
     color: "text-emerald-600",
     bgColor: "bg-emerald-50",
   },

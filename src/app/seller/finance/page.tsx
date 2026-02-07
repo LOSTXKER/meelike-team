@@ -51,7 +51,7 @@ export default function FinancePage() {
   // Get KYC level
   const kycLevel: KYCLevel = user?.seller?.kyc?.level || 'none';
   const hasKYC = canTopUp(kycLevel);
-  const existingPhone = user?.seller?.phone || '';
+  const existingPhone = user?.seller?.contactInfo?.phone || '';
 
   // KYC Modal State
   const [showKYCRequiredModal, setShowKYCRequiredModal] = useState(false);

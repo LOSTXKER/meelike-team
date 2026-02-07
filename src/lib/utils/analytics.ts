@@ -4,7 +4,7 @@
  * Derives analytics from localStorage-backed data (orders, services, teams, transactions)
  */
 
-import type { Order, StoreService, Team, TeamJob } from "@/types";
+import type { Order, StoreService, Team, Job } from "@/types";
 import type { Transaction } from "@/lib/api";
 
 export interface AnalyticsOverview {

@@ -19,20 +19,11 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
-import type { KYCLevel, KYCStatus } from "@/types";
+import { DEFAULT_KYC_DATA } from "@/types";
+import type { KYCLevel } from "@/types";
 
 type VerificationView = 'overview' | 'verified' | 'business';
 type VerificationStep = 'id_card' | 'selfie' | 'review';
-
-// Mock KYC data
-const mockKYCData = {
-  level: 'basic' as KYCLevel,
-  status: 'approved' as KYCStatus,
-  phoneVerified: true,
-  emailVerified: true,
-  phoneVerifiedAt: '2024-01-15T10:30:00Z',
-  emailVerifiedAt: '2024-01-15T10:35:00Z',
-};
 
 const LEVEL_INFO = {
   none: {
@@ -79,7 +70,7 @@ export default function WorkerVerificationPage() {
   });
   const [certFile, setCertFile] = useState<File | null>(null);
 
-  const kyc = mockKYCData;
+  const kyc = user?.worker?.kyc || DEFAULT_KYC_DATA;
   const currentLevel = kyc.level;
   const levelInfo = LEVEL_INFO[currentLevel];
 

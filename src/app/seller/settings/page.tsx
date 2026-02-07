@@ -30,8 +30,8 @@ export default function SettingsProfilePage() {
   const [formData, setFormData] = useState({
     displayName: seller?.displayName || "",
     email: user?.email || "",
-    phone: seller?.phone || "",
-    lineId: seller?.lineId || "",
+    phone: seller?.contactInfo?.phone || "",
+    lineId: seller?.contactInfo?.line || "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",

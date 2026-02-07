@@ -1,102 +1,52 @@
-export { PageHeader } from "./page-header";
-export { Breadcrumb } from "./breadcrumb";
-export { ActionRequired, getSellerActionItems } from "./action-required";
-export { ServiceTypeBadge } from "./service-type-badge";
-export { PlatformIcon } from "./platform-icon";
-export { StatusBadge } from "./status-badge";
-export { EmptyState } from "./empty-state";
-export { LoadingScreen } from "./loading-screen";
-export { PlanBadge } from "./plan-badge";
-export { StatsGrid, StatsGridCompact } from "./stats-grid";
+/**
+ * Shared Components Barrel Export
+ *
+ * Organized by domain sub-barrels for cleaner imports.
+ * Import from "@/components/shared" as before, or from specific sub-barrels:
+ *   import { KYCGate } from "@/components/shared/kyc";
+ *   import { FormField } from "@/components/shared/forms";
+ */
+
+// ===== Layout =====
+export * from "./layout";
+
+// ===== Feedback & Error Handling =====
+export * from "./feedback";
+
+// ===== Badges =====
+export * from "./badges";
+
+// ===== Stats =====
+export * from "./stats";
+
+// ===== Tables =====
+export * from "./tables";
+
+// ===== Forms =====
+export * from "./forms";
+
+// ===== Modals =====
+export * from "./modals";
+
+// ===== KYC =====
+export * from "./kyc";
+
+// ===== Help System =====
+export * from "./help";
+
+// ===== Filters =====
 export { FilterBar, SegmentedControl } from "./filter-bar";
-export { ClaimJobModal } from "./claim-job-modal";
-export { ShareJobModal } from "./share-job-modal";
-export { ReviewTeamModal } from "./review-team-modal";
-export { LevelBenefitsTable } from "./level-benefits-table";
-export { DailyStreak } from "./daily-streak";
-export { InviteTeamModal } from "./invite-team-modal";
 export { FilterTabs, memberStatusTabs, jobStatusTabs, payoutStatusTabs } from "./filter-tabs";
-export { PageSkeleton } from "./page-skeleton";
-export { 
-  DataTable,
-  renderAvatarCell,
-  renderBadgeCell,
-  renderRatingCell,
-  renderCurrencyCell,
-  renderDateCell,
-  renderActionsCell,
-} from "./data-table";
-export { 
-  getTeamStats, 
-  getMemberRoleStats, 
-  getJobStats, 
-  getPayoutStats,
-  getSellerDashboardStats,
-  getWorkerDashboardStats,
-} from "./stats-presets";
-export {
-  FormSection,
-  FormField,
-  FormRow,
-  FormActions,
-  FormDivider,
-  FormToggle,
-  FormCheckbox,
-} from "./form-section";
+export type { FilterOption } from "./filter-bar";
+export type { FilterTab, MemberStatus, JobFilterStatus, PayoutFilterStatus } from "./filter-tabs";
 
-// New components
-export { DataTable as GenericDataTable } from "./DataTable";
-export { FormField as EnhancedFormField, FormSelect, FormInput, FormTextarea } from "./Form";
-export { ErrorBoundary, ErrorFallback } from "./ErrorBoundary";
-export { AsyncBoundary, InlineLoading, InlineError, SkeletonLoader } from "./AsyncBoundary";
-
-// Pattern components
-export { StatCard } from "./StatCard";
+// ===== Cards =====
 export { InfoCard } from "./InfoCard";
 export { QuickActionCard } from "./QuickActionCard";
 
-// Help System components
-export { HelpIcon } from "./help-icon";
-export { ContextualHelp } from "./contextual-help";
-export { HelpTooltip } from "./help-tooltip";
-export { HelpSidebar } from "./help-sidebar";
+// ===== Gamification =====
+export { LevelBenefitsTable } from "./level-benefits-table";
+export { DailyStreak } from "./daily-streak";
 
-// Dev Tools
+// ===== Dev Tools =====
 export { DevTools } from "./dev-tools";
-
-// KYC Components
-export { OTPInput, OTPInputCompact } from "./OTPInput";
-export { FileUpload, ImageUpload } from "./FileUpload";
-export { IDCardUpload } from "./IDCardUpload";
-export { SelfieCapture } from "./SelfieCapture";
-export { KYCRequiredModal } from "./KYCRequiredModal";
-export { QuickKYCModal } from "./QuickKYCModal";
-export { KYCGate, useKYCGate } from "./KYCGate";
-export { KYCAlertBanner } from "./KYCAlertBanner";
-export { KYCStatusCard } from "./KYCStatusCard";
-
-// Content Guidelines Components
-export { ContentGuidelines, PROHIBITED_CONTENT, PENALTIES } from "./ContentGuidelines";
-export { GuidelinesAgreementModal } from "./GuidelinesAgreementModal";
-export { ReportContentModal } from "./ReportContentModal";
-
-// Types
-export type { StatItem } from "./stats-grid";
-export type { FilterOption } from "./filter-bar";
-export type { FilterTab, MemberStatus, JobFilterStatus, PayoutFilterStatus } from "./filter-tabs";
-export type { PageSkeletonVariant } from "./page-skeleton";
-export type { DataTableColumn } from "./data-table";
-export type { Column, DataTableProps } from "./DataTable";
-export type { FormFieldProps, FormSelectProps, FormInputProps, FormTextareaProps } from "./Form";
-export type { OTPInputProps } from "./OTPInput";
-export type { FileUploadProps } from "./FileUpload";
-export type { IDCardUploadProps, IDCardData } from "./IDCardUpload";
-export type { SelfieCaptureProps } from "./SelfieCapture";
-export type { KYCRequiredModalProps } from "./KYCRequiredModal";
-export type { QuickKYCModalProps } from "./QuickKYCModal";
-export type { KYCGateProps } from "./KYCGate";
-export type { KYCAlertBannerProps } from "./KYCAlertBanner";
-export type { KYCStatusCardProps } from "./KYCStatusCard";
-export type { ContentGuidelinesProps } from "./ContentGuidelines";
-export type { GuidelinesAgreementModalProps } from "./GuidelinesAgreementModal";
-export type { ReportContentModalProps } from "./ReportContentModal";

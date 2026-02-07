@@ -3,6 +3,21 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { AuthUser, Seller, Worker } from "@/types";
 import { getStorage, setStorage, STORAGE_KEYS } from "./storage";
 import { generateId } from "./utils/helpers";
+import {
+  createTokenPair,
+  refreshAccessToken,
+  isTokenExpiringSoon,
+  decodeMockJWT,
+} from "./auth/jwt";
+import { validate } from "./validations/utils";
+import { loginSchema } from "./validations/auth";
+
+/** Set a cookie readable by Next.js middleware for route protection */
+function setAuthCookie(role: string) {
+  if (typeof document !== "undefined") {
+    document.cookie = `meelike-auth-role=${role}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+  }
+}
 
 // ===== HELPER: Create default data on first login =====
 
@@ -11,12 +26,10 @@ function createDefaultSeller(userId: string, email: string): Seller {
     id: `seller-${generateId()}`,
     userId,
     displayName: email.split("@")[0],
-    name: email.split("@")[0],
+    name: "My Store",
     slug: email.split("@")[0].toLowerCase(),
     subscription: "free",
     theme: "meelike",
-    storeName: "My Store",
-    storeSlug: `store-${generateId()}`,
     plan: "free",
     sellerRank: "bronze",
     platformFeePercent: 15,
@@ -27,7 +40,6 @@ function createDefaultSeller(userId: string, email: string): Seller {
     totalRevenue: 0,
     rating: 0,
     ratingCount: 0,
-    storeTheme: "meelike",
     isActive: true,
     isVerified: false,
     createdAt: new Date().toISOString(),
@@ -68,6 +80,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string, role: "seller" | "worker" | "admin") => Promise<boolean>;
   logout: () => Promise<void>;
+  refreshToken: () => boolean;
   setUser: (user: AuthUser | null) => void;
   setHasHydrated: (state: boolean) => void;
   
@@ -78,6 +91,7 @@ interface AuthState {
   isAdmin: () => boolean;
   getUserId: () => string | null;
   getUserRole: () => "seller" | "worker" | "admin" | null;
+  getToken: () => string | null;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -88,16 +102,18 @@ export const useAuthStore = create<AuthState>()(
       hasHydrated: false,
       
       // Actions
-      login: async (email: string, _password: string, role: "seller" | "worker" | "admin") => {
+      login: async (email: string, password: string, role: "seller" | "worker" | "admin") => {
         set({ isLoading: true });
         
         try {
+          // Validate input
+          validate(loginSchema, { email, password, role });
+          
           // Simulate API call
           await new Promise((resolve) => setTimeout(resolve, 500));
           
           // Admin login
           if (role === "admin") {
-            // For demo, accept any email with "admin" in it or admin@meelike.com
             const isValidAdmin = email.toLowerCase().includes("admin") || 
                                  email.toLowerCase() === "admin@meelike.com";
             
@@ -106,33 +122,36 @@ export const useAuthStore = create<AuthState>()(
               return false;
             }
             
+            const userId = `admin-${generateId()}`;
+            const tokens = createTokenPair({ sub: userId, email, role: "admin" });
+            const decoded = decodeMockJWT(tokens.accessToken);
+            
             const user: AuthUser = {
-              id: `admin-${generateId()}`,
+              id: userId,
               email,
               role: "admin",
               isAdmin: true,
+              token: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+              tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
             };
+            setAuthCookie("admin");
             set({ user, isLoading: false });
             return true;
           }
           
           if (role === "seller") {
-            // Get sellers from storage (including seeded data)
             const sellers = getStorage<Seller[]>(STORAGE_KEYS.SELLERS, []);
             
-            // Try to find existing seller (from seed data or previous login)
-            // Priority: 1) match by email name, 2) use first seller if exists, 3) create new
             let seller = sellers.find(s => 
               s.name === email.split("@")[0] || 
               s.displayName === email.split("@")[0]
             );
             
-            // If no match by name, use first seller from seed data
             if (!seller && sellers.length > 0) {
               seller = sellers[0];
             }
             
-            // If still no seller, create new one
             if (!seller) {
               const userId = `user-${generateId()}`;
               seller = createDefaultSeller(userId, email);
@@ -140,29 +159,37 @@ export const useAuthStore = create<AuthState>()(
               setStorage(STORAGE_KEYS.SELLERS, sellers);
             }
             
+            const tokens = createTokenPair({
+              sub: seller.userId,
+              email,
+              role: "seller",
+              sellerId: seller.id,
+            });
+            const decoded = decodeMockJWT(tokens.accessToken);
+            
             const user: AuthUser = {
               id: seller.userId,
               email,
               role: "seller",
               seller,
+              token: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+              tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
             };
+            setAuthCookie("seller");
             set({ user, isLoading: false });
             return true;
           } else {
-            // Get workers from storage (including seeded data)
             const workers = getStorage<Worker[]>(STORAGE_KEYS.WORKERS, []);
             
-            // Try to find existing worker
             let worker = workers.find(w => 
               w.displayName === email.split("@")[0]
             );
             
-            // If no match, use first worker from seed data
             if (!worker && workers.length > 0) {
               worker = workers[0];
             }
             
-            // If still no worker, create new one
             if (!worker) {
               const userId = `user-${generateId()}`;
               worker = createDefaultWorker(userId, email);
@@ -170,12 +197,24 @@ export const useAuthStore = create<AuthState>()(
               setStorage(STORAGE_KEYS.WORKERS, workers);
             }
             
+            const tokens = createTokenPair({
+              sub: worker.userId,
+              email,
+              role: "worker",
+              workerId: worker.id,
+            });
+            const decoded = decodeMockJWT(tokens.accessToken);
+            
             const user: AuthUser = {
               id: worker.userId,
               email,
               role: "worker",
               worker,
+              token: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+              tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
             };
+            setAuthCookie("worker");
             set({ user, isLoading: false });
             return true;
           }
@@ -187,20 +226,56 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: async () => {
-        // Could add API call here to invalidate session
+        // Clear the auth cookie used by middleware
+        if (typeof document !== "undefined") {
+          document.cookie = "meelike-auth-role=; path=/; max-age=0";
+        }
         set({ user: null, isLoading: false });
+      },
+      
+      refreshToken: () => {
+        const user = get().user;
+        if (!user?.refreshToken) return false;
+        
+        const newAccessToken = refreshAccessToken(user.refreshToken);
+        if (!newAccessToken) {
+          // Refresh token expired -- force logout
+          set({ user: null });
+          return false;
+        }
+        
+        const decoded = decodeMockJWT(newAccessToken);
+        set({
+          user: {
+            ...user,
+            token: newAccessToken,
+            tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
+          },
+        });
+        return true;
       },
       
       setUser: (user) => set({ user }),
       setHasHydrated: (state) => set({ hasHydrated: state }),
       
       // Computed values
-      isAuthenticated: () => !!get().user,
+      isAuthenticated: () => !!get().user?.token,
       isSeller: () => get().user?.role === "seller",
       isWorker: () => get().user?.role === "worker",
       isAdmin: () => get().user?.role === "admin" || get().user?.isAdmin === true,
       getUserId: () => get().user?.id ?? null,
       getUserRole: () => get().user?.role ?? null,
+      getToken: () => {
+        const user = get().user;
+        if (!user?.token) return null;
+        
+        // Auto-refresh if expiring soon
+        if (user.token && isTokenExpiringSoon(user.token)) {
+          get().refreshToken();
+        }
+        
+        return get().user?.token ?? null;
+      },
     }),
     {
       name: "meelike-auth",

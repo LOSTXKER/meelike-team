@@ -26,7 +26,6 @@ interface BaseSellerStore {
   description?: string;
   
   // Subscription & Rank
-  /** @deprecated Use `plan` in Seller type instead */
   subscription: SubscriptionPlan;
   sellerRank: SellerRank;
   platformFeePercent: number; // 9-12% based on rank
@@ -89,30 +88,17 @@ export interface Seller extends BaseSellerStore {
   userId: string;
   displayName: string;
   
-  /** @deprecated Use `name` from base instead - kept for legacy support */
-  storeName: string;
-  /** @deprecated Use `slug` from base instead - kept for legacy support */
-  storeSlug: string;
-  
   // Contact info
   bio?: string;
-  /** @deprecated Consider using ContactInfo interface instead */
-  lineId?: string;
-  /** @deprecated Consider using ContactInfo interface instead */
-  phone?: string;
-  /** @deprecated Consider using ContactInfo interface instead */
-  email?: string;
+  contactInfo?: ContactInfo;
   
-  // Subscription - this is the preferred field over base's `subscription`
+  // Subscription - preferred field for Seller (base `subscription` is for Store)
   plan: SubscriptionPlan;
   planExpiresAt?: string;
   
   // Wallet & Stats
   balance: number;
   totalSpentOnWorkers: number;
-  
-  /** @deprecated Use `theme` from base instead - kept for legacy support */
-  storeTheme: StoreTheme;
   
   // Status
   isActive: boolean;

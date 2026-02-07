@@ -18,4 +18,10 @@ export interface AuthUser {
   seller?: Seller;
   worker?: Worker;
   isAdmin?: boolean;
+  /** JWT access token */
+  token?: string;
+  /** JWT refresh token */
+  refreshToken?: string;
+  /** Token expiry timestamp (ms) */
+  tokenExpiresAt?: number;
 }

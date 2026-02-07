@@ -128,11 +128,11 @@ export default function StorePage() {
         {/* Store Header */}
         <Card className="bg-gradient-to-br from-brand-surface to-brand-accent/5 border border-brand-border">
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Avatar fallback={store?.storeName || ""} size="xl" />
+            <Avatar fallback={store?.name || ""} size="xl" />
             <div className="text-center sm:text-left flex-1">
               <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
                 <Store className="w-7 h-7 text-brand-primary" />
-                {store?.storeName}
+                {store?.name}
               </h1>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2 text-sm">
                 <span className="flex items-center gap-1 text-brand-warning">
@@ -155,7 +155,7 @@ export default function StorePage() {
               </div>
               <p className="mt-3 text-brand-text-light">{store?.bio}</p>
               <p className="mt-2 text-sm text-brand-primary">
-                LINE: {store?.lineId}
+                LINE: {store?.contactInfo?.line}
               </p>
             </div>
           </div>
@@ -298,7 +298,7 @@ export default function StorePage() {
       <footer className="bg-brand-surface border-t border-brand-border mt-12 py-8">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-sm text-brand-text-light">
-            © 2024 {store?.storeName} • Powered by MeeLike Seller
+            © 2024 {store?.name} • Powered by MeeLike Seller
           </p>
         </div>
       </footer>

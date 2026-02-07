@@ -59,10 +59,6 @@ export interface Job {
   cancelReason?: string;
 }
 
-// ===== LEGACY ALIAS =====
-// For backward compatibility during migration
-export type TeamJob = Job;
-
 // ===== JOB CLAIM =====
 export interface JobClaim {
   id: string;

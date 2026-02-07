@@ -28,7 +28,6 @@ export interface RequestConfig extends RequestInit {
 export interface ApiClientConfig {
   baseURL: string;
   timeout?: number;
-  mockMode?: boolean;
   onAuthError?: () => void;
 }
 
@@ -37,28 +36,23 @@ export interface ApiClientConfig {
 export class ApiClient {
   private baseURL: string;
   private timeout: number;
-  private mockMode: boolean;
   private onAuthError?: () => void;
 
   constructor(config: ApiClientConfig) {
     this.baseURL = config.baseURL;
     this.timeout = config.timeout || 30000; // 30 seconds default
-    this.mockMode = config.mockMode ?? false;
     this.onAuthError = config.onAuthError;
   }
 
   /**
-   * Make an HTTP request
+   * Make an HTTP request.
+   * In development, MSW service worker intercepts these and routes to mock handlers.
+   * In production, these go to the real backend.
    */
   async request<T>(
     endpoint: string,
     config: RequestConfig = {}
   ): Promise<ApiResponse<T>> {
-    // In mock mode, use mock data
-    if (this.mockMode) {
-      return this.mockRequest<T>(endpoint);
-    }
-
     const {
       timeout = this.timeout,
       skipAuth = false,
@@ -173,22 +167,6 @@ export class ApiClient {
   // ===== PRIVATE METHODS =====
 
   /**
-   * Mock request for development
-   */
-  private async mockRequest<T>(endpoint: string): Promise<ApiResponse<T>> {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 200));
-
-    // Return mock data based on endpoint
-    // In real implementation, this would map to mock data
-    console.log(`[Mock API] ${endpoint}`);
-    return {
-      data: null,
-      error: new Error("Mock mode - endpoint not implemented"),
-    };
-  }
-
-  /**
    * Parse response body
    */
   private async parseResponse<T>(response: Response): Promise<T> {
@@ -262,17 +240,18 @@ export class ApiClient {
   }
 
   /**
-   * Get auth token from storage
+   * Get auth token from storage (reads JWT from Zustand persisted state)
    */
   private getAuthToken(): string | null {
     if (typeof window === "undefined") return null;
-    
+
     try {
       const authData = localStorage.getItem("meelike-auth");
       if (!authData) return null;
-      
+
       const parsed = JSON.parse(authData);
-      return parsed?.state?.user?.token || null;
+      const token = parsed?.state?.user?.token;
+      return token || null;
     } catch {
       return null;
     }
@@ -282,9 +261,8 @@ export class ApiClient {
 // ===== DEFAULT CLIENT INSTANCE =====
 
 export const apiClient = new ApiClient({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
   timeout: 30000,
-  mockMode: process.env.NODE_ENV === "development",
   onAuthError: () => {
     if (typeof window !== "undefined") {
       window.location.href = "/login";

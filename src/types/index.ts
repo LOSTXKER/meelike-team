@@ -61,7 +61,6 @@ export type {
 // ===== JOB TYPES =====
 export type {
   Job,
-  TeamJob,  // Legacy alias for backward compatibility
   JobClaim,
 } from "./job";
 
@@ -96,6 +95,7 @@ export type {
   KYCLevel,
   KYCStatus,
   KYCDocumentType,
+  KYCAction,
   OCRResult,
   KYCDocument,
   KYCData,

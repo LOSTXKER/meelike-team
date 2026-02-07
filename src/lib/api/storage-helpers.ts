@@ -27,7 +27,13 @@ import type {
 // ===== SHARED UTILITIES =====
 
 /** Simulate network delay (remove in production) */
-export const delay = (ms: number = 300) => new Promise((resolve) => setTimeout(resolve, ms));
+export const delay = (ms?: number) => {
+  const defaultDelay =
+    typeof window !== "undefined"
+      ? parseInt(localStorage.getItem("meelike_dev_mock_delay") || "300")
+      : 300;
+  return new Promise((resolve) => setTimeout(resolve, ms ?? defaultDelay));
+};
 
 // ===== TRANSACTION TYPE =====
 

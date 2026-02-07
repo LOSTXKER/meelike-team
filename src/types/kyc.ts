@@ -20,6 +20,10 @@ export type KYCStatus = 'pending' | 'submitted' | 'reviewing' | 'approved' | 're
 // ===== KYC DOCUMENT TYPE =====
 export type KYCDocumentType = 'id_card' | 'selfie_with_id' | 'company_cert' | 'tax_cert';
 
+// ===== KYC ACTION TYPE =====
+/** Shared action type used by KYC gate, modals, and related components */
+export type KYCAction = 'topup' | 'withdraw' | 'create_team' | 'general';
+
 // ===== WITHDRAWAL LIMITS BY LEVEL =====
 // Note: Only Verified and above can withdraw
 export const WITHDRAWAL_LIMITS: Record<KYCLevel, number> = {
