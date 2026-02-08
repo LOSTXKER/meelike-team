@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { Card, Button, Badge, Input, Progress } from "@/components/ui";
+import { Card, Button, Badge, Input, Progress, Skeleton } from "@/components/ui";
 import { Dialog } from "@/components/ui/Dialog";
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
@@ -43,6 +43,18 @@ export default function WithdrawPage() {
   const [showKYCRequiredModal, setShowKYCRequiredModal] = useState(false);
   const [showQuickKYCModal, setShowQuickKYCModal] = useState(false);
 
+  if (isLoading) {
+    return (
+      <Container size="xl">
+        <Section spacing="lg" className="animate-fade-in">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+        </Section>
+      </Container>
+    );
+  }
+
   const availableBalance = workerStats?.availableBalance || 0;
   const minWithdraw = 100;
   const withdrawFee = levelInfo.fee / 100; // Convert percentage to decimal
@@ -61,7 +73,7 @@ export default function WithdrawPage() {
   const handleStartKYC = useCallback(() => {
     setShowKYCRequiredModal(false);
     // For Verified level, redirect to full verification page instead of quick modal
-    window.location.href = '/work/profile/verification';
+    window.location.href = '/work/settings/verification';
   }, []);
 
   // Handle KYC success - allow to proceed
@@ -230,7 +242,7 @@ export default function WithdrawPage() {
             
             {/* Upgrade prompt */}
             {kycLevel !== 'business' && (
-              <Link href="/work/profile/verification" className="block mt-4 p-3 rounded-xl bg-gradient-to-r from-brand-primary/5 to-brand-primary/10 border border-brand-primary/20 hover:border-brand-primary/40 transition-all">
+              <Link href="/work/settings/verification" className="block mt-4 p-3 rounded-xl bg-gradient-to-r from-brand-primary/5 to-brand-primary/10 border border-brand-primary/20 hover:border-brand-primary/40 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-brand-primary" />
@@ -338,7 +350,7 @@ export default function WithdrawPage() {
                     <p className="text-sm text-brand-warning font-medium">
                       เกินวงเงินถอนรายวัน (฿{dailyLimit.toLocaleString()}/วัน)
                     </p>
-                    <Link href="/work/profile/verification" className="text-xs text-brand-primary hover:underline">
+                    <Link href="/work/settings/verification" className="text-xs text-brand-primary hover:underline">
                       อัปเกรด KYC เพื่อเพิ่มวงเงิน →
                     </Link>
                   </div>
@@ -396,7 +408,7 @@ export default function WithdrawPage() {
                 <p className="text-white/90 font-medium">{bankAccount.accountName}</p>
               </div>
             </div>
-            <Link href="/work/profile" className="inline-flex items-center gap-1 mt-3 text-sm text-brand-primary hover:underline font-medium">
+            <Link href="/work/settings/bank" className="inline-flex items-center gap-1 mt-3 text-sm text-brand-primary hover:underline font-medium">
               เปลี่ยนบัญชีธนาคาร <ArrowRight className="w-4 h-4" />
             </Link>
           </Card>

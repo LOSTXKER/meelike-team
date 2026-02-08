@@ -2,36 +2,150 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { WORKER_BOTTOM_NAV } from "@/lib/constants/navigation";
+import {
+  Home,
+  ClipboardList,
+  Users,
+  Wallet,
+  MoreHorizontal,
+  Trophy,
+  UserPlus,
+  Smartphone,
+  User,
+} from "lucide-react";
+import { useWorkerStats } from "@/lib/api/hooks";
+
+const MAIN_NAV = [
+  { label: "หน้าแรก", href: "/work", icon: Home },
+  { label: "งาน", href: "/work/jobs", icon: ClipboardList, badgeKey: "activeJobs" as const },
+  { label: "ทีม", href: "/work/teams", icon: Users },
+  { label: "รายได้", href: "/work/earnings", icon: Wallet },
+  { label: "เพิ่มเติม", href: "#more", icon: MoreHorizontal, isMore: true },
+];
+
+const MORE_MENU_ITEMS = [
+  { label: "Leaderboard", href: "/work/leaderboard", icon: Trophy },
+  { label: "ชวนเพื่อน", href: "/work/referral", icon: UserPlus },
+  { label: "บัญชี Social", href: "/work/accounts", icon: Smartphone },
+  { label: "ตั้งค่า", href: "/work/settings", icon: User },
+];
 
 export function WorkerBottomNav() {
   const pathname = usePathname();
+  const [showMore, setShowMore] = useState(false);
+  const { data: stats } = useWorkerStats();
+
+  // Check if current path is in "more" menu
+  const isInMoreMenu = MORE_MENU_ITEMS.some(
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/")
+  );
+
+  const getBadgeCount = (badgeKey?: string) => {
+    if (!badgeKey || !stats) return 0;
+    if (badgeKey === "activeJobs") return stats.activeJobs || 0;
+    return 0;
+  };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border lg:hidden z-50">
-      <div className="flex items-center justify-around h-16">
-        {WORKER_BOTTOM_NAV.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full transition-colors",
-                isActive
-                  ? "text-brand-primary"
-                  : "text-brand-text-light hover:text-brand-text-dark"
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="text-xs mt-1">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <>
+      {/* More Menu Overlay */}
+      {showMore && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setShowMore(false)}
+        />
+      )}
+
+      {/* More Menu Panel */}
+      {showMore && (
+        <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-brand-border rounded-t-2xl shadow-xl z-50 lg:hidden animate-slide-up">
+          <div className="p-4 grid grid-cols-4 gap-2">
+            {MORE_MENU_ITEMS.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setShowMore(false)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all",
+                    isActive
+                      ? "bg-brand-primary/10 text-brand-primary"
+                      : "text-brand-text-light hover:bg-brand-bg"
+                  )}
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="text-xs mt-1.5 font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-brand-border lg:hidden z-50 safe-area-bottom">
+        <div className="flex items-center justify-around h-16">
+          {MAIN_NAV.map((item) => {
+            const isActive =
+              item.isMore
+                ? isInMoreMenu || showMore
+                : pathname === item.href ||
+                  (item.href !== "/work" && pathname.startsWith(item.href + "/"));
+            const Icon = item.icon;
+            const badge = getBadgeCount(item.badgeKey);
+
+            if (item.isMore) {
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => setShowMore(!showMore)}
+                  className={cn(
+                    "flex flex-col items-center justify-center flex-1 h-full transition-colors relative",
+                    isActive
+                      ? "text-brand-primary"
+                      : "text-brand-text-light hover:text-brand-text-dark"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-xs mt-1 font-medium">{item.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center flex-1 h-full transition-colors relative",
+                  isActive
+                    ? "text-brand-primary"
+                    : "text-brand-text-light hover:text-brand-text-dark"
+                )}
+              >
+                <div className="relative">
+                  <Icon className="w-5 h-5" />
+                  {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-error text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs mt-1 font-medium">{item.label}</span>
+                {isActive && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-brand-primary rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

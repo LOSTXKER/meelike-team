@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { Card, Button, Badge, Progress, Skeleton } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
-import { StatCard } from "@/components/shared";
+import { StatCard, PageHeader } from "@/components/shared";
 import { formatCurrency, formatDate, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats, useWorkerJobs } from "@/lib/api/hooks";
 import {
@@ -112,24 +112,18 @@ export default function WorkerEarningsPage() {
     <Container size="xl">
       <Section spacing="lg" className="animate-fade-in">
         {/* Header */}
-        <HStack justify="between" align="center" className="flex-col sm:flex-row gap-4">
-          <VStack gap={2}>
-            <HStack gap={3} align="center" className="text-3xl font-bold text-brand-text-dark tracking-tight">
-              <span className="p-2.5 bg-brand-success/10 rounded-xl">
-                <DollarSign className="w-7 h-7 text-brand-success" />
-              </span>
-              รายได้ของฉัน
-            </HStack>
-            <p className="text-brand-text-light text-lg">
-              ติดตามรายได้และจัดการการถอนเงิน
-            </p>
-          </VStack>
-          <Link href="/work/earnings/history">
-            <Button variant="outline" className="bg-white shadow-sm" leftIcon={<History className="w-4 h-4" />}>
-              ดูประวัติทั้งหมด
-            </Button>
-          </Link>
-        </HStack>
+        <PageHeader
+          title="รายได้ของฉัน"
+          description="ติดตามรายได้และจัดการการถอนเงิน"
+          icon={DollarSign}
+          action={
+            <Link href="/work/earnings/history">
+              <Button variant="outline" className="bg-white shadow-sm" leftIcon={<History className="w-4 h-4" />}>
+                ดูประวัติทั้งหมด
+              </Button>
+            </Link>
+          }
+        />
 
         <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Column: Balance & Quick Stats */}
@@ -287,6 +281,15 @@ export default function WorkerEarningsPage() {
             </div>
             
             <div className="divide-y divide-brand-border/50">
+              {transactions.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-brand-bg mb-3">
+                    <History className="w-7 h-7 text-brand-text-light" />
+                  </div>
+                  <p className="font-medium text-brand-text-dark">ยังไม่มีธุรกรรม</p>
+                  <p className="text-sm text-brand-text-light">เริ่มรับงานเพื่อเริ่มสร้างรายได้</p>
+                </div>
+              )}
               {transactions.map((tx) => (
                 <div
                   key={tx.id}

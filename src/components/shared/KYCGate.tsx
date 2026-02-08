@@ -55,7 +55,7 @@ export function KYCGate({
       const verificationUrl =
         userType === "seller"
           ? "/seller/settings/verification"
-          : "/work/profile/verification";
+          : "/work/settings/verification";
       window.location.href = verificationUrl;
     }
   }, [requiredLevel, userType]);

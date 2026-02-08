@@ -209,7 +209,7 @@ export const WORKER_NAV: NavConfig = [
     items: [
       { label: "Leaderboard", href: "/work/leaderboard", icon: Trophy },
       { label: "ชวนเพื่อน", href: "/work/referral", icon: UserPlus },
-      { label: "โปรไฟล์", href: "/work/profile", icon: User },
+      { label: "ตั้งค่า", href: "/work/settings", icon: Settings },
     ],
   },
 ];
@@ -219,7 +219,7 @@ export const WORKER_BOTTOM_NAV: NavItem[] = [
   { label: "งาน", href: "/work/jobs", icon: ClipboardList },
   { label: "ทีม", href: "/work/teams", icon: Users },
   { label: "รายได้", href: "/work/earnings", icon: Wallet },
-  { label: "โปรไฟล์", href: "/work/profile", icon: User },
+  { label: "ตั้งค่า", href: "/work/settings", icon: Settings },
 ];
 
 export function isNavGroup(item: NavItem | NavGroup): item is NavGroup {

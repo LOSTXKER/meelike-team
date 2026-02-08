@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, Badge } from "@/components/ui";
+import { useState, useEffect } from "react";
+import { Card, Badge, Skeleton } from "@/components/ui";
 import { Container, Section } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import {
@@ -56,6 +57,9 @@ const weeklyRewards: WeeklyReward[] = [
 ];
 
 export default function LeaderboardPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
+
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -92,6 +96,22 @@ export default function LeaderboardPage() {
       </span>
     );
   };
+
+  if (isLoading) {
+    return (
+      <Container size="lg">
+        <Section spacing="md" className="animate-fade-in">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+          </div>
+        </Section>
+      </Container>
+    );
+  }
 
   return (
     <Container size="lg">

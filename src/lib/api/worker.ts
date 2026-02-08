@@ -18,9 +18,13 @@ import {
   getTeamJobsFromStorage,
   saveTeamJobsToStorage,
   getTeamsFromStorage,
+  saveTeamsToStorage,
   getTeamMembersFromStorage,
+  saveTeamMembersToStorage,
   getWorkersFromStorage,
+  saveWorkersToStorage,
   getWorkerAccountsFromStorage,
+  saveWorkerAccountsToStorage,
 } from "./storage-helpers";
 
 import type {
@@ -30,7 +34,21 @@ import type {
   Job,
   JobClaim,
   WorkerJob,
+  Payout,
 } from "@/types";
+
+// ===== WORKER TRANSACTION TYPE =====
+export interface WorkerTransaction {
+  id: string;
+  type: "earning" | "withdrawal" | "bonus" | "fee";
+  title: string;
+  description: string;
+  amount: number;
+  status: "completed" | "pending" | "failed";
+  relatedJobId?: string;
+  relatedPayoutId?: string;
+  createdAt: string;
+}
 
 // ===== DEFAULT DATA =====
 
@@ -353,5 +371,211 @@ export const workerApi = {
     
     saveJobClaimsToStorage(claims);
     return claims[claimIndex];
+  },
+
+  // ===== PROFILE =====
+
+  async updateProfile(patch: Partial<Pick<Worker, "displayName" | "bio" | "lineId" | "phone" | "bankName" | "bankAccount" | "bankAccountName" | "promptPayId" | "avatar">>): Promise<Worker> {
+    await delay();
+    const workerId = getCurrentWorkerId();
+    if (!workerId) throw new Error("Worker not authenticated");
+
+    const workers = getWorkersFromStorage();
+    const idx = workers.findIndex(w => w.id === workerId);
+    if (idx === -1) throw new Error("Worker not found");
+
+    workers[idx] = {
+      ...workers[idx],
+      ...patch,
+      lastActiveAt: new Date().toISOString(),
+    };
+    saveWorkersToStorage(workers);
+    return workers[idx];
+  },
+
+  // ===== ACCOUNTS CRUD =====
+
+  async createAccount(payload: {
+    platform: WorkerAccount["platform"];
+    username: string;
+    profileUrl: string;
+  }): Promise<WorkerAccount> {
+    await delay();
+    const workerId = getCurrentWorkerId();
+    if (!workerId) throw new Error("Worker not authenticated");
+
+    const accounts = getWorkerAccountsFromStorage();
+    const now = new Date().toISOString();
+
+    const newAccount: WorkerAccount = {
+      id: `acc-${generateId()}`,
+      workerId,
+      platform: payload.platform,
+      username: payload.username,
+      profileUrl: payload.profileUrl,
+      screenshotUrl: "",
+      verificationStatus: "pending",
+      profilePictureExists: true,
+      isActive: true,
+      jobsCompleted: 0,
+      followers: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    accounts.push(newAccount);
+    saveWorkerAccountsToStorage(accounts);
+    return newAccount;
+  },
+
+  async updateAccount(accountId: string, patch: Partial<Pick<WorkerAccount, "username" | "profileUrl" | "isActive">>): Promise<WorkerAccount> {
+    await delay();
+    const accounts = getWorkerAccountsFromStorage();
+    const idx = accounts.findIndex(a => a.id === accountId);
+    if (idx === -1) throw new Error("Account not found");
+
+    accounts[idx] = {
+      ...accounts[idx],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+    saveWorkerAccountsToStorage(accounts);
+    return accounts[idx];
+  },
+
+  async deleteAccount(accountId: string): Promise<boolean> {
+    await delay();
+    const accounts = getWorkerAccountsFromStorage();
+    const filtered = accounts.filter(a => a.id !== accountId);
+    if (filtered.length === accounts.length) return false;
+    saveWorkerAccountsToStorage(filtered);
+    return true;
+  },
+
+  // ===== WITHDRAWAL =====
+
+  async withdraw(payload: {
+    amount: number;
+    method: "promptpay" | "bank_transfer";
+    promptpayNumber?: string;
+    bankCode?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
+  }): Promise<Payout> {
+    await delay();
+    const workerId = getCurrentWorkerId();
+    if (!workerId) throw new Error("Worker not authenticated");
+
+    const workers = getWorkersFromStorage();
+    const worker = workers.find(w => w.id === workerId);
+    if (!worker) throw new Error("Worker not found");
+
+    if (payload.amount > worker.availableBalance) {
+      throw new Error("ยอดเงินไม่เพียงพอ");
+    }
+    if (payload.amount <= 0) {
+      throw new Error("จำนวนเงินต้องมากกว่า 0");
+    }
+
+    // Calculate fee based on worker level
+    const feeRates: Record<string, number> = {
+      bronze: 0.10,
+      silver: 0.08,
+      gold: 0.06,
+      platinum: 0.04,
+      vip: 0.02,
+    };
+    const feePercent = feeRates[worker.level] || 0.10;
+    const feeAmount = Math.round(payload.amount * feePercent);
+    const netAmount = payload.amount - feeAmount;
+    const now = new Date().toISOString();
+
+    const payout: Payout = {
+      id: `payout-${generateId()}`,
+      workerId,
+      requestedAmount: payload.amount,
+      feeAmount,
+      feePercent: feePercent * 100,
+      netAmount,
+      method: payload.method,
+      promptpayNumber: payload.promptpayNumber,
+      bankCode: payload.bankCode,
+      bankAccountNumber: payload.bankAccountNumber,
+      bankAccountName: payload.bankAccountName,
+      status: "completed",
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Deduct balance
+    const workerIdx = workers.findIndex(w => w.id === workerId);
+    workers[workerIdx].availableBalance -= payload.amount;
+    saveWorkersToStorage(workers);
+
+    return payout;
+  },
+
+  // ===== TRANSACTIONS / EARNINGS HISTORY =====
+
+  async getTransactions(): Promise<WorkerTransaction[]> {
+    await delay();
+    const workerId = getCurrentWorkerId();
+    if (!workerId) return [];
+
+    const claims = getJobClaimsFromStorage();
+    const teamJobs = getTeamJobsFromStorage();
+    const teams = getTeamsFromStorage();
+
+    const workerClaims = claims.filter(c => c.workerId === workerId);
+
+    const transactions: WorkerTransaction[] = workerClaims
+      .filter(c => c.status === "approved" || c.status === "submitted")
+      .map(claim => {
+        const job = teamJobs.find(j => j.id === claim.jobId);
+        const team = job ? teams.find(t => t.id === job.teamId) : null;
+
+        return {
+          id: `txn-${claim.id}`,
+          type: "earning" as const,
+          title: job?.serviceName || "งาน",
+          description: `${team?.name || "Team"} - ${claim.quantity} หน่วย`,
+          amount: claim.earnAmount,
+          status: claim.status === "approved" ? "completed" as const : "pending" as const,
+          relatedJobId: claim.jobId,
+          createdAt: claim.submittedAt || claim.createdAt,
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return transactions;
+  },
+
+  // ===== LEAVE TEAM =====
+
+  async leaveTeam(teamId: string): Promise<boolean> {
+    await delay();
+    const workerId = getCurrentWorkerId();
+    if (!workerId) throw new Error("Worker not authenticated");
+
+    const members = getTeamMembersFromStorage();
+    const filtered = members.filter(
+      m => !(m.teamId === teamId && m.workerId === workerId)
+    );
+
+    if (filtered.length === members.length) {
+      throw new Error("ไม่พบข้อมูลสมาชิกในทีมนี้");
+    }
+
+    saveTeamMembersToStorage(filtered);
+
+    // Update team member count
+    const teams = getTeamsFromStorage();
+    const teamIdx = teams.findIndex(t => t.id === teamId);
+    if (teamIdx !== -1) {
+      teams[teamIdx].memberCount = Math.max(0, teams[teamIdx].memberCount - 1);
+      saveTeamsToStorage(teams);
+    }
+
+    return true;
   },
 };

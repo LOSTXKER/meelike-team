@@ -6,7 +6,7 @@ import { seedAllData } from "@/lib/seed-data";
 import { clearAllStorage, STORAGE_KEYS, getStorage, setStorage } from "@/lib/storage";
 import { useAuthStore } from "@/lib/store";
 import type { Transaction } from "@/lib/api";
-import type { KYCLevel, SubscriptionPlan, SellerRank, Seller } from "@/types";
+import type { KYCLevel, SubscriptionPlan, SellerRank, Seller, Worker, WorkerLevel } from "@/types";
 import { DEFAULT_KYC_DATA } from "@/types/kyc";
 import {
   Hammer,
@@ -154,16 +154,38 @@ export function DevTools() {
     [user, setUser]
   );
 
+  const updateWorkerField = useCallback(
+    (patch: Partial<Worker>) => {
+      if (!user?.worker) return;
+
+      const updatedWorker = { ...user.worker, ...patch };
+      setUser({ ...user, worker: updatedWorker });
+
+      const workers = getStorage<Worker[]>(STORAGE_KEYS.WORKERS, []);
+      const idx = workers.findIndex((w) => w.id === user.worker!.id);
+      if (idx !== -1) {
+        workers[idx] = { ...workers[idx], ...patch };
+        setStorage(STORAGE_KEYS.WORKERS, workers);
+      }
+    },
+    [user, setUser]
+  );
+
   const handleSetKYCLevel = (level: KYCLevel) => {
-    if (!user?.seller) return;
-    const kyc = user.seller.kyc || { ...DEFAULT_KYC_DATA };
-    updateSellerField({
+    const kycPatch = {
       kyc: {
-        ...kyc,
+        ...(currentRole === "worker" ? user?.worker?.kyc : user?.seller?.kyc) || { ...DEFAULT_KYC_DATA },
         level,
-        status: level === "none" ? "pending" : "approved",
+        status: (level === "none" ? "pending" : "approved") as "pending" | "approved",
       },
-    });
+    };
+    if (currentRole === "worker" && user?.worker) {
+      updateWorkerField(kycPatch);
+    } else if (user?.seller) {
+      updateSellerField(kycPatch);
+    } else {
+      return;
+    }
     setMessage({ type: "success", text: `KYC: ${level}` });
   };
 
@@ -193,28 +215,35 @@ export function DevTools() {
   };
 
   const handleAdjustBalance = (amount: number) => {
-    if (!user?.seller) return;
-    const newBalance = Math.max(0, (user.seller.balance || 0) + amount);
-    updateSellerField({ balance: newBalance });
+    if (currentRole === "worker" && user?.worker) {
+      const newBalance = Math.max(0, (user.worker.availableBalance || 0) + amount);
+      updateWorkerField({ availableBalance: newBalance });
+      setMessage({ type: "success", text: `Balance: ${newBalance.toLocaleString()}` });
+    } else if (user?.seller) {
+      const newBalance = Math.max(0, (user.seller.balance || 0) + amount);
+      updateSellerField({ balance: newBalance });
 
-    // Also add a transaction record
-    const transactions = getStorage<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, []);
-    const newTxn: Transaction = {
-      id: `txn-dev-${Date.now()}`,
-      type: amount > 0 ? "topup" : "expense",
-      category: amount > 0 ? "topup" : "fee",
-      title: `[DEV] ${amount > 0 ? "+" : ""}${amount.toLocaleString()}`,
-      description: "DevTools balance adjustment",
-      amount,
-      date: new Date().toISOString(),
-    };
-    transactions.unshift(newTxn);
-    setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
+      const transactions = getStorage<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, []);
+      const newTxn: Transaction = {
+        id: `txn-dev-${Date.now()}`,
+        type: amount > 0 ? "topup" : "expense",
+        category: amount > 0 ? "topup" : "fee",
+        title: `[DEV] ${amount > 0 ? "+" : ""}${amount.toLocaleString()}`,
+        description: "DevTools balance adjustment",
+        amount,
+        date: new Date().toISOString(),
+      };
+      transactions.unshift(newTxn);
+      setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
 
-    setMessage({
-      type: "success",
-      text: `Balance: ${newBalance.toLocaleString()}`,
-    });
+      setMessage({ type: "success", text: `Balance: ${newBalance.toLocaleString()}` });
+    }
+  };
+
+  const handleSetWorkerLevel = (level: WorkerLevel) => {
+    if (!user?.worker) return;
+    updateWorkerField({ level });
+    setMessage({ type: "success", text: `Worker Level: ${level}` });
   };
 
   // ===== CONFIG ACTIONS =====
@@ -241,11 +270,19 @@ export function DevTools() {
     );
   }
 
-  const currentKYC = user?.seller?.kyc?.level || "none";
+  const currentRole = user?.role || "---";
+  const isSeller = currentRole === "seller";
+  const isWorker = currentRole === "worker";
+
+  const currentKYC = isWorker
+    ? user?.worker?.kyc?.level || "none"
+    : user?.seller?.kyc?.level || "none";
   const currentPlan = user?.seller?.plan || "free";
   const currentRank = user?.seller?.sellerRank || "bronze";
-  const currentBalance = user?.seller?.balance || 0;
-  const currentRole = user?.role || "---";
+  const currentBalance = isWorker
+    ? user?.worker?.availableBalance || 0
+    : user?.seller?.balance || 0;
+  const currentWorkerLevel = user?.worker?.level || "bronze";
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -285,8 +322,9 @@ export function DevTools() {
             <div className="mt-2 flex items-center gap-2 text-[10px] text-purple-200 flex-wrap">
               <span className="bg-white/10 px-1.5 py-0.5 rounded">{currentRole}</span>
               <span className="bg-white/10 px-1.5 py-0.5 rounded">KYC:{currentKYC}</span>
-              <span className="bg-white/10 px-1.5 py-0.5 rounded">{currentPlan}</span>
-              <span className="bg-white/10 px-1.5 py-0.5 rounded">{currentRank}</span>
+              {isSeller && <span className="bg-white/10 px-1.5 py-0.5 rounded">{currentPlan}</span>}
+              {isSeller && <span className="bg-white/10 px-1.5 py-0.5 rounded">{currentRank}</span>}
+              {isWorker && <span className="bg-white/10 px-1.5 py-0.5 rounded">Lv:{currentWorkerLevel}</span>}
             </div>
           )}
         </div>
@@ -429,7 +467,7 @@ export function DevTools() {
                     </div>
                   </Section>
 
-                  {/* KYC Level */}
+                  {/* KYC Level (both roles) */}
                   <Section icon={<Shield className="w-3.5 h-3.5" />} title="KYC Level">
                     <div className="grid grid-cols-2 gap-1">
                       {(["none", "basic", "verified", "business"] as KYCLevel[]).map(
@@ -446,42 +484,64 @@ export function DevTools() {
                     </div>
                   </Section>
 
-                  {/* Plan */}
-                  <Section icon={<Crown className="w-3.5 h-3.5" />} title="Subscription Plan">
-                    <div className="grid grid-cols-2 gap-1">
-                      {(["free", "basic", "pro", "business"] as SubscriptionPlan[]).map(
-                        (plan) => (
-                          <ToggleBtn
-                            key={plan}
-                            active={currentPlan === plan}
-                            onClick={() => handleSetPlan(plan)}
-                          >
-                            {plan}
-                          </ToggleBtn>
-                        )
-                      )}
-                    </div>
-                  </Section>
+                  {/* Seller-only sections */}
+                  {isSeller && (
+                    <>
+                      <Section icon={<Crown className="w-3.5 h-3.5" />} title="Subscription Plan">
+                        <div className="grid grid-cols-2 gap-1">
+                          {(["free", "basic", "pro", "business"] as SubscriptionPlan[]).map(
+                            (plan) => (
+                              <ToggleBtn
+                                key={plan}
+                                active={currentPlan === plan}
+                                onClick={() => handleSetPlan(plan)}
+                              >
+                                {plan}
+                              </ToggleBtn>
+                            )
+                          )}
+                        </div>
+                      </Section>
 
-                  {/* Seller Rank */}
-                  <Section icon={<ShieldCheck className="w-3.5 h-3.5" />} title="Seller Rank">
-                    <div className="grid grid-cols-2 gap-1">
-                      {(["bronze", "silver", "gold", "platinum"] as SellerRank[]).map(
-                        (rank) => (
-                          <ToggleBtn
-                            key={rank}
-                            active={currentRank === rank}
-                            onClick={() => handleSetRank(rank)}
-                          >
-                            {rank}
-                          </ToggleBtn>
-                        )
-                      )}
-                    </div>
-                  </Section>
+                      <Section icon={<ShieldCheck className="w-3.5 h-3.5" />} title="Seller Rank">
+                        <div className="grid grid-cols-2 gap-1">
+                          {(["bronze", "silver", "gold", "platinum"] as SellerRank[]).map(
+                            (rank) => (
+                              <ToggleBtn
+                                key={rank}
+                                active={currentRank === rank}
+                                onClick={() => handleSetRank(rank)}
+                              >
+                                {rank}
+                              </ToggleBtn>
+                            )
+                          )}
+                        </div>
+                      </Section>
+                    </>
+                  )}
 
-                  {/* Balance */}
-                  <Section icon={<Wallet className="w-3.5 h-3.5" />} title={`Balance: ${currentBalance.toLocaleString()}`}>
+                  {/* Worker-only sections */}
+                  {isWorker && (
+                    <Section icon={<ShieldCheck className="w-3.5 h-3.5" />} title="Worker Level">
+                      <div className="grid grid-cols-3 gap-1">
+                        {(["bronze", "silver", "gold", "platinum", "vip"] as WorkerLevel[]).map(
+                          (level) => (
+                            <ToggleBtn
+                              key={level}
+                              active={currentWorkerLevel === level}
+                              onClick={() => handleSetWorkerLevel(level)}
+                            >
+                              {level}
+                            </ToggleBtn>
+                          )
+                        )}
+                      </div>
+                    </Section>
+                  )}
+
+                  {/* Balance (both roles) */}
+                  <Section icon={<Wallet className="w-3.5 h-3.5" />} title={`Balance: ฿${currentBalance.toLocaleString()}`}>
                     <div className="flex gap-1">
                       {[1000, 5000, 10000, 50000].map((amt) => (
                         <button

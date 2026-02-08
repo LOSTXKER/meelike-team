@@ -44,6 +44,25 @@ export default function WorkerTeamsPage() {
         />
 
         {/* Teams */}
+        {myTeams.length === 0 && (
+          <Card variant="elevated" className="border-none shadow-md">
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-secondary border border-brand-border mb-4 shadow-sm">
+                <Users className="w-8 h-8 text-brand-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-brand-text-dark mb-1">ยังไม่ได้เข้าร่วมทีม</h3>
+              <p className="text-brand-text-light mb-4 max-w-sm mx-auto">ค้นหาทีมที่ตลาดกลาง หรือใช้รหัสเชิญเพื่อเข้าร่วมทีม</p>
+              <div className="flex gap-3 justify-center">
+                <Link href="/hub">
+                  <Button leftIcon={<Search className="w-4 h-4" />}>ค้นหาทีม</Button>
+                </Link>
+                <Link href="/work/teams/join">
+                  <Button variant="outline">ใช้รหัสเชิญ</Button>
+                </Link>
+              </div>
+            </div>
+          </Card>
+        )}
         <div className="space-y-6">
         {myTeams.map((team) => (
           <Card key={team.id} variant="elevated" className="border-none shadow-md hover:shadow-lg transition-all duration-300">

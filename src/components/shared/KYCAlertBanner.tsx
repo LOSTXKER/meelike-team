@@ -58,7 +58,7 @@ export function KYCAlertBanner({
   // Determine verification URL
   const verificationUrl = userType === "seller" 
     ? "/seller/settings/verification" 
-    : "/work/profile/verification";
+    : "/work/settings/verification";
 
   // Default messages based on level
   const defaultMessages: Record<KYCLevel, string> = {

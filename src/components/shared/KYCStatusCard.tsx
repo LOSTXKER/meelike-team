@@ -68,7 +68,7 @@ export function KYCStatusCard({
   const verificationUrl =
     userType === "seller"
       ? "/seller/settings/verification"
-      : "/work/profile/verification";
+      : "/work/settings/verification";
 
   // If user is at max level, don't show the card
   if (currentLevel === "business") return null;

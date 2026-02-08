@@ -92,3 +92,80 @@ export function useSubmitJobClaim() {
     },
   });
 }
+
+// ===== NEW QUERIES =====
+
+export function useWorkerTransactions() {
+  return useQuery({
+    queryKey: queryKeys.worker.transactions(),
+    queryFn: () => api.worker.getTransactions(),
+  });
+}
+
+// ===== NEW MUTATIONS =====
+
+export function useUpdateWorkerProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Parameters<typeof api.worker.updateProfile>[0]) =>
+      api.worker.updateProfile(patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.all });
+    },
+  });
+}
+
+export function useCreateWorkerAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof api.worker.createAccount>[0]) =>
+      api.worker.createAccount(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.accounts() });
+    },
+  });
+}
+
+export function useUpdateWorkerAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ accountId, patch }: { accountId: string; patch: Parameters<typeof api.worker.updateAccount>[1] }) =>
+      api.worker.updateAccount(accountId, patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.accounts() });
+    },
+  });
+}
+
+export function useDeleteWorkerAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (accountId: string) => api.worker.deleteAccount(accountId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.accounts() });
+    },
+  });
+}
+
+export function useWithdraw() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof api.worker.withdraw>[0]) =>
+      api.worker.withdraw(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.worker.transactions() });
+    },
+  });
+}
+
+export function useLeaveTeam() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (teamId: string) => api.worker.leaveTeam(teamId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.teams() });
+      qc.invalidateQueries({ queryKey: queryKeys.worker.stats() });
+    },
+  });
+}

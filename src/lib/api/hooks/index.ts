@@ -78,10 +78,20 @@ export {
   useWorkerAccounts,
   useWorkerTeams,
   useTeamJobPreview,
+  useWorkerTransactions,
 } from "./worker";
 
 // Worker mutation hooks
-export { useClaimTeamJob, useSubmitJobClaim } from "./worker";
+export {
+  useClaimTeamJob,
+  useSubmitJobClaim,
+  useUpdateWorkerProfile,
+  useCreateWorkerAccount,
+  useUpdateWorkerAccount,
+  useDeleteWorkerAccount,
+  useWithdraw,
+  useLeaveTeam,
+} from "./worker";
 
 // Hub query hooks
 export {
@@ -110,6 +120,8 @@ export {
   usePublicTeams,
   useTeamMembers,
   useWorkers,
+  useTeamByInviteCode,
+  useJoinTeamByInviteCode,
 } from "./team";
 
 // Combined hooks

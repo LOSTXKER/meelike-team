@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card, Button, Input, Badge } from "@/components/ui";
+import React, { useState, useEffect } from "react";
+import { Card, Button, Input, Badge, Skeleton } from "@/components/ui";
 import { Dialog } from "@/components/ui/Dialog";
 import { Container, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
@@ -75,6 +75,9 @@ const platformConfig: Record<
 };
 
 export default function WorkerAccountsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
+
   const [accounts, setAccounts] = useState<SocialAccount[]>([
     {
       id: "acc-1",
@@ -162,6 +165,22 @@ export default function WorkerAccountsPage() {
 
   const verifiedCount = accounts.filter((a) => a.status === "verified").length;
   const totalJobs = accounts.reduce((sum, a) => sum + a.jobsCompleted, 0);
+
+  if (isLoading) {
+    return (
+      <Container size="xl">
+        <Section spacing="lg" className="animate-fade-in">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+          </div>
+        </Section>
+      </Container>
+    );
+  }
 
   return (
     <Container size="xl">

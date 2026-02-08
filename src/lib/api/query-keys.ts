@@ -44,6 +44,7 @@ export const queryKeys = {
     jobs: () => [...queryKeys.worker.all, "jobs"] as const,
     accounts: () => [...queryKeys.worker.all, "accounts"] as const,
     teams: () => [...queryKeys.worker.all, "teams"] as const,
+    transactions: () => [...queryKeys.worker.all, "transactions"] as const,
     teamJobPreview: (id: string) =>
       [...queryKeys.worker.all, "teamJobPreview", id] as const,
   },
@@ -62,6 +63,8 @@ export const queryKeys = {
   team: {
     all: ["team"] as const,
     byId: (id: string) => [...queryKeys.team.all, id] as const,
+    byInviteCode: (code: string) =>
+      [...queryKeys.team.all, "inviteCode", code] as const,
     allTeams: () => [...queryKeys.team.all, "allTeams"] as const,
     publicTeams: () => [...queryKeys.team.all, "publicTeams"] as const,
     members: (teamId: string) =>

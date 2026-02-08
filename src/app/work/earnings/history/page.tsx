@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Card, Button, Badge, Tabs } from "@/components/ui";
+import { Card, Button, Badge, Tabs, Skeleton } from "@/components/ui";
 import { Container, Section, HStack, VStack } from "@/components/layout";
 import { PageHeader, EmptyState } from "@/components/shared";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -87,6 +87,23 @@ export default function EarningsHistoryPage() {
 
   // Get real worker jobs data
   const { data: workerJobs, isLoading } = useWorkerJobs();
+
+  if (isLoading) {
+    return (
+      <Container size="xl">
+        <Section spacing="lg" className="animate-fade-in">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          </div>
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+          </div>
+        </Section>
+      </Container>
+    );
+  }
 
   // Combine real earnings from jobs with mock withdrawals/bonuses
   const allTransactions = useMemo(() => {

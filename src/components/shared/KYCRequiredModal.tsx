@@ -58,8 +58,15 @@ export function KYCRequiredModal({
   const RequiredIcon = LEVEL_CONFIG[requiredLevel].icon;
 
   const handleStartKYC = () => {
-    onStartKYC?.();
-    onClose();
+    // Only call onStartKYC — do NOT call onClose here.
+    // The onStartKYC handler typically navigates away or closes the modal itself.
+    // Calling onClose after onStartKYC can trigger side-effects (e.g. history.back)
+    // that override the navigation from onStartKYC.
+    if (onStartKYC) {
+      onStartKYC();
+    } else {
+      onClose();
+    }
   };
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Card, Button, Input, Badge } from "@/components/ui";
+import { useState, useEffect } from "react";
+import { Card, Button, Input, Badge, Skeleton } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
 import { PageHeader } from "@/components/shared";
 import {
@@ -46,6 +46,8 @@ const referredFriends: ReferredFriend[] = [
 ];
 
 export default function ReferralPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
   const [copied, setCopied] = useState(false);
   const referralCode = "NUNA123";
   const referralLink = `seller.meelike.com/r/${referralCode.toLowerCase()}`;
@@ -73,6 +75,21 @@ export default function ReferralPage() {
 
   const totalEarned = referredFriends.reduce((sum, f) => sum + f.earnedForYou, 0);
   const totalReferred = referredFriends.length;
+
+  if (isLoading) {
+    return (
+      <Container size="lg">
+        <Section spacing="md" className="animate-fade-in">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-40 w-full rounded-xl" />
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          </div>
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </Section>
+      </Container>
+    );
+  }
 
   return (
     <Container size="lg">
