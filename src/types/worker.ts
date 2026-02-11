@@ -19,6 +19,7 @@ export interface Worker {
   bio?: string;
   lineId?: string;
   phone?: string;
+  bankCode?: string;
   bankName?: string;
   bankAccount?: string;
   bankAccountName?: string;

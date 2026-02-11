@@ -8,7 +8,7 @@ import { Container, Section, VStack, HStack } from "@/components/layout";
 import { KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
-import { useWorkerStats } from "@/lib/api/hooks";
+import { useWorkerStats, useWithdraw } from "@/lib/api/hooks";
 import {
   ArrowLeft,
   Wallet,
@@ -83,21 +83,42 @@ export default function WithdrawPage() {
   }, []);
 
   const quickAmounts = [100, 200, 500, 1000];
+  const withdraw = useWithdraw();
 
+  // Bank account from worker data (set in /work/settings/bank)
   const bankAccount = {
-    bank: "ธนาคารกสิกรไทย",
-    bankCode: "KBANK",
-    accountNumber: "xxx-x-xx123-4",
-    accountName: "นุ่น ศรีสุข",
+    bank: worker?.bankName || "",
+    bankCode: worker?.bankCode?.toUpperCase() || "",
+    accountNumber: worker?.bankAccount || "",
+    accountName: worker?.bankAccountName || "",
   };
+  const hasBankAccount = !!(bankAccount.bankCode && bankAccount.accountNumber);
 
   const calculateFee = (amt: number) => amt * withdrawFee;
   const calculateNet = (amt: number) => amt - calculateFee(amt);
 
   const handleWithdraw = () => {
-    alert("แจ้งถอนเงินเรียบร้อย! รอการตรวจสอบภายใน 24 ชั่วโมง");
-    setShowConfirmModal(false);
-    setStep(3);
+    const numAmount = Number(amount);
+    withdraw.mutate(
+      {
+        amount: numAmount,
+        method: worker?.promptPayId ? "promptpay" : "bank_transfer",
+        bankCode: bankAccount.bankCode,
+        bankAccountNumber: bankAccount.accountNumber,
+        bankAccountName: bankAccount.accountName,
+        promptpayNumber: worker?.promptPayId || undefined,
+      },
+      {
+        onSuccess: () => {
+          setShowConfirmModal(false);
+          setStep(3);
+        },
+        onError: (error) => {
+          setShowConfirmModal(false);
+          alert(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
+        },
+      }
+    );
   };
 
   return (
@@ -359,7 +380,7 @@ export default function WithdrawPage() {
 
               <Button
                 onClick={() => setStep(2)}
-                disabled={!amount || Number(amount) < minWithdraw || Number(amount) > effectiveMaxWithdraw}
+                disabled={!amount || Number(amount) < minWithdraw || Number(amount) > effectiveMaxWithdraw || !hasBankAccount}
                 size="lg"
                 className="w-full shadow-xl shadow-brand-primary/20 py-4"
               >
@@ -367,6 +388,28 @@ export default function WithdrawPage() {
               </Button>
             </div>
           </Card>
+
+          {/* No Bank Account Warning */}
+          {!hasBankAccount && hasKYC && (
+            <Card className="bg-brand-warning/5 border border-brand-warning/20">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-brand-warning shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-bold text-brand-text-dark text-sm">กรุณาเพิ่มบัญชีธนาคารก่อนถอนเงิน</p>
+                  <p className="text-xs text-brand-text-light mt-1">
+                    ต้องตั้งค่าบัญชีธนาคารในหน้าตั้งค่าก่อนจึงจะถอนเงินได้
+                  </p>
+                  <Link
+                    href="/work/settings/bank"
+                    className="inline-flex items-center gap-1.5 mt-2 text-sm text-brand-primary font-medium hover:underline"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    ตั้งค่าบัญชีธนาคาร <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Info Card */}
           <Card className="bg-brand-info/5 border border-brand-info/20">
@@ -399,7 +442,7 @@ export default function WithdrawPage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-white/80 text-sm font-medium">KASIKORNBANK</span>
+                  <span className="text-white/80 text-sm font-medium">{bankAccount.bank}</span>
                   <div className="px-3 py-1 bg-white/20 rounded-lg text-xs font-bold backdrop-blur-sm">
                     {bankAccount.bankCode}
                   </div>
@@ -555,8 +598,9 @@ export default function WithdrawPage() {
             <Button
               className="flex-1 shadow-lg shadow-brand-primary/20"
               onClick={handleWithdraw}
+              disabled={withdraw.isPending}
             >
-              ยืนยันถอนเงิน
+              {withdraw.isPending ? "กำลังดำเนินการ..." : "ยืนยันถอนเงิน"}
             </Button>
         </Dialog.Footer>
       </Dialog>

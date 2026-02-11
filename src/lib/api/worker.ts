@@ -375,7 +375,7 @@ export const workerApi = {
 
   // ===== PROFILE =====
 
-  async updateProfile(patch: Partial<Pick<Worker, "displayName" | "bio" | "lineId" | "phone" | "bankName" | "bankAccount" | "bankAccountName" | "promptPayId" | "avatar">>): Promise<Worker> {
+  async updateProfile(patch: Partial<Pick<Worker, "displayName" | "bio" | "lineId" | "phone" | "bankCode" | "bankName" | "bankAccount" | "bankAccountName" | "promptPayId" | "avatar">>): Promise<Worker> {
     await delay();
     const workerId = getCurrentWorkerId();
     if (!workerId) throw new Error("Worker not authenticated");
