@@ -452,6 +452,48 @@ export const workerApi = {
     return true;
   },
 
+  // ===== BANK ACCOUNT INQUIRY =====
+  // In production, this calls Corporate API's Account Inquiry endpoint.
+  // For now, it's a mock that simulates the bank returning the account holder's name.
+
+  async verifyBankAccount(payload: {
+    bankCode: string;
+    accountNumber: string;
+  }): Promise<{
+    bankCode: string;
+    accountNumber: string;
+    accountName: string;
+    verified: boolean;
+  }> {
+    await delay(800); // Simulate network latency
+
+    if (!payload.bankCode || !payload.accountNumber) {
+      throw new Error("กรุณาเลือกธนาคารและกรอกเลขบัญชี");
+    }
+
+    if (payload.accountNumber.replace(/[^0-9]/g, "").length < 10) {
+      throw new Error("เลขบัญชีไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง");
+    }
+
+    // Mock: return account name from the current worker's KYC data
+    // In production, this would call the bank's Account Inquiry API
+    const workerId = getCurrentWorkerId();
+    const workers = getWorkersFromStorage();
+    const worker = workers.find(w => w.id === workerId);
+    const kyc = worker?.kyc;
+
+    const accountName = kyc?.idCardFirstName && kyc?.idCardLastName
+      ? `${kyc.idCardPrefix || ""}${kyc.idCardFirstName} ${kyc.idCardLastName}`.trim()
+      : "ทดสอบ ระบบ"; // Fallback for demo
+
+    return {
+      bankCode: payload.bankCode,
+      accountNumber: payload.accountNumber,
+      accountName,
+      verified: true,
+    };
+  },
+
   // ===== WITHDRAWAL =====
 
   async withdraw(payload: {

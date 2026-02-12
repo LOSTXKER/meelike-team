@@ -147,6 +147,13 @@ export function useDeleteWorkerAccount() {
   });
 }
 
+export function useVerifyBankAccount() {
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof api.worker.verifyBankAccount>[0]) =>
+      api.worker.verifyBankAccount(payload),
+  });
+}
+
 export function useWithdraw() {
   const qc = useQueryClient();
   return useMutation({

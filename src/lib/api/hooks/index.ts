@@ -89,6 +89,7 @@ export {
   useCreateWorkerAccount,
   useUpdateWorkerAccount,
   useDeleteWorkerAccount,
+  useVerifyBankAccount,
   useWithdraw,
   useLeaveTeam,
 } from "./worker";
