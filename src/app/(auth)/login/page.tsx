@@ -10,7 +10,7 @@ import { Mail, Lock, Store, User, Sparkles, Shield } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isLoading } = useAuthStore();
+  const { login, loginDemo, isLoading } = useAuthStore();
 
   const [role, setRole] = useState<"seller" | "worker" | "admin">(
     (searchParams.get("role") as "seller" | "worker" | "admin") || "seller"
@@ -160,8 +160,7 @@ function LoginForm() {
               size="sm"
               className={`w-full ${role === "admin" ? "border-purple-300 text-purple-700 hover:bg-purple-50" : ""}`}
               onClick={async () => {
-                const demoEmail = role === "admin" ? "admin@meelike.com" : "demo@meelike.com";
-                const success = await login(demoEmail, "demo", role);
+                const success = await loginDemo(role);
                 if (success) {
                   const redirectPath = role === "seller" ? "/seller" : role === "worker" ? "/work" : "/admin";
                   router.push(redirectPath);

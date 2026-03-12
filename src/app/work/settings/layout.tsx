@@ -2,11 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Card, Badge } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
   User,
-  Shield,
+
   Settings,
   ChevronRight,
   Wallet,
@@ -14,7 +14,6 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
-import { DEFAULT_KYC_DATA } from "@/types";
 
 interface NavItem {
   id: string;
@@ -22,7 +21,6 @@ interface NavItem {
   description: string;
   href: string;
   icon: React.ElementType;
-  badge?: "kyc";
 }
 
 interface NavGroup {
@@ -40,14 +38,6 @@ const SETTINGS_GROUPS: NavGroup[] = [
         description: "ชื่อ, อีเมล, เบอร์โทร",
         href: "/work/settings",
         icon: User,
-      },
-      {
-        id: "verification",
-        label: "ยืนยันตัวตน",
-        description: "KYC Basic / Verified / Business",
-        href: "/work/settings/verification",
-        icon: Shield,
-        badge: "kyc",
       },
     ],
   },
@@ -93,11 +83,11 @@ export default function WorkerSettingsLayout({
 }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
-  const kycLevel = user?.worker?.kyc?.level || DEFAULT_KYC_DATA.level;
+  void user;
 
   const getActiveSection = () => {
     if (pathname === "/work/settings") return "profile";
-    if (pathname.includes("/verification")) return "verification";
+
     if (pathname.includes("/bank")) return "bank";
     if (pathname.includes("/accounts")) return "accounts";
     if (pathname.includes("/notifications")) return "notifications";
@@ -176,23 +166,6 @@ export default function WorkerSettingsLayout({
                                 >
                                   {item.label}
                                 </p>
-                                {item.badge === "kyc" && !isActive && (
-                                  <Badge
-                                    variant={
-                                      kycLevel === "none"
-                                        ? "warning"
-                                        : kycLevel === "business"
-                                          ? "success"
-                                          : "info"
-                                    }
-                                    size="sm"
-                                  >
-                                    {kycLevel === "none"
-                                      ? "!"
-                                      : kycLevel.charAt(0).toUpperCase() +
-                                        kycLevel.slice(1)}
-                                  </Badge>
-                                )}
                               </div>
                               <p
                                 className={cn(

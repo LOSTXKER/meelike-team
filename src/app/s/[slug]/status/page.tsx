@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Card, Badge, Button, Input, Progress, Skeleton } from "@/components/ui";
 import { Container, Section, VStack, HStack } from "@/components/layout";
-import { api } from "@/lib/api";
 import type { Order, StoreService } from "@/types";
 import {
   ArrowLeft,
@@ -65,15 +64,21 @@ export default function OrderStatusPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Load services on mount
+  // Load services on mount via public store API
   useEffect(() => {
     const loadServices = async () => {
-      const servicesData = await api.seller.getServices();
-      setServices(servicesData);
-      setInitialLoading(false);
+      try {
+        const res = await fetch(`/api/store/${slug}`);
+        const data = await res.json();
+        if (data.store?.services) setServices(data.store.services);
+      } catch {
+        // ignore
+      } finally {
+        setInitialLoading(false);
+      }
     };
     loadServices();
-  }, []);
+  }, [slug]);
 
   // Auto search from URL params
   useEffect(() => {
@@ -93,24 +98,25 @@ export default function OrderStatusPage() {
 
     setLoading(true);
     setNotFound(false);
-    
-    // Use API to search orders
-    const orders = await api.seller.getOrders();
 
-    // Mock search - find order by ID
-    const found = orders.find(
-      (o) => o.id.toLowerCase().includes(searchValue.toLowerCase()) ||
-             o.orderNumber.toLowerCase().includes(searchValue.toLowerCase())
-    );
-
-    if (found) {
-      setOrder(found);
-      setSearchId(searchValue);
-    } else {
+    try {
+      const res = await fetch(
+        `/api/store/${slug}/status?orderNumber=${encodeURIComponent(searchValue)}`
+      );
+      const data = await res.json();
+      if (res.ok && data.order) {
+        setOrder(data.order as Order);
+        setSearchId(searchValue);
+      } else {
+        setOrder(null);
+        setNotFound(true);
+      }
+    } catch {
       setOrder(null);
       setNotFound(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const copyOrderId = () => {

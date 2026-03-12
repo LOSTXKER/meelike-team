@@ -7,9 +7,6 @@
  * - Hub statistics
  */
 
-// Re-export TeamApplication type
-export type { TeamApplication } from "../storage-helpers";
-
 import {
   getPosts,
   getStats,

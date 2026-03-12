@@ -1,316 +1,308 @@
-import type { SubscriptionPlan, SellerRank } from "@/types";
+export type SubscriptionPlan =
+  | "free"
+  | "starter"
+  | "pro"
+  | "business"
+  | "enterprise";
 
-// ===== SUBSCRIPTION PLANS =====
+export type StoreLevel = "none" | "basic" | "custom" | "premium";
+
+export type AnalyticsLevel =
+  | "basic_today"
+  | "overview"
+  | "full"
+  | "full_export";
+
+export type PaymentHelperLevel = "text" | "qr" | "checklist_schedule" | "csv_batch";
+
+export type HubAccessLevel =
+  | "view"
+  | "post_recruit"
+  | "post_outsource"
+  | "priority";
+
+export type SupportLevel =
+  | "community"
+  | "email"
+  | "priority"
+  | "sla_dedicated";
+
+export interface PlanFeatures {
+  autoCreateJobs: boolean;
+  splitReassign: boolean;
+  outsource: boolean;
+  analytics: AnalyticsLevel;
+  exportCsv: boolean;
+  paymentHelper: PaymentHelperLevel;
+  hub: HubAccessLevel;
+  lineNotify: boolean;
+  lineMessagingApi: boolean;
+  webhook: boolean;
+  api: boolean;
+  whiteLabel: boolean;
+  customDomain: boolean;
+  support: SupportLevel;
+}
 
 export interface PlanConfig {
   id: SubscriptionPlan;
   name: string;
-  price: number; // THB per month
-  icon: string;
-  description: string;
-  features: {
-    teams: number; // Infinity = unlimited
-    admins: number;
-    botApi: "meelike" | "meelike_plus_external";
-    analytics: "basic" | "pro";
-    exportData: boolean;
-    webhook: boolean;
-    whiteLabel: boolean;
-    customDomain: boolean;
-    prioritySupport: boolean;
-  };
-  highlight?: boolean; // For "most popular" badge
+  price: number;
+  /** Infinity for enterprise */
+  orderQuota: number;
+  teams: number;
+  membersPerTeam: number;
+  storeLevel: StoreLevel;
+  features: PlanFeatures;
+  /** Psychological role in popcorn pricing */
+  role: "hook" | "decoy" | "target" | "premium" | "power";
+  highlight?: boolean;
+  badge?: string;
 }
+
+export const OVERAGE_FEE = 15; // THB per order over quota
 
 export const PLANS: Record<SubscriptionPlan, PlanConfig> = {
   free: {
     id: "free",
     name: "Free",
     price: 0,
-    icon: "🆓",
-    description: "เริ่มต้นใช้งานฟรี",
+    orderQuota: 10,
+    teams: 1,
+    membersPerTeam: 5,
+    storeLevel: "none",
+    role: "hook",
     features: {
-      teams: 2,
-      admins: 1,
-      botApi: "meelike",
-      analytics: "basic",
-      exportData: false,
+      autoCreateJobs: false,
+      splitReassign: false,
+      outsource: false,
+      analytics: "basic_today",
+      exportCsv: false,
+      paymentHelper: "text",
+      hub: "view",
+      lineNotify: false,
+      lineMessagingApi: false,
       webhook: false,
+      api: false,
       whiteLabel: false,
       customDomain: false,
-      prioritySupport: false,
+      support: "community",
     },
   },
-  basic: {
-    id: "basic",
-    name: "Basic",
-    price: 49,
-    icon: "🌱",
-    description: "สำหรับทีมเล็ก",
+
+  starter: {
+    id: "starter",
+    name: "Starter",
+    price: 149,
+    orderQuota: 30,
+    teams: 2,
+    membersPerTeam: 20,
+    storeLevel: "basic",
+    role: "decoy",
     features: {
-      teams: 5,
-      admins: 2,
-      botApi: "meelike",
-      analytics: "basic",
-      exportData: false,
+      autoCreateJobs: true,
+      splitReassign: false,
+      outsource: false,
+      analytics: "overview",
+      exportCsv: false,
+      paymentHelper: "qr",
+      hub: "post_recruit",
+      lineNotify: true,
+      lineMessagingApi: false,
       webhook: false,
+      api: false,
       whiteLabel: false,
       customDomain: false,
-      prioritySupport: false,
+      support: "community",
     },
   },
+
   pro: {
     id: "pro",
     name: "Pro",
-    price: 99,
-    icon: "⭐",
-    description: "คุ้มค่าที่สุด",
+    price: 399,
+    orderQuota: 150,
+    teams: 5,
+    membersPerTeam: 100,
+    storeLevel: "custom",
+    role: "target",
     highlight: true,
+    badge: "ยอดนิยม",
     features: {
-      teams: 20,
-      admins: 5,
-      botApi: "meelike_plus_external",
-      analytics: "pro",
-      exportData: true,
+      autoCreateJobs: true,
+      splitReassign: true,
+      outsource: true,
+      analytics: "full",
+      exportCsv: true,
+      paymentHelper: "checklist_schedule",
+      hub: "post_outsource",
+      lineNotify: true,
+      lineMessagingApi: true,
       webhook: true,
-      whiteLabel: true,
+      api: false,
+      whiteLabel: false,
       customDomain: false,
-      prioritySupport: false,
+      support: "email",
     },
   },
+
   business: {
     id: "business",
     name: "Business",
-    price: 399,
-    icon: "🏢",
-    description: "สำหรับธุรกิจขนาดใหญ่",
+    price: 799,
+    orderQuota: 500,
+    teams: 20,
+    membersPerTeam: 500,
+    storeLevel: "premium",
+    role: "premium",
     features: {
-      teams: Infinity,
-      admins: Infinity,
-      botApi: "meelike_plus_external",
-      analytics: "pro",
-      exportData: true,
+      autoCreateJobs: true,
+      splitReassign: true,
+      outsource: true,
+      analytics: "full_export",
+      exportCsv: true,
+      paymentHelper: "csv_batch",
+      hub: "priority",
+      lineNotify: true,
+      lineMessagingApi: true,
       webhook: true,
+      api: true,
+      whiteLabel: true,
+      customDomain: false,
+      support: "priority",
+    },
+  },
+
+  enterprise: {
+    id: "enterprise",
+    name: "Enterprise",
+    price: 1299,
+    orderQuota: Infinity,
+    teams: Infinity,
+    membersPerTeam: Infinity,
+    storeLevel: "premium",
+    role: "power",
+    badge: "ไม่จำกัด",
+    features: {
+      autoCreateJobs: true,
+      splitReassign: true,
+      outsource: true,
+      analytics: "full_export",
+      exportCsv: true,
+      paymentHelper: "csv_batch",
+      hub: "priority",
+      lineNotify: true,
+      lineMessagingApi: true,
+      webhook: true,
+      api: true,
       whiteLabel: true,
       customDomain: true,
-      prioritySupport: true,
+      support: "sla_dedicated",
     },
   },
 };
 
-export const PLAN_ORDER: SubscriptionPlan[] = ["free", "basic", "pro", "business"];
+export const PLAN_LIST = Object.values(PLANS);
 
-// ===== SELLER RANKS (Platform Fee) =====
+// ──────────────────────────────────────────────
+// LEGACY RANK SYSTEM (display only, no longer affects fees)
+// ──────────────────────────────────────────────
+
+export type SellerRank = "bronze" | "silver" | "gold" | "platinum";
 
 export interface RankConfig {
-  id: SellerRank;
   name: string;
-  icon: string;
-  minSpend: number; // Rolling 3-month average
-  maxSpend: number;
-  feePercent: number; // Platform fee percentage
+  minSpend: number;
   color: string;
-  description: string;
+  icon: string;
+  feePercent: number;
   benefits: string[];
 }
 
 export const RANKS: Record<SellerRank, RankConfig> = {
   bronze: {
-    id: "bronze",
     name: "Bronze",
-    icon: "🥉",
     minSpend: 0,
-    maxSpend: 20000,
-    feePercent: 12,
-    color: "#CD7F32",
-    description: "เริ่มต้น",
-    benefits: [
-      "ค่าธรรมเนียม 12%",
-      "เข้าถึงระบบพื้นฐาน",
-    ],
+    color: "#cd7f32",
+    icon: "🥉",
+    feePercent: 0,
+    benefits: ["ระบบพื้นฐาน", "สมาชิกทีม 5 คน"],
   },
   silver: {
-    id: "silver",
     name: "Silver",
-    icon: "🥈",
     minSpend: 20000,
-    maxSpend: 50000,
-    feePercent: 11,
-    color: "#C0C0C0",
-    description: "ยอดจ้าง ฿20K - ฿50K",
-    benefits: [
-      "ค่าธรรมเนียมลดเหลือ 11%",
-      "แบดจ์ Silver ที่หน้าร้าน",
-      "ลำดับแสดงผลสูงขึ้น",
-    ],
+    color: "#c0c0c0",
+    icon: "🥈",
+    feePercent: 0,
+    benefits: ["ทุกอย่างจาก Bronze", "Analytics เพิ่มเติม"],
   },
   gold: {
-    id: "gold",
     name: "Gold",
-    icon: "🥇",
     minSpend: 50000,
-    maxSpend: 150000,
-    feePercent: 10,
-    color: "#FFD700",
-    description: "ยอดจ้าง ฿50K - ฿150K",
-    benefits: [
-      "ค่าธรรมเนียมลดเหลือ 10%",
-      "แบดจ์ Gold ที่หน้าร้าน",
-      "รายงาน Analytics ขั้นสูง",
-      "ปักหมุดร้านในหมวดหมู่",
-    ],
+    color: "#ffd700",
+    icon: "🥇",
+    feePercent: 0,
+    benefits: ["ทุกอย่างจาก Silver", "Priority Support"],
   },
   platinum: {
-    id: "platinum",
     name: "Platinum",
-    icon: "💎",
     minSpend: 150000,
-    maxSpend: Infinity,
-    feePercent: 9,
-    color: "#E5E4E2",
-    description: "ยอดจ้าง > ฿150K",
-    benefits: [
-      "ค่าธรรมเนียมต่ำสุด 9%",
-      "แบดจ์ Platinum ที่หน้าร้าน",
-      "ซัพพอร์ตเร่งด่วน (Priority)",
-      "แบนเนอร์โปรโมตฟรี 1 ครั้ง/เดือน",
-      "เข้าถึงฟีเจอร์ก่อนใคร (Early access)",
-    ],
+    color: "#e5e4e2",
+    icon: "💎",
+    feePercent: 0,
+    benefits: ["ทุกอย่างจาก Gold", "Dedicated Account Manager"],
   },
 };
 
 export const RANK_ORDER: SellerRank[] = ["bronze", "silver", "gold", "platinum"];
 
-// ===== HELPER FUNCTIONS =====
-
-/**
- * Get the plan config by plan ID
- */
-export function getPlanConfig(plan: SubscriptionPlan): PlanConfig {
+export function getPlan(plan: SubscriptionPlan): PlanConfig {
   return PLANS[plan];
 }
 
-/**
- * Get the rank config by rank ID
- */
-export function getRankConfig(rank: SellerRank): RankConfig {
-  return RANKS[rank];
+export function getPlanPrice(plan: SubscriptionPlan): number {
+  return PLANS[plan].price;
 }
 
-/**
- * Calculate seller rank based on rolling 3-month average spend
- */
-export function calculateSellerRank(rollingAvgSpend: number): SellerRank {
-  if (rollingAvgSpend >= RANKS.platinum.minSpend) return "platinum";
-  if (rollingAvgSpend >= RANKS.gold.minSpend) return "gold";
-  if (rollingAvgSpend >= RANKS.silver.minSpend) return "silver";
-  return "bronze";
+export function getOrderQuota(plan: SubscriptionPlan): number {
+  return PLANS[plan].orderQuota;
 }
 
-/**
- * Calculate platform fee percentage based on rank
- */
-export function getPlatformFeePercent(rank: SellerRank): number {
-  return RANKS[rank].feePercent;
+export function isUnlimited(plan: SubscriptionPlan): boolean {
+  return PLANS[plan].orderQuota === Infinity;
 }
 
-/**
- * Calculate platform fee amount
- */
-export function calculatePlatformFee(amount: number, rank: SellerRank): number {
-  const feePercent = getPlatformFeePercent(rank);
-  return amount * (feePercent / 100);
+export function getStoreLevel(plan: SubscriptionPlan): StoreLevel {
+  return PLANS[plan].storeLevel;
 }
 
-/**
- * Calculate rolling 3-month average
- */
-export function calculateRollingAverage(monthlySpend: number[]): number {
-  const last3Months = monthlySpend.slice(-3);
-  if (last3Months.length === 0) return 0;
-  return last3Months.reduce((sum, val) => sum + val, 0) / last3Months.length;
-}
-
-/**
- * Get progress to next rank
- */
-export function getRankProgress(rollingAvgSpend: number, currentRank: SellerRank): {
-  nextRank: SellerRank | null;
-  progress: number;
-  amountNeeded: number;
-} {
-  const currentIndex = RANK_ORDER.indexOf(currentRank);
-  
-  if (currentIndex === RANK_ORDER.length - 1) {
-    // Already at highest rank
-    return { nextRank: null, progress: 100, amountNeeded: 0 };
-  }
-  
-  const nextRank = RANK_ORDER[currentIndex + 1];
-  const nextRankConfig = RANKS[nextRank];
-  const currentRankConfig = RANKS[currentRank];
-  
-  const rangeStart = currentRankConfig.minSpend;
-  const rangeEnd = nextRankConfig.minSpend;
-  const progress = Math.min(100, ((rollingAvgSpend - rangeStart) / (rangeEnd - rangeStart)) * 100);
-  const amountNeeded = Math.max(0, rangeEnd - rollingAvgSpend);
-  
-  return { nextRank, progress, amountNeeded };
-}
-
-/**
- * Check if a feature is available for a plan
- */
-export function isPlanFeatureAvailable(
+export function canUseFeature(
   plan: SubscriptionPlan,
-  feature: keyof PlanConfig["features"]
+  feature: keyof PlanFeatures
 ): boolean {
-  const config = PLANS[plan];
-  const value = config.features[feature];
-  
+  const value = PLANS[plan].features[feature];
   if (typeof value === "boolean") return value;
-  if (typeof value === "number") return value > 0;
+  // Non-boolean features are always "available" at some level; caller checks the level
   return true;
 }
 
-/**
- * Get the limit for a numeric plan feature
- */
-export function getPlanLimit(
+export function getFeatureLevel<K extends keyof PlanFeatures>(
   plan: SubscriptionPlan,
-  feature: "teams" | "admins"
-): number {
+  feature: K
+): PlanFeatures[K] {
   return PLANS[plan].features[feature];
 }
 
-/**
- * Check if user can use external bot API
- */
-export function canUseExternalBotApi(plan: SubscriptionPlan): boolean {
-  return PLANS[plan].features.botApi === "meelike_plus_external";
-}
-
-/**
- * Format price for display
- */
-export function formatPlanPrice(plan: SubscriptionPlan): string {
-  const config = PLANS[plan];
-  if (config.price === 0) return "ฟรี";
-  return `฿${config.price}/เดือน`;
-}
-
-/**
- * Format team limit for display
- */
-export function formatTeamLimit(plan: SubscriptionPlan): string {
-  const limit = PLANS[plan].features.teams;
-  return limit === Infinity ? "ไม่จำกัด" : `${limit} ทีม`;
-}
-
-/**
- * Format admin limit for display
- */
-export function formatAdminLimit(plan: SubscriptionPlan): string {
-  const limit = PLANS[plan].features.admins;
-  return limit === Infinity ? "ไม่จำกัด" : `${limit} คน`;
+export function isPlanAtLeast(
+  current: SubscriptionPlan,
+  minimum: SubscriptionPlan
+): boolean {
+  const order: SubscriptionPlan[] = [
+    "free",
+    "starter",
+    "pro",
+    "business",
+    "enterprise",
+  ];
+  return order.indexOf(current) >= order.indexOf(minimum);
 }

@@ -491,7 +491,7 @@ export default function SellerLayout({
                     { label: "ทีม", href: "/seller/team", keywords: "team ทีม worker" },
                     { label: "ร้านค้า", href: "/seller/store", keywords: "store ร้าน" },
                     { label: "ตั้งค่า", href: "/seller/settings", keywords: "settings ตั้งค่า" },
-                    { label: "ยืนยันตัวตน", href: "/seller/settings/verification", keywords: "kyc verify ยืนยัน" },
+
                     { label: "ตลาดกลาง Hub", href: "/hub", keywords: "hub ตลาด outsource" },
                   ];
                   const filtered = q

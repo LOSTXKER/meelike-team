@@ -1,307 +1,258 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Card, Button, Badge, Avatar, Input, Skeleton, Tabs } from "@/components/ui";
-import { Container, Section } from "@/components/layout";
-import { ServiceTypeBadge } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
-import { api } from "@/lib/api";
-import {
-  Star,
-  ShoppingBag,
-  MessageCircle,
-  Clock,
-  Zap,
-  Search,
-  Store,
-} from "lucide-react";
+import { ShoppingBag, Star, Search, Store } from "lucide-react";
+import Link from "next/link";
 
-type ServiceFilter = "all" | "facebook" | "instagram" | "tiktok" | "youtube";
+interface StoreService {
+  id: string;
+  name: string;
+  platform: string;
+  serviceType: string;
+  sellPrice: number;
+  minQty: number;
+  maxQty: number;
+  isActive: boolean;
+}
 
-// Custom hook for store data
-function useStoreData() {
-  const [data, setData] = useState<{
-    seller: Awaited<ReturnType<typeof api.seller.getSeller>> | null;
-    services: Awaited<ReturnType<typeof api.seller.getServices>> | null;
-  }>({ seller: null, services: null });
+interface StoreReview {
+  id: string;
+  customerName: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+interface PublicStore {
+  id: string;
+  slug: string;
+  name: string;
+  bio?: string;
+  theme: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  showPricing: boolean;
+  showReviews: boolean;
+  allowDirectOrder: boolean;
+  services: StoreService[];
+  reviews: StoreReview[];
+}
+
+function usePublicStore(slug: string) {
+  const [store, setStore] = useState<PublicStore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useState(() => {
-    const fetchData = async () => {
-      const [seller, services] = await Promise.all([
-        api.seller.getSeller(),
-        api.seller.getServices(),
-      ]);
-      setData({ seller, services });
-      setIsLoading(false);
-    };
-    fetchData();
-  });
+  useEffect(() => {
+    if (!slug) return;
+    fetch(`/api/store/${slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) setError(data.error);
+        else setStore(data.store);
+      })
+      .catch(() => setError("เกิดข้อผิดพลาด"))
+      .finally(() => setIsLoading(false));
+  }, [slug]);
 
-  return { ...data, isLoading };
+  return { store, isLoading, error };
 }
 
 export default function StorePage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { store, isLoading, error } = usePublicStore(slug);
 
-  const { seller: store, services, isLoading } = useStoreData();
-
-  const [filter, setFilter] = useState<ServiceFilter>("all");
+  const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredServices = useMemo(() => {
-    if (!services) return [];
-    return services.filter((service) => {
-      if (!service.isActive) return false;
-      if (filter !== "all" && service.category !== filter) return false;
-      if (searchQuery) {
-        return service.name.toLowerCase().includes(searchQuery.toLowerCase());
-      }
+    if (!store?.services) return [];
+    return store.services.filter((s) => {
+      if (!s.isActive) return false;
+      if (filter !== "all" && s.platform !== filter) return false;
+      if (searchQuery) return s.name.toLowerCase().includes(searchQuery.toLowerCase());
       return true;
     });
-  }, [services, filter, searchQuery]);
-
-  const categories: { value: ServiceFilter; label: string }[] = [
-    { value: "all", label: "ทั้งหมด" },
-    { value: "facebook", label: "Facebook" },
-    { value: "instagram", label: "Instagram" },
-    { value: "tiktok", label: "TikTok" },
-    { value: "youtube", label: "YouTube" },
-  ];
+  }, [store?.services, filter, searchQuery]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-brand-bg">
-        <header className="bg-brand-surface border-b border-brand-border sticky top-0 z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Skeleton className="h-8 w-32" />
-            <div className="flex gap-2">
-              <Skeleton className="h-9 w-20" />
-              <Skeleton className="h-9 w-20" />
-            </div>
-          </div>
-        </header>
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-          <Skeleton className="h-40 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-10 w-24 rounded-full" />
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
-            ))}
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-gray-400">
+          <Store className="w-10 h-10 mx-auto mb-3 animate-pulse" />
+          <p>กำลังโหลด...</p>
         </div>
       </div>
     );
   }
 
+  if (error || !store) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-2xl mb-2">🏪</p>
+          <p className="text-gray-600 font-medium">ไม่พบร้านค้านี้</p>
+          <Link href="/" className="text-sm text-violet-600 mt-2 inline-block">
+            กลับหน้าหลัก
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const platforms = ["all", "facebook", "instagram", "tiktok", "youtube", "twitter"];
+  const avgRating =
+    store.reviews.length > 0
+      ? store.reviews.reduce((sum, r) => sum + r.rating, 0) / store.reviews.length
+      : 0;
+
   return (
-    <div className="min-h-screen bg-brand-bg">
-      {/* Header */}
-      <header className="bg-brand-surface border-b border-brand-border sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Store className="w-6 h-6 text-brand-primary" />
-            <span className="font-bold text-brand-text-dark">MeeLike</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" leftIcon={<MessageCircle className="w-4 h-4" />}>
-              ติดต่อ
-            </Button>
-            <Link href={`/s/${slug}/cart`}>
-              <Button size="sm" leftIcon={<ShoppingBag className="w-4 h-4" />}>
-                ตะกร้า
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      {/* Banner */}
+      {store.bannerUrl && (
+        <div
+          className="h-48 bg-cover bg-center"
+          style={{ backgroundImage: `url(${store.bannerUrl})` }}
+        />
+      )}
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Store Header */}
-        <Card className="bg-gradient-to-br from-brand-surface to-brand-accent/5 border border-brand-border">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Avatar fallback={store?.name || ""} size="xl" />
-            <div className="text-center sm:text-left flex-1">
-              <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-2">
-                <Store className="w-7 h-7 text-brand-primary" />
-                {store?.name}
-              </h1>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2 text-sm">
-                <span className="flex items-center gap-1 text-brand-warning">
-                  <Star className="w-4 h-4" />
-                  {store?.rating} ({store?.ratingCount} รีวิว)
-                </span>
-                <span className="text-brand-text-light">|</span>
-                <span className="flex items-center gap-1 text-brand-text-light">
-                  <ShoppingBag className="w-4 h-4" />
-                  {store?.totalOrders.toLocaleString()} ออเดอร์
-                </span>
-                {store?.isVerified && (
-                  <>
-                    <span className="text-brand-text-light">|</span>
-                    <Badge variant="success" size="sm">
-                      ✓ ยืนยันแล้ว
-                    </Badge>
-                  </>
-                )}
-              </div>
-              <p className="mt-3 text-brand-text-light">{store?.bio}</p>
-              <p className="mt-2 text-sm text-brand-primary">
-                LINE: {store?.contactInfo?.line}
-              </p>
+        <div className="flex items-start gap-4">
+          {store.logoUrl ? (
+            <img
+              src={store.logoUrl}
+              alt={store.name}
+              className="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-md"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center border-4 border-white shadow-md">
+              <Store className="w-8 h-8 text-violet-600" />
             </div>
+          )}
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">{store.name}</h1>
+            {store.bio && <p className="text-gray-500 mt-1">{store.bio}</p>}
+            {store.showReviews && store.reviews.length > 0 && (
+              <div className="flex items-center gap-1 mt-1 text-sm text-gray-600">
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                <span>{avgRating.toFixed(1)}</span>
+                <span className="text-gray-400">({store.reviews.length} รีวิว)</span>
+              </div>
+            )}
           </div>
-        </Card>
-
-        {/* Flash Sale (Mock) */}
-        {services && services.length >= 3 && (
-          <Card variant="bordered" className="bg-brand-error/5 border-brand-error/20">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-brand-error" />
-                <span className="font-bold text-brand-error">Flash Sale</span>
-              </div>
-              <div className="flex items-center gap-2 text-brand-error">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm font-medium">หมดใน 2:30:00</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {services.slice(0, 3).map((service) => (
-                <div
-                  key={service.id}
-                  className="text-center p-3 rounded-lg bg-brand-surface"
-                >
-                  <p className="font-bold text-brand-primary mt-2">
-                    {formatCurrency(service.sellPrice * 0.8)}
-                  </p>
-                  <p className="text-xs text-brand-text-light line-through">
-                    {formatCurrency(service.sellPrice)}
-                  </p>
-                  <Badge variant="error" size="sm" className="mt-1">
-                    -20%
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {/* Tabs */}
-        <div className="flex border-b border-brand-border">
-          <Link
-            href={`/s/${slug}`}
-            className="px-6 py-3 font-medium text-brand-primary border-b-2 border-brand-primary"
-          >
-            บริการ
-          </Link>
-          <Link
-            href={`/s/${slug}/reviews`}
-            className="px-6 py-3 font-medium text-brand-text-light hover:text-brand-text-dark"
-          >
-            <Star className="w-4 h-4" />
-            รีวิว
-          </Link>
+          {store.allowDirectOrder && (
+            <Link
+              href={`/s/${slug}/order`}
+              className="px-5 py-2.5 bg-violet-600 text-white rounded-xl font-semibold hover:bg-violet-700 transition-colors flex items-center gap-2"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              สั่งซื้อ
+            </Link>
+          )}
         </div>
 
-        {/* Filter & Search */}
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+        {/* Search & Filter */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="ค้นหาบริการ..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {platforms.map((p) => (
               <button
-                key={cat.value}
-                onClick={() => setFilter(cat.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  filter === cat.value
-                    ? "bg-brand-primary text-white"
-                    : "bg-brand-surface border border-brand-border text-brand-text-light hover:text-brand-text-dark"
+                key={p}
+                onClick={() => setFilter(p)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors ${
+                  filter === p
+                    ? "bg-violet-600 text-white"
+                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                {cat.label}
+                {p === "all" ? "ทั้งหมด" : p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
             ))}
           </div>
-          <Input
-            placeholder="ค้นหาบริการ..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="w-4 h-4" />}
-          />
         </div>
 
-        {/* Services */}
-        <div className="space-y-4">
-          {filteredServices.map((service) => (
-            <Card key={service.id} variant="bordered">
-              <div className="flex items-start justify-between">
-                <div className="flex gap-4">
-                  <div>
-                    <h3 className="font-semibold text-brand-text-dark">
-                      {service.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <ServiceTypeBadge type={service.serviceType} />
-                    </div>
-                    {service.description && (
-                      <p className="text-sm text-brand-text-light mt-2">
-                        {service.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-brand-text-light">
-                      <span>
-                        ขั้นต่ำ {service.minQuantity} | สูงสุด{" "}
-                        {service.maxQuantity.toLocaleString()}
-                      </span>
-                      {service.estimatedTime && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {service.estimatedTime}
-                        </span>
-                      )}
+        {/* Services Grid */}
+        {filteredServices.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            <p>ไม่พบบริการ</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {filteredServices.map((service) => (
+              <div
+                key={service.id}
+                className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize">
+                    {service.platform}
+                  </span>
+                  <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full capitalize">
+                    {service.serviceType}
+                  </span>
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                  {service.name}
+                </h3>
+                {store.showPricing && (
+                  <p className="text-lg font-bold text-violet-700 mt-2">
+                    ฿{formatCurrency(service.sellPrice)}
+                    <span className="text-xs text-gray-400 font-normal">/ชิ้น</span>
+                  </p>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  {service.minQty.toLocaleString()} – {service.maxQty.toLocaleString()} ชิ้น
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Reviews */}
+        {store.showReviews && store.reviews.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-800">รีวิว</h2>
+            <div className="space-y-3">
+              {store.reviews.map((review) => (
+                <div key={review.id} className="bg-white rounded-2xl border border-gray-200 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-800">
+                      {review.customerName}
+                    </span>
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3.5 h-3.5 ${
+                            i < review.rating ? "text-yellow-400 fill-current" : "text-gray-200"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
+                  {review.comment && (
+                    <p className="text-sm text-gray-600">{review.comment}</p>
+                  )}
                 </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold text-brand-primary">
-                    {formatCurrency(service.sellPrice)}
-                  </p>
-                  <p className="text-xs text-brand-text-light">
-                    /{service.type === "view" ? "view" : "หน่วย"}
-                  </p>
-                  <Link href={`/s/${slug}/order?service=${service.id}`}>
-                    <Button size="sm" className="mt-3">
-                      สั่งซื้อ
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {filteredServices.length === 0 && (
-          <Card variant="bordered" className="text-center py-12">
-            <p className="text-brand-text-light">ไม่พบบริการที่ค้นหา</p>
-          </Card>
+              ))}
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="bg-brand-surface border-t border-brand-border mt-12 py-8">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-sm text-brand-text-light">
-            © 2024 {store?.name} • Powered by MeeLike Seller
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

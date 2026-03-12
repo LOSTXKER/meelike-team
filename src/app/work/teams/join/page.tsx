@@ -74,8 +74,8 @@ function JoinTeamContent() {
   const handleJoin = () => {
     joinMutation.mutate(activeCode, {
       onSuccess: (result) => {
-        setResultType(result.type);
-        setJoinedTeam(result.team);
+        setResultType((result.type ?? result.status) as ResultType ?? null);
+        setJoinedTeam(result.team ?? null);
         setPageState("result");
       },
     });

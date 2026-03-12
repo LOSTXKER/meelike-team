@@ -176,8 +176,9 @@ export default function SellerJobDetailPage() {
       await refetch();
       setShowCancelModal(false);
       
-      if (result.payoutAmount > 0) {
-        toast.success(`ยกเลิกงานเรียบร้อย! ได้สร้าง Payout สำหรับ Worker แล้ว จำนวนเงิน: ฿${result.payoutAmount.toFixed(2)}`);
+      const payoutAmount = (result as unknown as { payoutAmount?: number })?.payoutAmount ?? 0;
+      if (payoutAmount > 0) {
+        toast.success(`ยกเลิกงานเรียบร้อย! ได้สร้าง Payout สำหรับ Worker แล้ว จำนวนเงิน: ฿${payoutAmount.toFixed(2)}`);
       } else {
         toast.success("ยกเลิกงานเรียบร้อย!");
       }
@@ -258,7 +259,7 @@ export default function SellerJobDetailPage() {
                   <Package className="w-3.5 h-3.5 mr-1.5 text-brand-text-light" />
                   {job.orderNumber}
                 </Badge>
-                {team && (
+                {team != null && (
                   <Badge variant="default" className="bg-brand-bg text-brand-text-dark border-brand-border/50 font-medium px-3 py-1">
                     <Users className="w-3.5 h-3.5 mr-1.5 text-brand-text-light" />
                     {team.name}

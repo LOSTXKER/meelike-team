@@ -1,602 +1,301 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Card, Badge, Button, Input, Tabs } from "@/components/ui";
-import { Pagination, usePagination } from "@/components/ui/pagination";
-import { Dialog } from "@/components/ui/Dialog";
-import { PageHeader, EmptyState, KYCRequiredModal, QuickKYCModal, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
-import { canTopUp } from "@/types";
-import { useTransactions, useBalance } from "@/lib/api/hooks";
-import { useAuthStore } from "@/lib/store";
-import { useToast } from "@/components/ui/toast";
-import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/utils";
-import { canPerformFinancialTransaction, type KYCLevel } from "@/types";
+import Link from "next/link";
 import {
-  Wallet,
-  ArrowUpRight,
-  ArrowDownRight,
-  Plus,
-  Search,
-  Calendar,
-  History,
-  QrCode,
-  Building2,
-  Copy,
-  CheckCircle2,
-  Upload,
-  Download,
-  ShieldCheck,
-  Clock,
-  ChevronRight,
-  TrendingUp,
   CreditCard,
-  Shield,
+  TrendingUp,
+  AlertTriangle,
+  ArrowUpRight,
+  Clock,
+  CheckCircle,
+  Package,
+  BarChart3,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Card, Button, Badge, Skeleton } from "@/components/ui";
+import { Container, Section } from "@/components/layout";
+import { useSubscription, useOverageBills } from "@/lib/api/hooks/subscription";
+import { PLANS, OVERAGE_FEE } from "@/lib/constants/plans";
+import { getQuotaPercent } from "@/lib/utils/feature-gate";
+import type { SubscriptionPlan } from "@/lib/constants/plans";
 
-const TOPUP_AMOUNTS = [100, 300, 500, 1000, 2000, 5000];
+function QuotaMeter({
+  used,
+  limit,
+  percent,
+}: {
+  used: number;
+  limit: number | null;
+  percent: number;
+}) {
+  const color =
+    percent >= 100
+      ? "bg-brand-error"
+      : percent >= 80
+      ? "bg-brand-warning"
+      : "bg-brand-success";
 
-const BANK_INFO = {
-  bank: "ธนาคารกสิกรไทย",
-  accountNumber: "123-4-56789-0",
-  accountName: "บริษัท มีไลค์ จำกัด",
-  promptpay: "080-xxx-xxxx",
-};
+  if (limit === null) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-brand-success font-medium">
+        <CheckCircle className="w-4 h-4" />
+        <span>ออเดอร์ไม่จำกัด</span>
+      </div>
+    );
+  }
 
-type FilterType = "all" | "income" | "expense" | "topup";
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between text-sm">
+        <span className="text-brand-text-light">ใช้ไปแล้ว</span>
+        <span className="font-bold text-brand-text-dark">
+          {used} / {limit} ออเดอร์
+        </span>
+      </div>
+      <div className="h-3 bg-brand-secondary rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${color}`}
+          style={{ width: `${Math.min(percent, 100)}%` }}
+        />
+      </div>
+      <p className="text-xs text-brand-text-light">{percent}% ของโควต้าเดือนนี้</p>
+    </div>
+  );
+}
+
+function PlanBadge({ plan }: { plan: SubscriptionPlan }) {
+  const config = PLANS[plan];
+  const variants: Record<SubscriptionPlan, "default" | "success" | "warning" | "info" | "error"> = {
+    free: "default",
+    starter: "info",
+    pro: "success",
+    business: "warning",
+    enterprise: "error",
+  };
+  return (
+    <Badge variant={variants[plan]} size="md">
+      {config.name}
+      {config.badge ? ` · ${config.badge}` : ""}
+    </Badge>
+  );
+}
 
 export default function FinancePage() {
-  const { data: allTransactions = [], isLoading, refetch: refetchTransactions } = useTransactions();
-  const { data: balance = 0, refetch: refetchBalance } = useBalance();
-  const { user } = useAuthStore();
-  const toast = useToast();
+  const { data: subData, isLoading: subLoading } = useSubscription();
+  const { data: billData, isLoading: billLoading } = useOverageBills();
 
-  // Get KYC level
-  const kycLevel: KYCLevel = user?.seller?.kyc?.level || 'none';
-  const hasKYC = canTopUp(kycLevel);
-  const existingPhone = user?.seller?.contactInfo?.phone || '';
+  if (subLoading) {
+    return (
+      <Container size="md">
+        <Section spacing="lg">
+          <div className="space-y-6 animate-fade-in">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-48 w-full rounded-2xl" />
+            <Skeleton className="h-36 w-full rounded-2xl" />
+          </div>
+        </Section>
+      </Container>
+    );
+  }
 
-  // KYC Modal State
-  const [showKYCRequiredModal, setShowKYCRequiredModal] = useState(false);
-  const [showQuickKYCModal, setShowQuickKYCModal] = useState(false);
+  const sub = (subData as { data?: Record<string, unknown> })?.data as {
+    plan: SubscriptionPlan;
+    planExpiresAt?: string;
+    usage: {
+      month: number;
+      year: number;
+      ordersUsed: number;
+      quotaLimit: number | null;
+      overageCount: number;
+    };
+    hasUnpaidOverageBill: boolean;
+    unpaidBill?: {
+      id: string;
+      month: number;
+      year: number;
+      overageOrders: number;
+      totalAmount: number;
+    };
+  } | null;
 
-  // Topup Modal State
-  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
-  const [topupAmount, setTopupAmount] = useState<number>(500);
-  const [customAmount, setCustomAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"promptpay" | "bank">("promptpay");
-  const [topupStep, setTopupStep] = useState<"amount" | "payment" | "confirm">("amount");
-  const [copied, setCopied] = useState(false);
+  const bills = (billData as { data?: { bills: Array<{
+    id: string;
+    month: number;
+    year: number;
+    overageOrders: number;
+    feePerOrder: number;
+    totalAmount: number;
+    status: string;
+    paidAt?: string;
+  }> } })?.data?.bills ?? [];
 
-  // Transaction Filter State
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState<FilterType>("all");
+  const plan = sub?.plan ?? "free";
+  const planConfig = PLANS[plan];
+  const usage = sub?.usage;
+  const quotaPercent = usage
+    ? getQuotaPercent(plan, usage.ordersUsed)
+    : 0;
 
-  // Handle topup button click - check KYC first
-  const handleTopupClick = useCallback(() => {
-    if (!hasKYC) {
-      setShowKYCRequiredModal(true);
-    } else {
-      setIsTopupModalOpen(true);
-    }
-  }, [hasKYC]);
-
-  // Handle start KYC from modal
-  const handleStartKYC = useCallback(() => {
-    setShowKYCRequiredModal(false);
-    setShowQuickKYCModal(true);
-  }, []);
-
-  // Handle KYC success
-  const handleKYCSuccess = useCallback(() => {
-    setShowQuickKYCModal(false);
-    // After KYC success, open topup modal
-    setIsTopupModalOpen(true);
-  }, []);
-
-  // Filter transactions
-  const filteredTransactions = (allTransactions || []).filter((txn) => {
-    const matchSearch =
-      txn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      txn.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchFilter = filter === "all" || txn.type === filter;
-    return matchSearch && matchFilter;
-  });
-
-  // Paginate filtered transactions
-  const { paginatedItems: paginatedTransactions, currentPage, totalPages, totalItems, pageSize, setCurrentPage } = usePagination(filteredTransactions, 10);
-
-  // Calculate stats
-  const totalIncome = (allTransactions || []).filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
-  const totalExpense = (allTransactions || []).filter(t => t.type === "expense").reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  const totalTopup = (allTransactions || []).filter(t => t.type === "topup").reduce((sum, t) => sum + t.amount, 0);
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleTopupSubmit = async () => {
-    try {
-      const amount = customAmount ? parseInt(customAmount) : topupAmount;
-      
-      await api.seller.createTopupTransaction({
-        amount,
-        method: paymentMethod,
-        reference: paymentMethod === "promptpay" ? `PP${Date.now()}` : `BANK${Date.now()}`,
-      });
-      
-      await refetchTransactions();
-      await refetchBalance();
-      
-      setTopupStep("confirm");
-    } catch (error) {
-      console.error("Error creating topup transaction:", error);
-      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
-    }
-  };
-
-  const resetTopup = () => {
-    setTopupStep("amount");
-    setTopupAmount(500);
-    setCustomAmount("");
-    setIsTopupModalOpen(false);
-  };
-
-  const finalAmount = customAmount ? parseInt(customAmount) : topupAmount;
+  const thaiMonths = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* KYC Alert Banner - Show if not verified */}
-      {!hasKYC && (
-        <KYCAlertBanner 
-          requiredLevel="basic" 
-          userType="seller"
-          message="ยืนยันเบอร์โทรเพื่อเติมเงินได้"
-          dismissible={false}
-        />
-      )}
-
-      {/* Header */}
-      <PageHeader
-        title="การเงิน"
-        description="จัดการยอดเงิน เติมเงิน และดูประวัติธุรกรรม"
-        icon={Wallet}
-        action={
-          <Button variant="outline" leftIcon={<Download className="w-4 h-4" />}>
-            ส่งออก CSV
-          </Button>
-        }
-      />
-
-      {/* KYC Status Card - Show if not verified */}
-      {!hasKYC && (
-        <KYCStatusCard userType="seller" />
-      )}
-
-      {/* Balance Card - Clean Style */}
-      <Card className="p-6 border-none shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div>
-            <div className="text-brand-text-light text-sm flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-brand-primary" />
-              </div>
-              <span>ยอดเงินคงเหลือ</span>
-            </div>
-            <p className="text-4xl sm:text-5xl font-bold text-brand-text-dark">{formatCurrency(balance || 0)}</p>
-            <div className="flex items-center gap-2 mt-2 text-sm text-brand-text-light">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-              <span>เติมเงินแล้ว {formatCurrency(totalTopup)} เดือนนี้</span>
-            </div>
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+            <CreditCard className="w-5 h-5 text-brand-primary" />
           </div>
-          <Button
-            onClick={handleTopupClick}
-            size="lg"
-            leftIcon={<Plus className="w-5 h-5" />}
-          >
-            เติมเงิน
-          </Button>
+          การสมัครสมาชิก & การใช้งาน
+        </h1>
+        <p className="text-sm text-brand-text-light mt-1 ml-[52px]">
+          ดูแผนปัจจุบัน โควต้าออเดอร์ และค่าใช้จ่ายเพิ่มเติม
+        </p>
+      </div>
+
+      {/* Current Plan Card */}
+      <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-brand-text-light">แผนปัจจุบัน</p>
+            <PlanBadge plan={plan} />
+            {sub?.planExpiresAt && (
+              <p className="text-xs text-brand-text-light flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                หมดอายุ{" "}
+                {new Date(sub.planExpiresAt).toLocaleDateString("th-TH", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-bold text-brand-text-dark">
+              ฿{planConfig.price.toLocaleString()}
+            </p>
+            <p className="text-sm text-brand-text-light">/เดือน</p>
+          </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-brand-border/30">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</p>
-            <p className="text-xs text-brand-text-light flex items-center justify-center gap-1 mt-1">
-              <ArrowDownRight className="w-3 h-3 text-emerald-500" />
-              รายรับ
-            </p>
-          </div>
-          <div className="text-center border-x border-brand-border/30">
-            <p className="text-2xl font-bold text-red-500">{formatCurrency(totalExpense)}</p>
-            <p className="text-xs text-brand-text-light flex items-center justify-center gap-1 mt-1">
-              <ArrowUpRight className="w-3 h-3 text-red-500" />
-              รายจ่าย
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-brand-text-dark">{(allTransactions || []).length}</p>
-            <p className="text-xs text-brand-text-light flex items-center justify-center gap-1 mt-1">
-              <History className="w-3 h-3" />
-              ธุรกรรม
-            </p>
-          </div>
+        <div className="mt-5 pt-5 border-t border-brand-border/30">
+          <Link href="/seller/settings/subscription">
+            <Button variant="primary" rightIcon={<ArrowUpRight className="w-4 h-4" />}>
+              อัปเกรดแผน
+            </Button>
+          </Link>
         </div>
       </Card>
 
-      {/* Transaction History */}
-      <Card className="border-none shadow-md overflow-hidden">
-        {/* Header with Filters */}
-        <div className="p-4 border-b border-brand-border/30 bg-brand-bg/30">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3">
-              <History className="w-5 h-5 text-brand-primary" />
-              <h2 className="font-bold text-brand-text-dark">ประวัติธุรกรรม</h2>
-              <Badge variant="default" size="sm">{allTransactions?.length || 0} รายการ</Badge>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-              {/* Filter Tabs */}
-              <Tabs
-                tabs={[
-                  { id: "all", label: "ทั้งหมด" },
-                  { id: "income", label: "รายรับ" },
-                  { id: "expense", label: "รายจ่าย" },
-                  { id: "topup", label: "เติมเงิน" },
-                ]}
-                activeTab={filter}
-                onChange={(id) => { setFilter(id as FilterType); setCurrentPage(1); }}
-                variant="pills"
-              />
-
-              {/* Search */}
-              <div className="relative sm:w-48">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-light" />
-                <input
-                  type="text"
-                  placeholder="ค้นหา..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-brand-border/50 text-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none"
-                />
+      {/* Quota Meter */}
+      {usage && (
+        <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-brand-text-dark flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-primary/10">
+                <Package className="w-4 h-4 text-brand-primary" />
               </div>
+              โควต้าออเดอร์ — {thaiMonths[(usage.month ?? 1) - 1]} {usage.year}
+            </h2>
+            {usage.overageCount > 0 && (
+              <Badge variant="warning" size="sm">
+                Overage: {usage.overageCount}
+              </Badge>
+            )}
+          </div>
+
+          <QuotaMeter
+            used={usage.ordersUsed}
+            limit={usage.quotaLimit}
+            percent={quotaPercent}
+          />
+
+          {usage.quotaLimit !== null && usage.ordersUsed >= usage.quotaLimit && (
+            <div className="mt-4 text-sm text-brand-warning bg-brand-warning/10 rounded-xl p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>เกินโควต้า — ออเดอร์เพิ่มเติมจะถูกเรียกเก็บ ฿{OVERAGE_FEE}/ออเดอร์</span>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Unpaid Overage Bill Alert */}
+      {sub?.hasUnpaidOverageBill && sub.unpaidBill && (
+        <Card className="border-brand-error/30 bg-brand-error/5 p-6">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-brand-error/10 shrink-0">
+              <AlertTriangle className="w-5 h-5 text-brand-error" />
+            </div>
+            <div className="space-y-2 flex-1">
+              <h3 className="font-bold text-brand-error">
+                มีค่า Overage ค้างชำระ
+              </h3>
+              <p className="text-sm text-brand-error/80">
+                เดือน {thaiMonths[(sub.unpaidBill.month ?? 1) - 1]} {sub.unpaidBill.year}:{" "}
+                {sub.unpaidBill.overageOrders} ออเดอร์ — รวม ฿
+                {sub.unpaidBill.totalAmount.toLocaleString()}
+              </p>
+              <p className="text-xs text-brand-error/60">
+                กรุณาชำระก่อนสร้างออเดอร์ใหม่
+              </p>
+              <Link href="/seller/settings/subscription">
+                <Button variant="danger" size="sm">ชำระเดี๋ยวนี้</Button>
+              </Link>
             </div>
           </div>
-        </div>
+        </Card>
+      )}
 
-        {/* Transaction List */}
-        <div className="divide-y divide-brand-border/30">
-          {filteredTransactions.length === 0 ? (
-            <div className="p-8">
-              <EmptyState
-                icon={History}
-                title="ไม่พบรายการธุรกรรม"
-                description="ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
-              />
-            </div>
-          ) : (
-            paginatedTransactions.map((txn) => (
+      {/* Overage Bill History */}
+      {!billLoading && bills.length > 0 && (
+        <Card variant="elevated" padding="none" className="border-none shadow-lg shadow-brand-primary/5 overflow-hidden">
+          <div className="px-6 py-4 border-b border-brand-border/30">
+            <h2 className="font-bold text-brand-text-dark flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-accent/10">
+                <BarChart3 className="w-4 h-4 text-brand-accent" />
+              </div>
+              ประวัติค่า Overage
+            </h2>
+          </div>
+          <div className="divide-y divide-brand-border/30">
+            {bills.map((bill) => (
               <div
-                key={txn.id}
-                className="p-4 flex items-center justify-between gap-4 hover:bg-brand-bg/30 transition-colors"
+                key={bill.id}
+                className="flex items-center justify-between px-6 py-4 hover:bg-brand-bg/50 transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                      txn.type === "income"
-                        ? "bg-emerald-100 text-emerald-600"
-                        : txn.type === "topup"
-                        ? "bg-blue-100 text-blue-600"
-                        : "bg-red-100 text-red-600"
-                    )}
-                  >
-                    {txn.type === "income" ? (
-                      <ArrowDownRight className="w-5 h-5" />
-                    ) : txn.type === "topup" ? (
-                      <Plus className="w-5 h-5" />
-                    ) : (
-                      <ArrowUpRight className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-brand-text-dark text-sm">{txn.title}</p>
-                    <p className="text-xs text-brand-text-light">{txn.description}</p>
-                    <p className="text-xs text-brand-text-light mt-1 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(txn.date).toLocaleDateString("th-TH", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold text-brand-text-dark">
+                    {thaiMonths[(bill.month ?? 1) - 1]} {bill.year}
+                  </p>
+                  <p className="text-xs text-brand-text-light mt-0.5">
+                    {bill.overageOrders} ออเดอร์ × ฿{bill.feePerOrder}
+                  </p>
                 </div>
-
-                <div className="text-right shrink-0">
-                  <p
-                    className={cn(
-                      "text-lg font-bold",
-                      txn.amount > 0 ? "text-emerald-600" : "text-red-600"
-                    )}
-                  >
-                    {txn.amount > 0 ? "+" : ""}
-                    {formatCurrency(Math.abs(txn.amount))}
+                <div className="text-right flex items-center gap-3">
+                  <p className="text-sm font-bold text-brand-text-dark">
+                    ฿{bill.totalAmount.toLocaleString()}
                   </p>
                   <Badge
                     variant={
-                      txn.category === "order"
-                        ? "success"
-                        : txn.category === "payout"
-                        ? "warning"
-                        : txn.category === "topup"
-                        ? "info"
-                        : "default"
+                      bill.status === "paid" ? "success" : bill.status === "waived" ? "default" : "error"
                     }
                     size="sm"
                   >
-                    {txn.category === "order"
-                      ? "ออเดอร์"
-                      : txn.category === "payout"
-                      ? "จ่ายทีม"
-                      : txn.category === "topup"
-                      ? "เติมเงิน"
-                      : "API"}
+                    {bill.status === "paid"
+                      ? "ชำระแล้ว"
+                      : bill.status === "waived"
+                      ? "ยกเว้น"
+                      : "ค้างชำระ"}
                   </Badge>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        <div className="p-4 border-t border-brand-border/30">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-          />
-        </div>
-      </Card>
-
-      {/* Topup Modal */}
-      <Dialog
-        open={isTopupModalOpen}
-        onClose={resetTopup}
-        size="md"
-      >
-        <Dialog.Header>
-          <Dialog.Title>
-            {topupStep === "amount"
-              ? "เติมเงินเข้าระบบ"
-              : topupStep === "payment"
-              ? "ชำระเงิน"
-              : "กำลังตรวจสอบ"}
-          </Dialog.Title>
-        </Dialog.Header>
-        <Dialog.Body>
-          {/* Step 1: Select Amount */}
-          {topupStep === "amount" && (
-            <div className="space-y-6">
-              <div className="text-center p-4 bg-brand-bg/50 rounded-xl">
-                <p className="text-sm text-brand-text-light">ยอดเงินปัจจุบัน</p>
-                <p className="text-2xl font-bold text-brand-primary">{formatCurrency(balance || 0)}</p>
-              </div>
-
-              <div>
-                <p className="font-medium text-brand-text-dark mb-3">เลือกจำนวนเงิน</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {TOPUP_AMOUNTS.map((amt) => (
-                    <button
-                      key={amt}
-                      onClick={() => {
-                        setTopupAmount(amt);
-                        setCustomAmount("");
-                      }}
-                      className={cn(
-                        "p-3 rounded-xl border transition-all text-center",
-                        topupAmount === amt && !customAmount
-                          ? "border-brand-primary bg-brand-primary text-white"
-                          : "border-brand-border/50 hover:border-brand-primary/50"
-                      )}
-                    >
-                      <span className="font-bold">{formatCurrency(amt)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-brand-text-light mb-2">หรือระบุจำนวนเอง</p>
-                <Input
-                  type="number"
-                  placeholder="ระบุจำนวนเงิน (฿50 - ฿100,000)"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                  leftIcon={<span className="text-brand-text-light font-bold">฿</span>}
-                />
-              </div>
-
-              <Button
-                onClick={() => setTopupStep("payment")}
-                disabled={!finalAmount || finalAmount < 50}
-                className="w-full"
-              >
-                ดำเนินการต่อ <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          )}
-
-          {/* Step 2: Payment */}
-          {topupStep === "payment" && (
-            <div className="space-y-6">
-              <div className="text-center p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
-                <p className="text-sm text-brand-text-light">จำนวนที่ต้องชำระ</p>
-                <p className="text-3xl font-bold text-brand-primary">{formatCurrency(finalAmount)}</p>
-              </div>
-
-              {/* Payment Method Selection */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPaymentMethod("promptpay")}
-                  className={cn(
-                    "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
-                    paymentMethod === "promptpay"
-                      ? "border-brand-primary bg-brand-primary/5"
-                      : "border-brand-border/50 hover:border-brand-primary/50"
-                  )}
-                >
-                  <QrCode className={cn("w-8 h-8", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-light")} />
-                  <span className={cn("font-medium", paymentMethod === "promptpay" ? "text-brand-primary" : "text-brand-text-dark")}>
-                    PromptPay
-                  </span>
-                </button>
-                <button
-                  onClick={() => setPaymentMethod("bank")}
-                  className={cn(
-                    "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
-                    paymentMethod === "bank"
-                      ? "border-brand-primary bg-brand-primary/5"
-                      : "border-brand-border/50 hover:border-brand-primary/50"
-                  )}
-                >
-                  <Building2 className={cn("w-8 h-8", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-light")} />
-                  <span className={cn("font-medium", paymentMethod === "bank" ? "text-brand-primary" : "text-brand-text-dark")}>
-                    โอนเงิน
-                  </span>
-                </button>
-              </div>
-
-              {/* Payment Details */}
-              <div className="bg-brand-bg/50 rounded-xl p-4">
-                {paymentMethod === "promptpay" ? (
-                  <div className="text-center space-y-3">
-                    <div className="bg-white p-4 rounded-xl inline-block">
-                      <QrCode className="w-32 h-32 text-brand-text-dark mx-auto" />
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="font-mono text-lg font-bold">{BANK_INFO.promptpay}</span>
-                      <button
-                        onClick={() => handleCopy(BANK_INFO.promptpay)}
-                        className="p-1.5 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
-                      >
-                        {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-                      <div className="w-10 h-10 bg-[#00A950] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                        K
-                      </div>
-                      <div>
-                        <p className="text-xs text-brand-text-light">{BANK_INFO.bank}</p>
-                        <p className="font-medium text-brand-text-dark">{BANK_INFO.accountName}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <div>
-                        <p className="text-xs text-brand-text-light">เลขที่บัญชี</p>
-                        <p className="font-mono font-bold text-brand-text-dark">{BANK_INFO.accountNumber}</p>
-                      </div>
-                      <button
-                        onClick={() => handleCopy(BANK_INFO.accountNumber.replace(/-/g, ""))}
-                        className="p-2 hover:bg-brand-bg rounded-lg text-brand-text-light hover:text-brand-primary"
-                      >
-                        {copied ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Upload Slip */}
-              <div className="border-2 border-dashed border-brand-border rounded-xl p-6 text-center hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all cursor-pointer">
-                <Upload className="w-8 h-8 text-brand-text-light mx-auto mb-2" />
-                <p className="font-medium text-brand-text-dark">อัพโหลดหลักฐานการโอน</p>
-                <p className="text-xs text-brand-text-light">JPG, PNG ไม่เกิน 5MB</p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setTopupStep("amount")} className="flex-1">
-                  ย้อนกลับ
-                </Button>
-                <Button onClick={handleTopupSubmit} className="flex-1">
-                  แจ้งชำระเงิน
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Confirmation */}
-          {topupStep === "confirm" && (
-            <div className="text-center space-y-6 py-4">
-              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-                <Clock className="w-10 h-10 text-amber-500" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-brand-text-dark mb-2">กำลังตรวจสอบยอดเงิน</h3>
-                <p className="text-brand-text-light">
-                  ระบบได้รับข้อมูลแล้ว เจ้าหน้าที่จะตรวจสอบและปรับยอดเงินให้ภายใน{" "}
-                  <span className="text-brand-primary font-bold">5-15 นาที</span>
-                </p>
-              </div>
-
-              <div className="bg-brand-bg/50 rounded-xl p-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-brand-text-light">จำนวนเงิน</span>
-                  <span className="font-bold text-brand-text-dark">{formatCurrency(finalAmount)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-brand-text-light">สถานะ</span>
-                  <Badge variant="warning">รอตรวจสอบ</Badge>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl text-left">
-                <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-brand-text-light">
-                  การชำระเงินของคุณปลอดภัย 100% หากมีปัญหาสามารถติดต่อ Support ได้ตลอด 24 ชม.
-                </p>
-              </div>
-
-              <Button onClick={resetTopup} className="w-full">
-                เสร็จสิ้น
-              </Button>
-            </div>
-          )}
-        </Dialog.Body>
-      </Dialog>
-
-      {/* KYC Required Modal */}
-      <KYCRequiredModal
-        isOpen={showKYCRequiredModal}
-        onClose={() => setShowKYCRequiredModal(false)}
-        onStartKYC={handleStartKYC}
-        requiredLevel="basic"
-        currentLevel={kycLevel}
-        action="topup"
-        userType="seller"
-      />
-
-      {/* Quick KYC Modal */}
-      <QuickKYCModal
-        isOpen={showQuickKYCModal}
-        onClose={() => setShowQuickKYCModal(false)}
-        onSuccess={handleKYCSuccess}
-        existingPhone={existingPhone}
-        action="topup"
-      />
-
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

@@ -34,7 +34,7 @@ export type {
   WorkerAccount,
   WorkerJob,
   WorkerBankAccount,
-  Payout,
+  WorkerPaymentConfirmation,
 } from "./worker";
 
 // ===== TEAM TYPES =====
@@ -90,38 +90,6 @@ export type {
   SellerMeeLikeConfig,
 } from "./meelike";
 
-// ===== KYC TYPES =====
-export type {
-  KYCLevel,
-  KYCStatus,
-  KYCDocumentType,
-  KYCAction,
-  OCRResult,
-  KYCDocument,
-  KYCData,
-  KYCSubmissionRequest,
-  KYCReviewRequest,
-  KYCPendingItem,
-  OTPType,
-  OTPRequest,
-  OTPVerifyRequest,
-  OTPResponse,
-} from "./kyc";
-
-export {
-  WITHDRAWAL_LIMITS,
-  DEFAULT_KYC_DATA,
-  getWithdrawalLimit,
-  canWithdraw,
-  getKYCLevelLabel,
-  getKYCStatusLabel,
-  meetsKYCRequirement,
-  canPerformFinancialTransaction,
-  canTopUp,
-  canWithdrawMoney,
-  getNextLevelRequirements,
-  getNextKYCLevel,
-} from "./kyc";
 
 // ===== REPORT TYPES =====
 export type {

@@ -1,21 +1,20 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+
 import { Card, Button, Input, Badge, Skeleton } from "@/components/ui";
 import { VStack } from "@/components/layout";
 import { useAuthStore } from "@/lib/store";
 import { useUpdateWorkerProfile, useVerifyBankAccount } from "@/lib/api/hooks";
 import { useToast } from "@/components/ui/toast";
-import { canWithdrawMoney, type KYCLevel } from "@/types";
 import {
   Building2,
   CreditCard,
   Save,
   CheckCircle2,
   Info,
-  Shield,
-  AlertTriangle,
+
+
   Search,
   XCircle,
   Loader2,
@@ -41,15 +40,6 @@ export default function WorkerBankSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
-  // KYC info
-  const kycLevel: KYCLevel = worker?.kyc?.level || 'none';
-  const hasKYC = canWithdrawMoney(kycLevel);
-  const kycFullName = useMemo(() => {
-    const kyc = worker?.kyc;
-    if (!kyc?.idCardFirstName || !kyc?.idCardLastName) return "";
-    const prefix = kyc.idCardPrefix ? `${kyc.idCardPrefix}` : "";
-    return `${prefix}${kyc.idCardFirstName} ${kyc.idCardLastName}`.trim();
-  }, [worker?.kyc]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -65,18 +55,6 @@ export default function WorkerBankSettingsPage() {
     worker?.bankAccountName || null
   );
   const [verifyError, setVerifyError] = useState<string | null>(null);
-  const [nameMatchesKYC, setNameMatchesKYC] = useState<boolean | null>(null);
-
-  // Check if verification result matches KYC
-  useEffect(() => {
-    if (verifiedName && kycFullName) {
-      // Normalize both names for comparison (trim, lowercase)
-      const normalize = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
-      setNameMatchesKYC(normalize(verifiedName) === normalize(kycFullName));
-    } else {
-      setNameMatchesKYC(null);
-    }
-  }, [verifiedName, kycFullName]);
 
   // Reset verification when bank or account number changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -87,13 +65,10 @@ export default function WorkerBankSettingsPage() {
       // Reset verification
       setVerifiedName(null);
       setVerifyError(null);
-      setNameMatchesKYC(null);
     } else if (name === "bankAccount") {
       setFormData(prev => ({ ...prev, bankAccount: value }));
-      // Reset verification
       setVerifiedName(null);
       setVerifyError(null);
-      setNameMatchesKYC(null);
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -103,8 +78,6 @@ export default function WorkerBankSettingsPage() {
   const handleVerify = () => {
     setVerifyError(null);
     setVerifiedName(null);
-    setNameMatchesKYC(null);
-
     verifyBank.mutate(
       {
         bankCode: formData.bankCode,
@@ -112,8 +85,8 @@ export default function WorkerBankSettingsPage() {
       },
       {
         onSuccess: (result) => {
-          setVerifiedName(result.accountName);
-          setFormData(prev => ({ ...prev, bankAccountName: result.accountName }));
+          setVerifiedName(result.accountName ?? null);
+          setFormData(prev => ({ ...prev, bankAccountName: result.accountName ?? "" }));
         },
         onError: (error) => {
           setVerifyError(error.message || "ไม่สามารถตรวจสอบบัญชีได้ กรุณาลองใหม่");
@@ -126,10 +99,6 @@ export default function WorkerBankSettingsPage() {
   const handleSave = () => {
     if (!verifiedName) {
       toast.error("กรุณาตรวจสอบบัญชีก่อนบันทึก");
-      return;
-    }
-    if (nameMatchesKYC === false) {
-      toast.error("ชื่อบัญชีไม่ตรงกับข้อมูล KYC ไม่สามารถบันทึกได้");
       return;
     }
 
@@ -158,34 +127,10 @@ export default function WorkerBankSettingsPage() {
 
   const hasBankInfo = formData.bankCode && formData.bankAccount && verifiedName;
   const canVerify = formData.bankCode && formData.bankAccount.replace(/[^0-9]/g, "").length >= 10;
-  const canSave = verifiedName && nameMatchesKYC !== false;
+  const canSave = !!verifiedName;
 
   return (
     <div className="space-y-6">
-      {/* KYC Warning */}
-      {!hasKYC && (
-        <Card className="border-none shadow-md border-brand-warning/30 bg-brand-warning/5">
-          <div className="p-6">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-6 h-6 text-brand-warning shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-brand-text-dark">ต้องยืนยันตัวตน (KYC) ก่อน</p>
-                <p className="text-sm text-brand-text-light mt-1">
-                  ชื่อบัญชีธนาคารต้องตรงกับข้อมูลบัตรประชาชนที่ยืนยันตัวตนแล้ว กรุณายืนยันตัวตนก่อนตั้งค่าบัญชีรับเงิน
-                </p>
-                <Link
-                  href="/work/settings/verification"
-                  className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-brand-primary text-white text-sm font-medium rounded-xl hover:bg-brand-primary/90 transition-colors"
-                >
-                  <Shield className="w-4 h-4" />
-                  ยืนยันตัวตนเลย
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Status */}
       <Card className="border-none shadow-md">
         <div className="p-6">
@@ -291,53 +236,15 @@ export default function WorkerBankSettingsPage() {
             )}
 
             {verifiedName && (
-              <div className={`p-4 rounded-xl border ${
-                nameMatchesKYC === false
-                  ? "bg-brand-error/5 border-brand-error/20"
-                  : "bg-brand-success/5 border-brand-success/20"
-              }`}>
+              <div className="p-4 rounded-xl border bg-brand-success/5 border-brand-success/20">
                 <div className="flex items-start gap-3">
-                  {nameMatchesKYC === false ? (
-                    <XCircle className="w-5 h-5 text-brand-error shrink-0 mt-0.5" />
-                  ) : (
-                    <CheckCircle2 className="w-5 h-5 text-brand-success shrink-0 mt-0.5" />
-                  )}
+                  <CheckCircle2 className="w-5 h-5 text-brand-success shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-xs text-brand-text-light">ชื่อเจ้าของบัญชี (จากธนาคาร)</p>
                     <p className="text-lg font-bold text-brand-text-dark mt-0.5">{verifiedName}</p>
-
-                    {kycFullName && nameMatchesKYC === true && (
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <Shield className="w-3.5 h-3.5 text-brand-success" />
-                        <p className="text-xs text-brand-success font-medium">
-                          ตรงกับข้อมูล KYC ({kycFullName})
-                        </p>
-                      </div>
-                    )}
-
-                    {kycFullName && nameMatchesKYC === false && (
-                      <div className="mt-2 space-y-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 text-brand-error" />
-                          <p className="text-xs text-brand-error font-medium">
-                            ไม่ตรงกับข้อมูล KYC
-                          </p>
-                        </div>
-                        <div className="p-2 bg-white/60 rounded-lg text-xs text-brand-text-light">
-                          <p>ชื่อจาก KYC: <span className="font-medium text-brand-text-dark">{kycFullName}</span></p>
-                          <p>ชื่อจากธนาคาร: <span className="font-medium text-brand-text-dark">{verifiedName}</span></p>
-                        </div>
-                        <p className="text-xs text-brand-error/80">
-                          บัญชีธนาคารต้องเป็นชื่อเดียวกับที่ยืนยันตัวตน (KYC) กรุณาใช้บัญชีที่เป็นชื่อของตัวเอง
-                        </p>
-                      </div>
-                    )}
-
-                    {!kycFullName && (
-                      <p className="text-xs text-brand-text-light mt-1.5">
-                        ตรวจสอบบัญชีสำเร็จ
-                      </p>
-                    )}
+                    <p className="text-xs text-brand-text-light mt-1.5">
+                      ตรวจสอบบัญชีสำเร็จ
+                    </p>
                   </div>
                 </div>
               </div>
@@ -378,8 +285,8 @@ export default function WorkerBankSettingsPage() {
               <ol className="text-brand-text-light mt-2 space-y-1 list-decimal list-inside">
                 <li>เลือกธนาคารและกรอกเลขบัญชี</li>
                 <li>กดปุ่ม &ldquo;ตรวจสอบบัญชี&rdquo; เพื่อดึงชื่อเจ้าของบัญชีจากธนาคาร</li>
-                <li>ระบบจะเช็คว่าชื่อบัญชีตรงกับข้อมูล KYC หรือไม่</li>
-                <li>ถ้าตรง → กดบันทึกได้เลย</li>
+                <li>ตรวจสอบชื่อเจ้าของบัญชีให้ถูกต้อง</li>
+                <li>กดบันทึกได้เลย</li>
               </ol>
             </div>
           </div>
@@ -390,7 +297,7 @@ export default function WorkerBankSettingsPage() {
       <div className="flex justify-end">
         <Button
           onClick={handleSave}
-          disabled={updateProfile.isPending || !canSave || !hasKYC}
+          disabled={updateProfile.isPending || !canSave}
           className="shadow-md shadow-brand-primary/20"
         >
           <Save className="w-4 h-4 mr-2" />

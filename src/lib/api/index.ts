@@ -19,9 +19,6 @@ export { workerApi } from "./worker";
 export { hubApi } from "./hub";
 export { teamApi } from "./team";
 
-// Re-export types from storage-helpers
-export type { Transaction, TeamApplication } from "./storage-helpers";
-
 // Import for combined api object
 import { sellerApi } from "./seller";
 import { workerApi } from "./worker";

@@ -1,347 +1,315 @@
 "use client";
 
-import { useMemo } from "react";
-import Link from "next/link";
-import { useAuthStore } from "@/lib/store";
-import { Card, Button, Badge, Progress, Skeleton } from "@/components/ui";
-import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
-import { StatCard, PageHeader } from "@/components/shared";
-import { formatCurrency, formatDate, getLevelInfo } from "@/lib/utils";
-import { useWorkerStats, useWorkerJobs } from "@/lib/api/hooks";
 import {
-  Wallet,
+  Coins,
   TrendingUp,
-  CreditCard,
-  CheckCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Star,
-  DollarSign,
-  ClipboardList,
-  Trophy,
-  Flame,
-  Target,
-  ArrowRight,
-  History,
+  Clock,
+  CheckCircle2,
+  Banknote,
+  CalendarDays,
+  Briefcase,
+  ArrowDownLeft,
+  Info,
 } from "lucide-react";
+import { Card, Button, Badge, Skeleton } from "@/components/ui";
+import { useWorkerEarnings, useConfirmPaymentReceived } from "@/lib/api/hooks/payouts";
+import { useWorkerStats } from "@/lib/api/hooks";
+
+interface PaymentRecord {
+  id: string;
+  amount: number;
+  method?: string;
+  status: string;
+  slipUrl?: string;
+  confirmedAt?: string;
+  createdAt: string;
+  seller?: { displayName: string };
+}
+
+interface JobClaim {
+  id: string;
+  earnAmount: number;
+  actualQuantity?: number;
+  quantity: number;
+  reviewedAt?: string;
+  job?: {
+    serviceName: string;
+    team?: { name: string; seller?: { displayName: string } };
+  };
+}
 
 export default function WorkerEarningsPage() {
-  const { user } = useAuthStore();
-  const worker = user?.worker;
-  const levelInfo = getLevelInfo(worker?.level || "bronze");
+  const { data: statsData } = useWorkerStats();
+  const { data: earningsData, isLoading } = useWorkerEarnings();
+  const confirmPayment = useConfirmPaymentReceived();
 
-  // Use API hooks
-  const { data: workerStats, isLoading } = useWorkerStats();
-  const { data: workerJobs } = useWorkerJobs();
+  const stats = (statsData as { data?: Record<string, unknown> })?.data as {
+    totalOwed: number;
+    totalEarned: number;
+    todayEarnings: number;
+    weekEarnings: number;
+  } | null;
 
-  // Derive transactions from completed jobs
-  const transactions = useMemo(() => {
-    if (!workerJobs) return [];
-    
-    const earnTransactions = workerJobs.completed
-      .filter(job => job.earnings)
-      .map((job, index) => ({
-        id: index + 1,
-        type: "earn" as const,
-        description: `งาน: ${job.serviceName}`,
-        amount: job.earnings || 0,
-        date: job.completedAt || new Date().toISOString(),
-        status: "completed" as const,
-      }));
-    
-    // Mock withdrawals for display (would come from separate withdrawal system)
-    const mockWithdrawals = [
-      {
-        id: 900,
-        type: "withdraw" as const,
-        description: "ถอนเงิน - กสิกร",
-        amount: -100,
-        date: "2024-12-29",
-        status: "completed" as const,
-      },
-    ];
-    
-    return [...earnTransactions, ...mockWithdrawals].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  }, [workerJobs]);
-
-  // Calculate level progress
-  const levelThresholds = {
-    bronze: { min: 0, max: 50, next: "Silver" },
-    silver: { min: 51, max: 200, next: "Gold" },
-    gold: { min: 201, max: 500, next: "Platinum" },
-    platinum: { min: 501, max: 1000, next: "VIP" },
-    vip: { min: 1001, max: Infinity, next: "VIP" },
-  };
-  const currentThreshold = levelThresholds[worker?.level || "bronze"];
-  const progressToNextLevel =
-    ((worker?.totalJobsCompleted || 0 - currentThreshold.min) /
-      (currentThreshold.max - currentThreshold.min)) *
-    100;
+  const earnings = (earningsData as { data?: Record<string, unknown> })?.data as {
+    approvedClaims: JobClaim[];
+    confirmedPayments: PaymentRecord[];
+    pendingPayments: PaymentRecord[];
+    totalOwed: number;
+    totalEarned: number;
+  } | null;
 
   if (isLoading) {
     return (
-      <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <Skeleton className="h-10 w-48 mb-2" />
-            <Skeleton className="h-5 w-64" />
-          </div>
-          <Skeleton className="h-10 w-36" />
+      <div className="space-y-6 animate-fade-in">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-2xl" />
+          ))}
         </div>
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 space-y-6">
-            <Skeleton className="h-72 rounded-2xl" />
-            <Skeleton className="h-48 rounded-2xl" />
-          </div>
-          <div className="lg:col-span-2 space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))}
-            </div>
-            <Skeleton className="h-96 rounded-2xl" />
-          </div>
-        </div>
+        <Skeleton className="h-40 rounded-2xl" />
       </div>
     );
   }
 
+  const pendingPayments = earnings?.pendingPayments ?? [];
+  const confirmedPayments = earnings?.confirmedPayments ?? [];
+  const approvedClaims = earnings?.approvedClaims ?? [];
+
   return (
-    <Container size="xl">
-      <Section spacing="lg" className="animate-fade-in">
-        {/* Header */}
-        <PageHeader
-          title="รายได้ของฉัน"
-          description="ติดตามรายได้และจัดการการถอนเงิน"
-          icon={DollarSign}
-          action={
-            <Link href="/work/earnings/history">
-              <Button variant="outline" className="bg-white shadow-sm" leftIcon={<History className="w-4 h-4" />}>
-                ดูประวัติทั้งหมด
-              </Button>
-            </Link>
-          }
-        />
-
-        <div className="grid lg:grid-cols-3 gap-8">
-        {/* Left Column: Balance & Quick Stats */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Balance Card */}
-          <Card className="bg-gradient-to-br from-[#8C6A54] to-[#6D5E54] text-white border-none shadow-xl shadow-brand-primary/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-            
-            <div className="relative">
-              <div className="text-center mb-6">
-                <p className="text-[#E8DED5] text-sm flex items-center justify-center gap-2 mb-2 font-medium uppercase tracking-wide">
-                  <span className="p-1.5 rounded-full bg-white/10 backdrop-blur-sm">
-                    <Wallet className="w-4 h-4" />
-                  </span>
-                  ยอดเงินที่ถอนได้
-                </p>
-                <p className="text-4xl font-bold tracking-tight text-white drop-shadow-sm">
-                  {formatCurrency(workerStats?.availableBalance || 0)}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 py-4 border-t border-white/20">
-                <div className="text-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10">
-                  <p className="text-white/80 text-xs font-medium">รอตรวจสอบ</p>
-                  <p className="text-lg font-bold mt-1">
-                    {formatCurrency(workerStats?.pendingBalance || 0)}
-                  </p>
-                </div>
-                <div className="text-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10">
-                  <p className="text-white/80 text-xs font-medium">ถอนไปแล้ว</p>
-                  <p className="text-lg font-bold mt-1">
-                    {formatCurrency(workerStats?.totalEarned || 0)}
-                  </p>
-                </div>
-              </div>
-
-              <Link href="/work/earnings/withdraw" className="block mt-4">
-                <Button
-                  size="lg"
-                  className="w-full bg-white text-brand-primary hover:bg-[#F4EFEA] border-none shadow-lg shadow-black/10 font-bold"
-                >
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  แจ้งถอนเงิน
-                </Button>
-              </Link>
-            </div>
-          </Card>
-
-          {/* Level Progress Card */}
-          <Card variant="elevated" className="border-none shadow-lg shadow-brand-primary/5 relative overflow-hidden">
-            <div className="absolute -top-8 -right-8 w-24 h-24 bg-brand-warning/10 rounded-full blur-2xl" />
-            <div className="relative">
-              <div className="flex items-center gap-4 mb-4">
-                <div className={`p-3 rounded-xl ${levelInfo.color.replace('text-', 'bg-')}/10 shadow-sm`}>
-                  <Trophy className={`w-7 h-7 ${levelInfo.color}`} />
-                </div>
-                <div>
-                  <p className="font-bold text-brand-text-dark text-xl">
-                    {levelInfo.name}
-                  </p>
-                  <p className="text-sm text-brand-text-light">
-                    {worker?.totalJobsCompleted} / {currentThreshold.max} งาน
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-brand-text-light">ความคืบหน้าสู่ {currentThreshold.next}</span>
-                  <span className="font-bold text-brand-text-dark">{Math.round(Math.min(progressToNextLevel, 100))}%</span>
-                </div>
-                <Progress value={Math.min(progressToNextLevel, 100)} className="h-2.5" />
-              </div>
-              
-              <div className="flex gap-2 mt-4">
-                <Badge variant="info" className="shadow-sm">ค่าถอน {levelInfo.fee}%</Badge>
-                <Badge variant="success" className="shadow-sm">โบนัส +{levelInfo.bonus}%</Badge>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Right Column: Stats & Transactions */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card variant="elevated" className="border-none shadow-md hover:-translate-y-1 transition-transform">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-brand-success/10">
-                  <TrendingUp className="w-5 h-5 text-brand-success" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-brand-text-dark leading-none">
-                    {formatCurrency(workerStats?.todayEarned || 0)}
-                  </p>
-                  <p className="text-xs text-brand-text-light mt-1">วันนี้</p>
-                </div>
-              </div>
-            </Card>
-            <Card variant="elevated" className="border-none shadow-md hover:-translate-y-1 transition-transform">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-brand-info/10">
-                  <CheckCircle className="w-5 h-5 text-brand-info" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-brand-text-dark leading-none">
-                    {worker?.totalJobsCompleted}
-                  </p>
-                  <p className="text-xs text-brand-text-light mt-1">งานสำเร็จ</p>
-                </div>
-              </div>
-            </Card>
-            <Card variant="elevated" className="border-none shadow-md hover:-translate-y-1 transition-transform">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-brand-warning/10">
-                  <Flame className="w-5 h-5 text-brand-warning" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-brand-text-dark leading-none">
-                    7 วัน
-                  </p>
-                  <p className="text-xs text-brand-text-light mt-1">Streak</p>
-                </div>
-              </div>
-            </Card>
-            <Card variant="elevated" className="border-none shadow-md hover:-translate-y-1 transition-transform">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-brand-accent/10">
-                  <Target className="w-5 h-5 text-brand-accent" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-brand-text-dark leading-none">
-                    98%
-                  </p>
-                  <p className="text-xs text-brand-text-light mt-1">ผ่านตรวจ</p>
-                </div>
-              </div>
-            </Card>
+    <div className="space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-brand-text-dark flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+            <Coins className="w-5 h-5 text-brand-primary" />
           </div>
+          รายได้ของฉัน
+        </h1>
+        <p className="text-sm text-brand-text-light mt-1 ml-[52px]">
+          ดูสรุปรายได้และยืนยันการรับเงิน
+        </p>
+      </div>
 
-          {/* Transactions */}
-          <Card variant="elevated" padding="none" className="border-none shadow-lg shadow-brand-primary/5 overflow-hidden">
-            <div className="p-5 border-b border-brand-border/50 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-brand-text-dark flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-brand-primary" />
-                ธุรกรรมล่าสุด
-              </h2>
-              <Link
-                href="/work/earnings/history"
-                className="text-sm font-medium text-brand-primary hover:text-brand-primary/80 transition-colors flex items-center gap-1"
-              >
-                ดูทั้งหมด <ArrowRight className="w-4 h-4" />
-              </Link>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card variant="elevated" className="p-5 border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-brand-text-light">รายได้รอรับ</p>
+              <p className="text-2xl font-bold text-brand-primary mt-1">
+                ฿{(stats?.totalOwed ?? earnings?.totalOwed ?? 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-brand-text-light mt-1">
+                ยอดที่แม่ทีมยังไม่ได้โอน
+              </p>
             </div>
-            
-            <div className="divide-y divide-brand-border/50">
-              {transactions.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-brand-bg mb-3">
-                    <History className="w-7 h-7 text-brand-text-light" />
-                  </div>
-                  <p className="font-medium text-brand-text-dark">ยังไม่มีธุรกรรม</p>
-                  <p className="text-sm text-brand-text-light">เริ่มรับงานเพื่อเริ่มสร้างรายได้</p>
+            <div className="p-2 rounded-lg bg-brand-primary/10">
+              <Clock className="w-4 h-4 text-brand-primary" />
+            </div>
+          </div>
+        </Card>
+        <Card variant="elevated" className="p-5 border-none shadow-lg shadow-brand-primary/5 hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-brand-text-light">รายได้รวมทั้งหมด</p>
+              <p className="text-2xl font-bold text-brand-text-dark mt-1">
+                ฿{(stats?.totalEarned ?? earnings?.totalEarned ?? 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-brand-text-light mt-1">ตั้งแต่เริ่มใช้งาน</p>
+            </div>
+            <div className="p-2 rounded-lg bg-brand-accent/10">
+              <TrendingUp className="w-4 h-4 text-brand-accent" />
+            </div>
+          </div>
+        </Card>
+        <Card variant="bordered" className="p-5 hover:shadow-md hover:border-brand-primary/20 transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-brand-text-light">วันนี้</p>
+              <p className="text-xl font-bold text-brand-success mt-1">
+                ฿{(stats?.todayEarnings ?? 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-brand-success/10">
+              <CalendarDays className="w-4 h-4 text-brand-success" />
+            </div>
+          </div>
+        </Card>
+        <Card variant="bordered" className="p-5 hover:shadow-md hover:border-brand-primary/20 transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-brand-text-light">สัปดาห์นี้</p>
+              <p className="text-xl font-bold text-brand-info mt-1">
+                ฿{(stats?.weekEarnings ?? 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-brand-info/10">
+              <Banknote className="w-4 h-4 text-brand-info" />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Notice */}
+      <Card className="bg-brand-warning/5 border-brand-warning/20 p-4">
+        <div className="flex items-start gap-3">
+          <div className="p-1.5 rounded-lg bg-brand-warning/10 shrink-0">
+            <Info className="w-4 h-4 text-brand-warning" />
+          </div>
+          <div className="text-sm text-brand-warning">
+            <p className="font-semibold mb-0.5">วิธีรับเงิน</p>
+            <p>
+              แม่ทีมจะโอนเงินให้โดยตรงผ่าน PromptPay หรือโอนเงินธนาคาร
+              เมื่อได้รับเงินแล้วกด &quot;ยืนยันรับเงิน&quot; ด้านล่าง
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Pending Payment Confirmations */}
+      {pendingPayments.length > 0 && (
+        <Card variant="elevated" padding="none" className="border-none shadow-lg shadow-brand-primary/5 overflow-hidden">
+          <div className="px-6 py-4 border-b border-brand-border/30 flex items-center justify-between">
+            <h2 className="font-bold text-brand-text-dark flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-warning/10">
+                <ArrowDownLeft className="w-4 h-4 text-brand-warning" />
+              </div>
+              รอยืนยันการรับเงิน
+            </h2>
+            <Badge variant="warning" size="sm">{pendingPayments.length}</Badge>
+          </div>
+          <div className="divide-y divide-brand-border/30">
+            {pendingPayments.map((p) => (
+              <div key={p.id} className="px-6 py-4 flex items-center justify-between hover:bg-brand-bg/50 transition-colors">
+                <div>
+                  <p className="text-sm font-semibold text-brand-text-dark">
+                    {p.seller?.displayName ?? "แม่ทีม"}
+                  </p>
+                  <p className="text-xs text-brand-text-light mt-0.5">
+                    {new Date(p.createdAt).toLocaleDateString("th-TH")}
+                    {p.method === "promptpay" ? " · PromptPay" : " · โอนเงิน"}
+                  </p>
+                  {p.slipUrl && (
+                    <a
+                      href={p.slipUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-brand-primary underline mt-0.5 inline-block"
+                    >
+                      ดูสลิป
+                    </a>
+                  )}
                 </div>
-              )}
-              {transactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between p-5 hover:bg-brand-bg/30 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`p-3 rounded-2xl shadow-sm transition-transform group-hover:scale-105 ${
-                        tx.type === "earn"
-                          ? "bg-brand-success/10"
-                          : "bg-brand-error/10"
-                      }`}
-                    >
-                      {tx.type === "earn" ? (
-                        <ArrowUpRight className="w-5 h-5 text-brand-success" />
-                      ) : (
-                        <ArrowDownRight className="w-5 h-5 text-brand-error" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-brand-text-dark text-base mb-0.5">
-                        {tx.description}
-                      </p>
-                      <p className="text-xs text-brand-text-light font-medium">
-                        {formatDate(tx.date)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-bold text-lg mb-1 ${
-                        tx.amount > 0 ? "text-brand-success" : "text-brand-error"
-                      }`}
-                    >
-                      {tx.amount > 0 ? "+" : ""}
-                      {formatCurrency(tx.amount)}
+                <div className="text-right">
+                  <p className="text-base font-bold text-brand-text-dark">
+                    ฿{p.amount.toLocaleString()}
+                  </p>
+                  <Button
+                    variant="success"
+                    size="sm"
+                    className="mt-1.5"
+                    onClick={() => confirmPayment.mutate(p.id)}
+                    isLoading={confirmPayment.isPending}
+                    leftIcon={<CheckCircle2 className="w-3 h-3" />}
+                  >
+                    ยืนยันรับเงิน
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Approved Claims */}
+      {approvedClaims.length > 0 && (
+        <Card variant="elevated" padding="none" className="border-none shadow-lg shadow-brand-primary/5 overflow-hidden">
+          <div className="px-6 py-4 border-b border-brand-border/30">
+            <h2 className="font-bold text-brand-text-dark flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-success/10">
+                <Briefcase className="w-4 h-4 text-brand-success" />
+              </div>
+              งานที่อนุมัติแล้ว (รอแม่ทีมโอน)
+            </h2>
+          </div>
+          <div className="divide-y divide-brand-border/30">
+            {approvedClaims.slice(0, 10).map((claim) => (
+              <div key={claim.id} className="px-6 py-4 flex items-center justify-between hover:bg-brand-bg/50 transition-colors">
+                <div>
+                  <p className="text-sm font-semibold text-brand-text-dark">
+                    {claim.job?.serviceName ?? "งาน"}
+                  </p>
+                  <p className="text-xs text-brand-text-light mt-0.5">
+                    {claim.job?.team?.name ?? "ทีม"} · {claim.actualQuantity ?? claim.quantity} รายการ
+                  </p>
+                  {claim.reviewedAt && (
+                    <p className="text-xs text-brand-text-light">
+                      อนุมัติ {new Date(claim.reviewedAt).toLocaleDateString("th-TH")}
                     </p>
-                    <Badge
-                      variant={tx.status === "completed" ? "success" : "warning"}
-                      size="sm"
-                      className="font-bold text-[10px] px-2 py-0.5 uppercase tracking-wide"
-                    >
-                      {tx.status === "completed" ? "สำเร็จ" : "รอตรวจ"}
-                    </Badge>
-                  </div>
+                  )}
                 </div>
-              ))}
+                <p className="text-sm font-bold text-brand-success">
+                  +฿{claim.earnAmount.toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Payment History */}
+      {confirmedPayments.length > 0 && (
+        <Card variant="elevated" padding="none" className="border-none shadow-lg shadow-brand-primary/5 overflow-hidden">
+          <div className="px-6 py-4 border-b border-brand-border/30">
+            <h2 className="font-bold text-brand-text-dark flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-accent/10">
+                <CheckCircle2 className="w-4 h-4 text-brand-accent" />
+              </div>
+              ประวัติการรับเงิน
+            </h2>
+          </div>
+          <div className="divide-y divide-brand-border/30">
+            {confirmedPayments.map((p) => (
+              <div key={p.id} className="px-6 py-4 flex items-center justify-between hover:bg-brand-bg/50 transition-colors">
+                <div>
+                  <p className="text-sm font-semibold text-brand-text-dark">
+                    {p.seller?.displayName ?? "แม่ทีม"}
+                  </p>
+                  <p className="text-xs text-brand-text-light mt-0.5">
+                    {p.confirmedAt
+                      ? new Date(p.confirmedAt).toLocaleDateString("th-TH")
+                      : "-"}
+                  </p>
+                </div>
+                <div className="text-right flex items-center gap-3">
+                  <p className="text-sm font-bold text-brand-text-dark">
+                    ฿{p.amount.toLocaleString()}
+                  </p>
+                  <Badge variant="success" size="sm">รับแล้ว</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {approvedClaims.length === 0 &&
+        pendingPayments.length === 0 &&
+        confirmedPayments.length === 0 && (
+          <Card variant="elevated" className="border-none shadow-md">
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-full bg-brand-secondary flex items-center justify-center mx-auto mb-4">
+                <Coins className="w-8 h-8 text-brand-text-light" />
+              </div>
+              <p className="text-lg font-semibold text-brand-text-dark">ยังไม่มีรายได้</p>
+              <p className="text-sm text-brand-text-light mt-1">
+                เริ่มรับงานและส่งงานเพื่อสะสมรายได้
+              </p>
             </div>
           </Card>
-        </div>
-        </div>
-      </Section>
-    </Container>
+        )}
+    </div>
   );
 }

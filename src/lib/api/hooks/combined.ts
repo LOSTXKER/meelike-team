@@ -57,10 +57,11 @@ export function useTeamMembersWithWorkers(teamId?: string) {
 
 // ===== JOB CLAIMS HOOKS =====
 
-export function useJobClaims() {
+export function useJobClaims(jobId?: string) {
   return useQuery({
     queryKey: queryKeys.seller.jobClaims(),
-    queryFn: () => api.seller.getJobClaims(),
+    queryFn: () => jobId ? api.seller.getJobClaims(jobId) : [],
+    enabled: !!jobId,
   });
 }
 

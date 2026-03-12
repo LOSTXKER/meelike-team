@@ -2,7 +2,12 @@
 
 import { Card, Button } from "@/components/ui";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { clearAllStorage } from "@/lib/storage";
+function clearAllStorage() {
+  if (typeof window !== "undefined") {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+}
 import { Trash2, AlertTriangle } from "lucide-react";
 
 export default function DangerZonePage() {

@@ -7,7 +7,6 @@ import { VStack } from "@/components/layout";
 import { useAuthStore } from "@/lib/store";
 import { useUpdateWorkerProfile } from "@/lib/api/hooks";
 import { useToast } from "@/components/ui/toast";
-import { DEFAULT_KYC_DATA } from "@/types";
 import {
   User,
   Mail,
@@ -15,7 +14,7 @@ import {
   Camera,
   Save,
   MessageCircle,
-  Shield,
+
   ChevronRight,
   Lock,
   Wallet,
@@ -31,8 +30,7 @@ export default function WorkerSettingsProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
-  const kycLevel = worker?.kyc?.level || DEFAULT_KYC_DATA.level;
-  const kycLabel = kycLevel === "none" ? "ยังไม่ยืนยัน" : kycLevel === "basic" ? "Basic" : kycLevel === "verified" ? "Verified" : "Business";
+
   const hasBankInfo = worker?.bankName && worker?.bankAccount;
 
   const [formData, setFormData] = useState({
@@ -96,30 +94,8 @@ export default function WorkerSettingsProfilePage() {
         </div>
       </Card>
 
-      {/* Quick Links: KYC & Bank */}
+      {/* Quick Links */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <Link href="/work/settings/verification">
-          <Card className="border-none shadow-sm cursor-pointer hover:shadow-md transition-all h-full">
-            <div className="p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                <Shield className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-brand-text-dark text-sm">ยืนยันตัวตน (KYC)</p>
-                <p className="text-xs text-brand-text-light truncate">เพิ่มวงเงินการถอน</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge
-                  variant={kycLevel === "none" ? "warning" : kycLevel === "business" ? "success" : "info"}
-                  size="sm"
-                >
-                  {kycLabel}
-                </Badge>
-                <ChevronRight className="w-4 h-4 text-brand-text-light" />
-              </div>
-            </div>
-          </Card>
-        </Link>
         <Link href="/work/settings/bank">
           <Card className="border-none shadow-sm cursor-pointer hover:shadow-md transition-all h-full">
             <div className="p-4 flex items-center gap-4">

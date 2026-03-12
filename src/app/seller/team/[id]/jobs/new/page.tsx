@@ -109,7 +109,7 @@ export default function CreateJobPage() {
       });
 
       toast.success("สร้างงานเรียบร้อยแล้ว!");
-      router.push(`/seller/team/${teamId}/jobs/${newJob.id}`);
+      if (newJob) router.push(`/seller/team/${teamId}/jobs/${newJob.id}`);
     } catch (error) {
       console.error("Error creating job:", error);
       toast.error("เกิดข้อผิดพลาดในการสร้างงาน");

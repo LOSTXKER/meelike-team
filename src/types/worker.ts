@@ -1,11 +1,12 @@
 /**
  * Worker Types
- * 
+ *
  * Types related to workers, their accounts, and jobs.
+ * Note: Payout/withdrawal removed — workers receive manual payments from team leaders.
  */
 
 import type { Platform } from "./common";
-import type { KYCData } from "./kyc";
+
 
 // ===== WORKER LEVEL =====
 export type WorkerLevel = "bronze" | "silver" | "gold" | "platinum" | "vip";
@@ -33,14 +34,15 @@ export interface Worker {
   totalJobsCompleted: number;
   pendingBalance: number;
   availableBalance: number;
+  /** Total owed by team leaders (informational only — no system withdrawal) */
+  totalOwed: number;
   isActive: boolean;
   isBanned: boolean;
   teamIds: string[];
   createdAt: string;
   lastActiveAt: string;
-  
-  // KYC Verification
-  kyc?: KYCData;
+
+
 }
 
 // ===== WORKER ACCOUNT =====
@@ -105,6 +107,9 @@ export interface WorkerJob {
   teamLogo?: string;
   teamRating?: number;
   teamJobsCompleted?: number;
+  orderNumber?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // ===== WORKER BANK ACCOUNT =====
@@ -121,32 +126,18 @@ export interface WorkerBankAccount {
   createdAt: string;
 }
 
-// ===== PAYOUT =====
-export interface Payout {
+// ===== PAYMENT CONFIRMATION (replaces Payout) =====
+export interface WorkerPaymentConfirmation {
   id: string;
   workerId: string;
-  requestedAmount: number;
-  feeAmount: number;
-  feePercent: number;
-  netAmount: number;
-  method: "promptpay" | "bank_transfer";
-  promptpayNumber?: string;
-  bankCode?: string;
-  bankAccountNumber?: string;
-  bankAccountName?: string;
-  status:
-    | "pending"
-    | "approved"
-    | "processing"
-    | "completed"
-    | "rejected"
-    | "failed";
-  reviewedBy?: string;
-  reviewedAt?: string;
-  rejectionReason?: string;
-  transferredAt?: string;
-  bankRefNumber?: string;
-  errorMessage?: string;
+  sellerId: string;
+  sellerName: string;
+  amount: number;
+  method?: "promptpay" | "bank_transfer";
+  slipUrl?: string;
+  note?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  confirmedAt?: string;
   createdAt: string;
-  updatedAt: string;
 }

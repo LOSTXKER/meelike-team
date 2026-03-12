@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Settings,
-  Shield,
+
   Bell,
   Mail,
   DollarSign,
@@ -33,7 +33,7 @@ interface SettingsSection {
 
 const SECTIONS: SettingsSection[] = [
   { id: "general", title: "ทั่วไป", description: "ตั้งค่าพื้นฐานของระบบ", icon: Settings },
-  { id: "kyc", title: "KYC", description: "การยืนยันตัวตน", icon: Shield },
+
   { id: "payment", title: "การเงิน", description: "ค่าธรรมเนียมและการชำระเงิน", icon: DollarSign },
   { id: "notification", title: "การแจ้งเตือน", description: "การแจ้งเตือนอัตโนมัติ", icon: Bell },
   { id: "security", title: "ความปลอดภัย", description: "การรักษาความปลอดภัย", icon: Lock },
@@ -50,11 +50,6 @@ export default function AdminSettingsPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [allowRegistration, setAllowRegistration] = useState(true);
 
-  // KYC Settings
-  const [requireKYCForWithdraw, setRequireKYCForWithdraw] = useState(true);
-  const [requireKYCForTopup, setRequireKYCForTopup] = useState(true);
-  const [autoApproveBasicKYC, setAutoApproveBasicKYC] = useState(false);
-  const [kycExpiryDays, setKycExpiryDays] = useState("365");
 
   // Payment Settings
   const [platformFeePercent, setPlatformFeePercent] = useState("15");
@@ -65,7 +60,6 @@ export default function AdminSettingsPage() {
   // Notification Settings
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [newUserNotification, setNewUserNotification] = useState(true);
-  const [kycPendingNotification, setKycPendingNotification] = useState(true);
   const [reportNotification, setReportNotification] = useState(true);
 
   // Security Settings
@@ -131,55 +125,6 @@ export default function AdminSettingsPage() {
           </div>
         );
 
-      case "kyc":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 bg-brand-bg/50 rounded-lg">
-              <div>
-                <p className="font-medium text-brand-text-dark">บังคับ KYC สำหรับถอนเงิน</p>
-                <p className="text-sm text-brand-text-light">ผู้ใช้ต้องยืนยันตัวตนก่อนถอนเงิน</p>
-              </div>
-              <Switch
-                checked={requireKYCForWithdraw}
-                onChange={setRequireKYCForWithdraw}
-              />
-            </div>
-            <div className="flex items-center justify-between p-4 bg-brand-bg/50 rounded-lg">
-              <div>
-                <p className="font-medium text-brand-text-dark">บังคับ KYC สำหรับเติมเงิน</p>
-                <p className="text-sm text-brand-text-light">ผู้ใช้ต้องยืนยันตัวตนก่อนเติมเงิน</p>
-              </div>
-              <Switch
-                checked={requireKYCForTopup}
-                onChange={setRequireKYCForTopup}
-              />
-            </div>
-            <div className="flex items-center justify-between p-4 bg-brand-bg/50 rounded-lg">
-              <div>
-                <p className="font-medium text-brand-text-dark">อนุมัติ Basic KYC อัตโนมัติ</p>
-                <p className="text-sm text-brand-text-light">อนุมัติการยืนยัน OTP โดยอัตโนมัติ</p>
-              </div>
-              <Switch
-                checked={autoApproveBasicKYC}
-                onChange={setAutoApproveBasicKYC}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-brand-text-dark mb-2">
-                อายุการยืนยัน KYC (วัน)
-              </label>
-              <Input
-                type="number"
-                value={kycExpiryDays}
-                onChange={(e) => setKycExpiryDays(e.target.value)}
-                placeholder="365"
-              />
-              <p className="text-xs text-brand-text-light mt-1">
-                ระยะเวลาที่การยืนยัน KYC ยังคงใช้ได้
-              </p>
-            </div>
-          </div>
-        );
 
       case "payment":
         return (
@@ -255,16 +200,6 @@ export default function AdminSettingsPage() {
               <Switch
                 checked={newUserNotification}
                 onChange={setNewUserNotification}
-              />
-            </div>
-            <div className="flex items-center justify-between p-4 bg-brand-bg/50 rounded-lg">
-              <div>
-                <p className="font-medium text-brand-text-dark">แจ้งเตือน KYC รอตรวจสอบ</p>
-                <p className="text-sm text-brand-text-light">แจ้งเตือนเมื่อมี KYC รอการอนุมัติ</p>
-              </div>
-              <Switch
-                checked={kycPendingNotification}
-                onChange={setKycPendingNotification}
               />
             </div>
             <div className="flex items-center justify-between p-4 bg-brand-bg/50 rounded-lg">

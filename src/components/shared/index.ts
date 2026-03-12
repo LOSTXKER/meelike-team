@@ -3,7 +3,7 @@
  *
  * Organized by domain sub-barrels for cleaner imports.
  * Import from "@/components/shared" as before, or from specific sub-barrels:
- *   import { KYCGate } from "@/components/shared/kyc";
+ *
  *   import { FormField } from "@/components/shared/forms";
  */
 
@@ -28,8 +28,9 @@ export * from "./forms";
 // ===== Modals =====
 export * from "./modals";
 
-// ===== KYC =====
-export * from "./kyc";
+
+// ===== OTP =====
+export { OTPInput } from "./OTPInput";
 
 // ===== Help System =====
 export * from "./help";

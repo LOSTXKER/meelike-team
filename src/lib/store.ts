@@ -1,73 +1,18 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { AuthUser, Seller, Worker } from "@/types";
-import { getStorage, setStorage, STORAGE_KEYS } from "./storage";
-import { generateId } from "./utils/helpers";
-import {
-  createTokenPair,
-  refreshAccessToken,
-  isTokenExpiringSoon,
-  decodeMockJWT,
-} from "./auth/jwt";
-import { validate } from "./validations/utils";
-import { loginSchema } from "./validations/auth";
+import { createClient } from "@/lib/supabase/client";
 
-/** Set a cookie readable by Next.js middleware for route protection */
 function setAuthCookie(role: string) {
   if (typeof document !== "undefined") {
     document.cookie = `meelike-auth-role=${role}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
   }
 }
 
-// ===== HELPER: Create default data on first login =====
-
-function createDefaultSeller(userId: string, email: string): Seller {
-  return {
-    id: `seller-${generateId()}`,
-    userId,
-    displayName: email.split("@")[0],
-    name: "My Store",
-    slug: email.split("@")[0].toLowerCase(),
-    subscription: "free",
-    theme: "meelike",
-    plan: "free",
-    sellerRank: "bronze",
-    platformFeePercent: 15,
-    rollingAvgSpend: 0,
-    totalSpentOnWorkers: 0,
-    balance: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    rating: 0,
-    ratingCount: 0,
-    isActive: true,
-    isVerified: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}
-
-function createDefaultWorker(userId: string, email: string): Worker {
-  const now = new Date().toISOString();
-  return {
-    id: `worker-${generateId()}`,
-    userId,
-    displayName: email.split("@")[0],
-    level: "bronze",
-    rating: 0,
-    ratingCount: 0,
-    totalJobs: 0,
-    totalJobsCompleted: 0,
-    totalEarned: 0,
-    completionRate: 100,
-    availableBalance: 0,
-    pendingBalance: 0,
-    isActive: true,
-    isBanned: false,
-    teamIds: [],
-    createdAt: now,
-    lastActiveAt: now,
-  };
+function clearAuthCookie() {
+  if (typeof document !== "undefined") {
+    document.cookie = "meelike-auth-role=; path=/; max-age=0";
+  }
 }
 
 // ===== AUTH STORE =====
@@ -76,15 +21,14 @@ interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
   hasHydrated: boolean;
-  
-  // Actions
+
   login: (email: string, password: string, role: "seller" | "worker" | "admin") => Promise<boolean>;
+  loginDemo: (role: "seller" | "worker" | "admin") => Promise<boolean>;
   logout: () => Promise<void>;
   refreshToken: () => boolean;
   setUser: (user: AuthUser | null) => void;
   setHasHydrated: (state: boolean) => void;
-  
-  // Computed values (as functions to always get fresh data)
+
   isAuthenticated: () => boolean;
   isSeller: () => boolean;
   isWorker: () => boolean;
@@ -100,182 +44,142 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       hasHydrated: false,
-      
-      // Actions
+
       login: async (email: string, password: string, role: "seller" | "worker" | "admin") => {
         set({ isLoading: true });
-        
+
         try {
-          // Validate input
-          validate(loginSchema, { email, password, role });
-          
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          
-          // Admin login
-          if (role === "admin") {
-            const isValidAdmin = email.toLowerCase().includes("admin") || 
-                                 email.toLowerCase() === "admin@meelike.com";
-            
-            if (!isValidAdmin) {
-              set({ isLoading: false });
-              return false;
-            }
-            
-            const userId = `admin-${generateId()}`;
-            const tokens = createTokenPair({ sub: userId, email, role: "admin" });
-            const decoded = decodeMockJWT(tokens.accessToken);
-            
-            const user: AuthUser = {
-              id: userId,
-              email,
-              role: "admin",
-              isAdmin: true,
-              token: tokens.accessToken,
-              refreshToken: tokens.refreshToken,
-              tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
-            };
-            setAuthCookie("admin");
-            set({ user, isLoading: false });
-            return true;
+          const supabase = createClient();
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error) {
+            console.error("Supabase login error:", error.message);
+            set({ isLoading: false });
+            return false;
           }
-          
-          if (role === "seller") {
-            const sellers = getStorage<Seller[]>(STORAGE_KEYS.SELLERS, []);
-            
-            let seller = sellers.find(s => 
-              s.name === email.split("@")[0] || 
-              s.displayName === email.split("@")[0]
-            );
-            
-            if (!seller && sellers.length > 0) {
-              seller = sellers[0];
+
+          const session = data.session;
+          const supaUser = data.user;
+
+          // Fetch the full user profile from our DB via API
+          let seller: Seller | undefined;
+          let worker: Worker | undefined;
+
+          try {
+            if (role === "seller" || role === "admin") {
+              const res = await fetch("/api/seller/subscription", {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+              });
+              if (res.ok) {
+                // Seller exists - fetch seller profile
+                seller = {
+                  id: supaUser.id,
+                  userId: supaUser.id,
+                  displayName: supaUser.user_metadata?.name ?? email.split("@")[0],
+                  name: supaUser.user_metadata?.name ?? email.split("@")[0],
+                  slug: email.split("@")[0].toLowerCase(),
+                  plan: "free",
+                  subscription: "free",
+                  sellerRank: "bronze",
+                  platformFeePercent: 0,
+                  rollingAvgSpend: 0,
+                  totalSpentOnWorkers: 0,
+                  balance: 0,
+                  totalOrders: 0,
+                  totalRevenue: 0,
+                  rating: 0,
+                  ratingCount: 0,
+                  isActive: true,
+                  isVerified: false,
+                  theme: "meelike",
+                  createdAt: supaUser.created_at,
+                  updatedAt: supaUser.created_at,
+                } as Seller;
+              }
             }
-            
-            if (!seller) {
-              const userId = `user-${generateId()}`;
-              seller = createDefaultSeller(userId, email);
-              sellers.push(seller);
-              setStorage(STORAGE_KEYS.SELLERS, sellers);
-            }
-            
-            const tokens = createTokenPair({
-              sub: seller.userId,
-              email,
-              role: "seller",
-              sellerId: seller.id,
-            });
-            const decoded = decodeMockJWT(tokens.accessToken);
-            
-            const user: AuthUser = {
-              id: seller.userId,
-              email,
-              role: "seller",
-              seller,
-              token: tokens.accessToken,
-              refreshToken: tokens.refreshToken,
-              tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
-            };
-            setAuthCookie("seller");
-            set({ user, isLoading: false });
-            return true;
-          } else {
-            const workers = getStorage<Worker[]>(STORAGE_KEYS.WORKERS, []);
-            
-            let worker = workers.find(w => 
-              w.displayName === email.split("@")[0]
-            );
-            
-            if (!worker && workers.length > 0) {
-              worker = workers[0];
-            }
-            
-            if (!worker) {
-              const userId = `user-${generateId()}`;
-              worker = createDefaultWorker(userId, email);
-              workers.push(worker);
-              setStorage(STORAGE_KEYS.WORKERS, workers);
-            }
-            
-            const tokens = createTokenPair({
-              sub: worker.userId,
-              email,
-              role: "worker",
-              workerId: worker.id,
-            });
-            const decoded = decodeMockJWT(tokens.accessToken);
-            
-            const user: AuthUser = {
-              id: worker.userId,
-              email,
-              role: "worker",
-              worker,
-              token: tokens.accessToken,
-              refreshToken: tokens.refreshToken,
-              tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
-            };
-            setAuthCookie("worker");
-            set({ user, isLoading: false });
-            return true;
+          } catch {
+            // Profile fetch failed, continue with basic user
           }
+
+          const authUser: AuthUser = {
+            id: supaUser.id,
+            email: supaUser.email ?? email,
+            role,
+            seller,
+            worker,
+            isAdmin: role === "admin",
+            token: session.access_token,
+            refreshToken: session.refresh_token,
+            tokenExpiresAt: session.expires_at ? session.expires_at * 1000 : undefined,
+          };
+
+          setAuthCookie(role);
+          set({ user: authUser, isLoading: false });
+          return true;
         } catch (error) {
-          set({ isLoading: false });
           console.error("Login error:", error);
+          set({ isLoading: false });
           return false;
         }
       },
-      
-      logout: async () => {
-        // Clear the auth cookie used by middleware
-        if (typeof document !== "undefined") {
-          document.cookie = "meelike-auth-role=; path=/; max-age=0";
+
+      loginDemo: async (role: "seller" | "worker" | "admin") => {
+        set({ isLoading: true });
+
+        try {
+          // Call demo endpoint to ensure user exists
+          const demoRes = await fetch("/api/auth/demo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role }),
+          });
+
+          if (!demoRes.ok) {
+            console.error("Demo setup failed");
+            set({ isLoading: false });
+            return false;
+          }
+
+          const { email, password } = await demoRes.json();
+
+          // Now sign in with the demo credentials
+          return get().login(email, password, role);
+        } catch (error) {
+          console.error("Demo login error:", error);
+          set({ isLoading: false });
+          return false;
         }
+      },
+
+      logout: async () => {
+        try {
+          const supabase = createClient();
+          await supabase.auth.signOut();
+        } catch {
+          // ignore signout errors
+        }
+        clearAuthCookie();
         set({ user: null, isLoading: false });
       },
-      
+
       refreshToken: () => {
-        const user = get().user;
-        if (!user?.refreshToken) return false;
-        
-        const newAccessToken = refreshAccessToken(user.refreshToken);
-        if (!newAccessToken) {
-          // Refresh token expired -- force logout
-          set({ user: null });
-          return false;
-        }
-        
-        const decoded = decodeMockJWT(newAccessToken);
-        set({
-          user: {
-            ...user,
-            token: newAccessToken,
-            tokenExpiresAt: decoded ? decoded.exp * 1000 : undefined,
-          },
-        });
+        // Supabase handles token refresh automatically
         return true;
       },
-      
+
       setUser: (user) => set({ user }),
       setHasHydrated: (state) => set({ hasHydrated: state }),
-      
-      // Computed values
+
       isAuthenticated: () => !!get().user?.token,
       isSeller: () => get().user?.role === "seller",
       isWorker: () => get().user?.role === "worker",
       isAdmin: () => get().user?.role === "admin" || get().user?.isAdmin === true,
       getUserId: () => get().user?.id ?? null,
       getUserRole: () => get().user?.role ?? null,
-      getToken: () => {
-        const user = get().user;
-        if (!user?.token) return null;
-        
-        // Auto-refresh if expiring soon
-        if (user.token && isTokenExpiringSoon(user.token)) {
-          get().refreshToken();
-        }
-        
-        return get().user?.token ?? null;
-      },
+      getToken: () => get().user?.token ?? null,
     }),
     {
       name: "meelike-auth",
@@ -292,8 +196,7 @@ export const useAuthStore = create<AuthState>()(
 interface AppState {
   sidebarOpen: boolean;
   darkMode: boolean;
-  
-  // Actions
+
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   toggleDarkMode: () => void;
@@ -305,10 +208,10 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       sidebarOpen: true,
       darkMode: false,
-      
+
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
-      
+
       toggleDarkMode: () => {
         const newDarkMode = !get().darkMode;
         set({ darkMode: newDarkMode });
@@ -316,7 +219,7 @@ export const useAppStore = create<AppState>()(
           document.documentElement.classList.toggle("dark", newDarkMode);
         }
       },
-      
+
       setDarkMode: (enabled) => {
         set({ darkMode: enabled });
         if (typeof document !== "undefined") {
@@ -343,8 +246,7 @@ export interface Notification {
 
 interface NotificationState {
   notifications: Notification[];
-  
-  // Actions
+
   addNotification: (notification: Omit<Notification, "id" | "createdAt">) => void;
   removeNotification: (id: string) => void;
   clearAllNotifications: () => void;
@@ -352,7 +254,7 @@ interface NotificationState {
 
 export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: [],
-  
+
   addNotification: (notification) => {
     const id = Math.random().toString(36).substring(7);
     const newNotification: Notification = {
@@ -360,12 +262,11 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       id,
       createdAt: Date.now(),
     };
-    
+
     set((state) => ({
       notifications: [...state.notifications, newNotification],
     }));
-    
-    // Auto remove after duration
+
     if (notification.duration !== 0) {
       setTimeout(() => {
         set((state) => ({
@@ -374,12 +275,12 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       }, notification.duration || 5000);
     }
   },
-  
+
   removeNotification: (id) => {
     set((state) => ({
       notifications: state.notifications.filter((n) => n.id !== id),
     }));
   },
-  
+
   clearAllNotifications: () => set({ notifications: [] }),
 }));

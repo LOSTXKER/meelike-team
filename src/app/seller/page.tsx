@@ -16,12 +16,11 @@ import {
 import { VStack } from "@/components/layout";
 import {
   PlanBadge,
-  KYCAlertBanner,
-  KYCStatusCard,
+
   ContentGuidelines,
 } from "@/components/shared";
 import { Checkbox } from "@/components/ui";
-import { meetsKYCRequirement, type KYCLevel } from "@/types";
+
 import { formatCurrency } from "@/lib/utils";
 import { RANKS, RANK_ORDER } from "@/lib/constants/plans";
 import {
@@ -83,8 +82,6 @@ export default function SellerDashboard() {
     setGuidelinesAccepted(false);
   };
 
-  const kycLevel: KYCLevel = seller?.kyc?.level || "none";
-  const needsKYC = !meetsKYCRequirement(kycLevel, "basic");
 
   // Rank data
   const currentRank: SellerRank = seller?.sellerRank || "bronze";
@@ -107,14 +104,6 @@ export default function SellerDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* ===== KYC ALERT (conditional, dismissible) ===== */}
-      {needsKYC && (
-        <KYCAlertBanner
-          requiredLevel="basic"
-          userType="seller"
-          message="ยืนยันตัวตนเพื่อเติมเงินและใช้งานได้เต็มที่"
-        />
-      )}
 
       {/* ===== WELCOME HEADER ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -419,10 +408,6 @@ export default function SellerDashboard() {
             </div>
           </Card>
 
-          {/* KYC Status Card */}
-          {kycLevel !== "business" && (
-            <KYCStatusCard userType="seller" compact />
-          )}
         </div>
       </div>
 

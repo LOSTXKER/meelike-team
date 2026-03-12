@@ -1,0 +1,737 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────────
+
+enum UserRole {
+  seller
+  worker
+  admin
+}
+
+enum SubscriptionPlan {
+  free
+  starter
+  pro
+  business
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  trialing
+}
+
+enum WorkerLevel {
+  bronze
+  silver
+  gold
+  platinum
+  vip
+}
+
+enum Platform {
+  facebook
+  instagram
+  tiktok
+  youtube
+  twitter
+}
+
+enum ServiceType {
+  like
+  comment
+  follow
+  share
+  view
+}
+
+enum ServiceMode {
+  bot
+  human
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  processing
+  completed
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  refunded
+}
+
+enum JobStatus {
+  pending
+  in_progress
+  pending_review
+  completed
+  cancelled
+}
+
+enum ClaimStatus {
+  claimed
+  submitted
+  approved
+  rejected
+  cancelled
+}
+
+enum TeamRole {
+  lead
+  assistant
+  worker
+}
+
+enum TeamMemberStatus {
+  pending
+  active
+  inactive
+  banned
+}
+
+
+enum PaymentRecordStatus {
+  pending
+  confirmed
+}
+
+enum PayoutBillStatus {
+  pending
+  paid
+  waived
+}
+
+enum VerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum OutsourceStatus {
+  open
+  in_progress
+  completed
+  cancelled
+}
+
+enum BidStatus {
+  pending
+  accepted
+  rejected
+  withdrawn
+}
+
+enum HubPostType {
+  recruit
+  find_team
+  outsource
+}
+
+enum ReportCategory {
+  gambling
+  illegal
+  scam
+  adult
+  other
+}
+
+enum ReportStatus {
+  pending
+  reviewed
+  confirmed
+  dismissed
+  false_report
+}
+
+enum StoreLevel {
+  none
+  basic
+  custom
+  premium
+}
+
+// ──────────────────────────────────────────────
+// CORE USER
+// ──────────────────────────────────────────────
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  phone       String?
+  role        UserRole
+  name        String
+  avatarUrl   String?
+
+  isActive    Boolean  @default(true)
+  isBanned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  seller      Seller?
+  worker      Worker?
+
+}
+
+// ──────────────────────────────────────────────
+// SELLER
+// ──────────────────────────────────────────────
+
+model Seller {
+  id                    String           @id @default(uuid())
+  userId                String           @unique
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName           String
+  slug                  String           @unique
+  plan                  SubscriptionPlan @default(free)
+  planExpiresAt         DateTime?
+  orderUsageThisMonth   Int              @default(0)
+  quotaResetAt          DateTime?
+  lineNotifyToken       String?
+  webhookUrl            String?
+  isActive              Boolean          @default(true)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  subscriptions         Subscription[]
+  orderUsageRecords     OrderUsage[]
+  overageBills          OverageBill[]
+  payments              Payment[]
+  services              Service[]
+  orders                Order[]
+  teams                 Team[]
+  store                 Store?
+  paymentRecords        PaymentRecord[]
+  paymentSchedules      PaymentSchedule[]
+  outsourceJobs         OutsourceJob[]
+  meeLikeConfig         SellerMeeLikeConfig?
+}
+
+// ──────────────────────────────────────────────
+// WORKER
+// ──────────────────────────────────────────────
+
+model Worker {
+  id               String      @id @default(uuid())
+  userId           String      @unique
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName      String
+  bio              String?
+  promptPayId      String?
+  bankCode         String?
+  bankAccount      String?
+  totalJobs        Int         @default(0)
+  totalEarned      Float       @default(0)
+  completionRate   Float       @default(0)
+  rating           Float       @default(0)
+  level            WorkerLevel @default(bronze)
+  pendingBalance   Float       @default(0)
+  totalOwed        Float       @default(0)
+  isActive         Boolean     @default(true)
+  isBanned         Boolean     @default(false)
+  lastActiveAt     DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  teamMembers      TeamMember[]
+  jobClaims        JobClaim[]
+  accounts         WorkerAccount[]
+  paymentRecords   PaymentRecord[]
+  jobApplications  TeamJoinRequest[]
+}
+
+// ──────────────────────────────────────────────
+// SUBSCRIPTION & BILLING (NEW MODEL)
+// ──────────────────────────────────────────────
+
+model Subscription {
+  id          String             @id @default(uuid())
+  sellerId    String
+  seller      Seller             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  plan        SubscriptionPlan
+  status      SubscriptionStatus @default(active)
+  startDate   DateTime
+  endDate     DateTime
+  price       Float
+  autoRenew   Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  payments    Payment[]
+}
+
+model OrderUsage {
+  id          String   @id @default(uuid())
+  sellerId    String
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  month       Int
+  year        Int
+  ordersUsed  Int      @default(0)
+  quotaLimit  Int
+  overageCount Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sellerId, month, year])
+}
+
+model OverageBill {
+  id             String          @id @default(uuid())
+  sellerId       String
+  seller         Seller          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  month          Int
+  year           Int
+  overageOrders  Int
+  feePerOrder    Float
+  totalAmount    Float
+  status         PayoutBillStatus @default(pending)
+  paidAt         DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([sellerId, month, year])
+}
+
+model Payment {
+  id             String           @id @default(uuid())
+  sellerId       String
+  seller         Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription?    @relation(fields: [subscriptionId], references: [id])
+  type           String           // "subscription" | "overage"
+  amount         Float
+  method         String?          // "promptpay" | "bank_transfer"
+  reference      String?
+  slipUrl        String?
+  status         String           @default("pending") // pending | confirmed | rejected
+  confirmedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// SERVICES
+// ──────────────────────────────────────────────
+
+model Service {
+  id               String      @id @default(uuid())
+  sellerId         String
+  seller           Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?
+  platform         Platform
+  serviceType      ServiceType
+  mode             ServiceMode @default(human)
+  costPrice        Float?
+  workerRate       Float?
+  sellPrice        Float
+  minQty           Int         @default(1)
+  maxQty           Int         @default(10000)
+  meelikeServiceId String?
+  isActive         Boolean     @default(true)
+  showInStore      Boolean     @default(false)
+  orderCount       Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  orderItems       OrderItem[]
+}
+
+// ──────────────────────────────────────────────
+// ORDERS
+// ──────────────────────────────────────────────
+
+model Order {
+  id             String        @id @default(uuid())
+  orderNumber    String        @unique
+  sellerId       String
+  seller         Seller        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  customerName   String
+  contactType    String?
+  contactValue   String?
+  customerNote   String?
+  subtotal       Float
+  discount       Float         @default(0)
+  total          Float
+  totalCost      Float         @default(0)
+  totalProfit    Float         @default(0)
+  paymentStatus  PaymentStatus @default(pending)
+  status         OrderStatus   @default(pending)
+  trackingUrl    String?
+  paidAt         DateTime?
+  confirmedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  items          OrderItem[]
+  timeline       OrderTimeline[]
+  jobs           Job[]
+}
+
+model OrderItem {
+  id                String      @id @default(uuid())
+  orderId           String
+  order             Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  serviceId         String?
+  service           Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceName       String
+  serviceType       ServiceType
+  platform          Platform
+  targetUrl         String
+  quantity          Int
+  unitPrice         Float
+  subtotal          Float
+  costPerUnit       Float       @default(0)
+  totalCost         Float       @default(0)
+  profit            Float       @default(0)
+  profitPercent     Float       @default(0)
+  status            String      @default("pending")
+  completedQuantity Int         @default(0)
+  meelikeOrderId    String?
+  outsourceJobId    String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  jobs              Job[]
+}
+
+model OrderTimeline {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  event     String
+  itemId    String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+// ──────────────────────────────────────────────
+// TEAMS
+// ──────────────────────────────────────────────
+
+model Team {
+  id                  String   @id @default(uuid())
+  sellerId            String
+  seller              Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  name                String
+  description         String?
+  inviteCode          String   @unique @default(uuid())
+  requireApproval     Boolean  @default(false)
+  isPublic            Boolean  @default(true)
+  isRecruiting        Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  memberCount         Int      @default(0)
+  activeJobCount      Int      @default(0)
+  totalJobsCompleted  Int      @default(0)
+  rating              Float    @default(0)
+  ratingCount         Int      @default(0)
+  assistantConfig     Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  members             TeamMember[]
+  jobs                Job[]
+  joinRequests        TeamJoinRequest[]
+  outsourceBids       OutsourceBid[]
+}
+
+model TeamMember {
+  id              String           @id @default(uuid())
+  teamId          String
+  team            Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  workerId        String
+  worker          Worker           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  role            TeamRole         @default(worker)
+  status          TeamMemberStatus @default(pending)
+  jobsCompleted   Int              @default(0)
+  totalEarned     Float            @default(0)
+  rating          Float            @default(0)
+  joinedAt        DateTime         @default(now())
+  lastActiveAt    DateTime?
+
+  @@unique([teamId, workerId])
+}
+
+model TeamJoinRequest {
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  message   String?
+  status    String   @default("pending") // pending | approved | rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// JOBS
+// ──────────────────────────────────────────────
+
+model Job {
+  id                  String    @id @default(uuid())
+  sellerId            String
+  teamId              String?
+  team                Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  orderId             String?
+  order               Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderItemId         String?
+  orderItem           OrderItem? @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  sourceJobId         String?
+  sourceJob           Job?      @relation("JobSplit", fields: [sourceJobId], references: [id])
+  splitJobs           Job[]     @relation("JobSplit")
+  title               String?
+  serviceName         String
+  platform            Platform
+  serviceType         ServiceType
+  targetUrl           String
+  instructions        String?
+  quantity            Int
+  completedQuantity   Int       @default(0)
+  claimedQuantity     Int       @default(0)
+  pricePerUnit        Float
+  totalPayout         Float
+  visibility          String    @default("team") // "team" | "public"
+  allowedWorkerIds    String[]
+  minWorkerLevel      WorkerLevel?
+  isUrgent            Boolean   @default(false)
+  deadline            DateTime?
+  status              JobStatus @default(pending)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  claims              JobClaim[]
+}
+
+model JobClaim {
+  id               String      @id @default(uuid())
+  jobId            String
+  job              Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workerId         String
+  worker           Worker      @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  workerAccountId  String?
+  quantity         Int
+  earnAmount       Float
+  status           ClaimStatus @default(claimed)
+  proofUrls        String[]
+  actualQuantity   Int?
+  note             String?
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// STORE (NEW)
+// ──────────────────────────────────────────────
+
+model Store {
+  id               String     @id @default(uuid())
+  sellerId         String     @unique
+  seller           Seller     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  slug             String     @unique
+  name             String
+  bio              String?
+  theme            String     @default("default")
+  logoUrl          String?
+  bannerUrl        String?
+  primaryColor     String?
+  isPublic         Boolean    @default(false)
+  showPricing      Boolean    @default(true)
+  showReviews      Boolean    @default(true)
+  allowDirectOrder Boolean    @default(true)
+  customDomain     String?
+  embedCode        String?
+  level            StoreLevel @default(none)
+  settings         Json?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  reviews          StoreReview[]
+}
+
+model StoreReview {
+  id           String   @id @default(uuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customerName String
+  rating       Int
+  comment      String?
+  reply        String?
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// PAYMENT HELPER (NEW)
+// ──────────────────────────────────────────────
+
+model PaymentRecord {
+  id           String              @id @default(uuid())
+  sellerId     String
+  seller       Seller              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  workerId     String
+  worker       Worker              @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  amount       Float
+  method       String?             // "promptpay" | "bank_transfer"
+  status       PaymentRecordStatus @default(pending)
+  slipUrl      String?
+  note         String?
+  confirmedAt  DateTime?
+  periodStart  DateTime?
+  periodEnd    DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model PaymentSchedule {
+  id         String   @id @default(uuid())
+  sellerId   String
+  seller     Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int?     // 0=Sunday … 6=Saturday; null if using dayOfMonth
+  dayOfMonth Int?
+  isActive   Boolean  @default(true)
+  lastRunAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// WORKER ACCOUNTS
+// ──────────────────────────────────────────────
+
+model WorkerAccount {
+  id                 String             @id @default(uuid())
+  workerId           String
+  worker             Worker             @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  platform           Platform
+  username           String
+  profileUrl         String?
+  screenshotUrl      String?
+  verificationStatus VerificationStatus @default(pending)
+  aiResult           Json?
+  followers          Int?
+  isActive           Boolean            @default(true)
+  jobsCompleted      Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+
+// ──────────────────────────────────────────────
+// OUTSOURCE
+// ──────────────────────────────────────────────
+
+model OutsourceJob {
+  id                  String          @id @default(uuid())
+  sellerId            String
+  seller              Seller          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orderId             String?
+  orderItemId         String?
+  sourceJobId         String?
+  title               String
+  platform            Platform
+  jobType             ServiceType
+  quantity            Int
+  completedQuantity   Int             @default(0)
+  budget              Float
+  suggestedPricePerUnit Float?
+  deadline            DateTime?
+  status              OutsourceStatus @default(open)
+  acceptedBidId       String?
+  assignedTeamId      String?
+  bidsCount           Int             @default(0)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  bids                OutsourceBid[]
+}
+
+model OutsourceBid {
+  id                String       @id @default(uuid())
+  outsourceJobId    String
+  outsourceJob      OutsourceJob @relation(fields: [outsourceJobId], references: [id], onDelete: Cascade)
+  teamId            String
+  team              Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  pricePerUnit      Float
+  totalPrice        Float
+  estimatedDays     Int
+  message           String?
+  status            BidStatus    @default(pending)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// HUB
+// ──────────────────────────────────────────────
+
+model HubPost {
+  id          String      @id @default(uuid())
+  authorId    String
+  type        HubPostType
+  title       String?
+  content     String
+  platforms   Platform[]
+  tags        String[]
+  status      String      @default("active") // active | closed | expired
+  viewCount   Int         @default(0)
+  replyCount  Int         @default(0)
+  expiresAt   DateTime?
+  metadata    Json?       // type-specific fields
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// CONTENT REPORT
+// ──────────────────────────────────────────────
+
+model ContentReport {
+  id           String         @id @default(uuid())
+  reporterId   String
+  jobId        String?
+  teamId       String?
+  teamLeaderId String?
+  sellerId     String?
+  category     ReportCategory
+  evidence     String[]
+  status       ReportStatus   @default(pending)
+  decision     String?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// MEELIKE API CONFIG
+// ──────────────────────────────────────────────
+
+model SellerMeeLikeConfig {
+  id          String   @id @default(uuid())
+  sellerId    String   @unique
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  apiKey      String
+  isConnected Boolean  @default(false)
+  balance     Float?
+  lastSyncAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

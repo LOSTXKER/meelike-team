@@ -154,18 +154,6 @@ export function useVerifyBankAccount() {
   });
 }
 
-export function useWithdraw() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: Parameters<typeof api.worker.withdraw>[0]) =>
-      api.worker.withdraw(payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.worker.stats() });
-      qc.invalidateQueries({ queryKey: queryKeys.worker.transactions() });
-    },
-  });
-}
-
 export function useLeaveTeam() {
   const qc = useQueryClient();
   return useMutation({

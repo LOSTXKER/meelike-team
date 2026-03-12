@@ -14,7 +14,7 @@ import type {
   ServiceType,
   ServiceMode,
 } from "./common";
-import type { KYCData } from "./kyc";
+
 
 // ===== BASE SELLER/STORE INTERFACE =====
 interface BaseSellerStore {
@@ -104,9 +104,7 @@ export interface Seller extends BaseSellerStore {
   isActive: boolean;
   isVerified: boolean;
   
-  // KYC Verification
-  kyc?: KYCData;
-  
+
   // Reference to store (for future multi-seller support)
   storeId?: string;
 }

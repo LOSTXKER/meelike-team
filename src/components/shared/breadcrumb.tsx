@@ -15,7 +15,7 @@ const PATH_LABELS: Record<string, string> = {
   analytics: "Analytics",
   finance: "การเงิน",
   settings: "ตั้งค่า",
-  verification: "ยืนยันตัวตน",
+
   bank: "บัญชีรับเงิน",
   subscription: "จัดการแพ็คเกจ",
   api: "ความปลอดภัย",

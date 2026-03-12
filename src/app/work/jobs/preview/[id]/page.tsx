@@ -333,7 +333,7 @@ export default function WorkerJobPreviewPage() {
             </Card>
 
             {/* Team Info */}
-            {team && (
+            {team != null && (
               <Card variant="elevated" padding="lg" className="border-none shadow-lg shadow-brand-primary/5">
                 <h3 className="font-bold text-brand-text-dark mb-4 flex items-center gap-2">
                   <div className="p-2 bg-brand-accent/10 rounded-lg">
@@ -419,11 +419,11 @@ export default function WorkerJobPreviewPage() {
                 <div className="flex justify-between items-center text-sm p-3 bg-brand-bg/50 rounded-xl">
                   <span className="text-brand-text-light font-medium">วันที่เปิดรับ</span>
                   <span className="text-brand-text-dark font-bold">
-                    {new Date(job.createdAt).toLocaleDateString("th-TH", {
+                    {job.createdAt ? new Date(job.createdAt).toLocaleDateString("th-TH", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
-                    })}
+                    }) : "-"}
                   </span>
                 </div>
                 {job.deadline && (

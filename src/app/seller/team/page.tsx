@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, Button, Badge, Input, Dialog, Checkbox } from "@/components/ui";
 import { VStack } from "@/components/layout";
-import { PageHeader, EmptyState, ContentGuidelines, KYCRequiredModal, PROHIBITED_CONTENT, PENALTIES } from "@/components/shared";
+import { PageHeader, EmptyState, ContentGuidelines, PROHIBITED_CONTENT, PENALTIES } from "@/components/shared";
 import { formatCurrency } from "@/lib/utils";
 import { useSellerTeams, useTeamPayouts, useTransactions } from "@/lib/api/hooks";
 import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { meetsKYCRequirement } from "@/types/kyc";
-import type { KYCLevel } from "@/types";
 import { useToast } from "@/components/ui/toast";
 import {
   Building2,
@@ -47,20 +45,12 @@ export default function TeamCenterPage() {
   const [sortBy, setSortBy] = useState<SortOption>("earnings");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [showKYCModal, setShowKYCModal] = useState(false);
+
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamDescription, setNewTeamDescription] = useState("");
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
 
-  // KYC verification check
-  const currentKYCLevel: KYCLevel = user?.seller?.kyc?.level || "none";
-  const isKYCVerified = meetsKYCRequirement(currentKYCLevel, "verified");
-
   const handleOpenCreateModal = () => {
-    if (!isKYCVerified) {
-      setShowKYCModal(true);
-      return;
-    }
     setIsCreateModalOpen(true);
   };
 
@@ -182,7 +172,7 @@ export default function TeamCenterPage() {
       setNewTeamDescription("");
       setGuidelinesAccepted(false);
       
-      router.push(`/seller/team/${newTeam.id}`);
+      if (newTeam) router.push(`/seller/team/${newTeam.id}`);
     } catch (error) {
       console.error("Error creating team:", error);
       toast.error("เกิดข้อผิดพลาดในการสร้างทีม กรุณาลองใหม่อีกครั้ง");
@@ -432,19 +422,6 @@ export default function TeamCenterPage() {
         </Card>
       )}
 
-      {/* KYC Required Modal */}
-      <KYCRequiredModal
-        isOpen={showKYCModal}
-        onClose={() => setShowKYCModal(false)}
-        onStartKYC={() => {
-          setShowKYCModal(false);
-          router.push("/seller/settings/verification");
-        }}
-        requiredLevel="verified"
-        currentLevel={currentKYCLevel}
-        action="create_team"
-        userType="seller"
-      />
 
       {/* Create Team Dialog */}
       <Dialog

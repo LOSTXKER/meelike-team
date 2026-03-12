@@ -151,7 +151,7 @@ function RegisterForm() {
   const handleCompleteRegistration = async () => {
     setError("");
     
-    // Complete registration (KYC level will be 'none' - only email verified)
+
     const success = await login(formData.email, formData.password, role);
     if (success) {
       router.push(role === "seller" ? "/seller" : "/work");
@@ -290,7 +290,7 @@ function RegisterForm() {
                   value={formData.phone}
                   onChange={handleChange}
                   leftIcon={<Phone className="w-4 h-4" />}
-                  hint="ใช้สำหรับการติดต่อและยืนยันตัวตนภายหลัง"
+                  hint="ใช้สำหรับการติดต่อ"
                 />
 
                 <Input
@@ -409,15 +409,14 @@ function RegisterForm() {
                 </div>
               </div>
 
-              {/* Info about KYC */}
               <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 mb-6">
                 <p className="text-sm font-medium text-blue-800 mb-1">
                   เริ่มใช้งานได้เลย!
                 </p>
                 <p className="text-xs text-blue-700">
-                  {role === "seller" 
-                    ? "คุณสามารถสร้างทีม สร้างบริการ และรับออเดอร์ได้ทันที เมื่อต้องการเติมเงินจะต้องยืนยันตัวตนเพิ่มเติม"
-                    : "คุณสามารถสมัครเข้าทีมและรับงานได้ทันที เมื่อต้องการถอนเงินจะต้องยืนยันตัวตนเพิ่มเติม"
+                  {role === "seller"
+                    ? "คุณสามารถสร้างทีม สร้างบริการ และรับออเดอร์ได้ทันที"
+                    : "คุณสามารถสมัครเข้าทีมและรับงานได้ทันที"
                   }
                 </p>
               </div>

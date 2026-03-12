@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { Card, Button, Badge, Progress, Skeleton, SkeletonCard } from "@/components/ui";
 import { Container, Grid, Section, VStack, HStack } from "@/components/layout";
-import { StatsGrid, EmptyState, DailyStreak, LevelBenefitsTable, StatCard, KYCAlertBanner, KYCStatusCard } from "@/components/shared";
-import { meetsKYCRequirement, type KYCLevel } from "@/types";
+import { StatsGrid, EmptyState, DailyStreak, LevelBenefitsTable, StatCard } from "@/components/shared";
 import { useAuthStore } from "@/lib/store";
 import { formatCurrency, getLevelInfo } from "@/lib/utils";
 import { useWorkerStats, useWorkerActiveJobs } from "@/lib/api/hooks";
@@ -88,21 +87,9 @@ export default function WorkerDashboard() {
     { icon: <CheckCircle2 className="w-6 h-6" />, title: "100% Success", desc: "งานสำเร็จ 100 งาน", color: "text-green-500", bg: "bg-green-500/10" },
   ];
 
-  // Get KYC level for worker
-  const kycLevel: KYCLevel = worker?.kyc?.level || 'none';
-  const needsVerified = !meetsKYCRequirement(kycLevel, 'verified');
 
   return (
     <Container size="xl">
-      {/* KYC Alert Banner - Show if not verified (can't withdraw) */}
-      {needsVerified && (
-        <KYCAlertBanner 
-          requiredLevel="verified" 
-          userType="worker"
-          message="ยืนยันบัตรประชาชนเพื่อถอนเงินได้"
-          className="mb-6"
-        />
-      )}
 
       <Section spacing="lg" className="animate-fade-in pb-20 lg:pb-0">
         {/* Header Section */}
@@ -186,10 +173,6 @@ export default function WorkerDashboard() {
             </div>
           </Card>
 
-          {/* KYC Status Card - Show if not business level */}
-          {kycLevel !== 'business' && (
-            <KYCStatusCard userType="worker" compact={kycLevel === 'verified'} />
-          )}
 
           {/* Daily Streak */}
           <DailyStreak currentStreak={7} />

@@ -212,6 +212,7 @@ export default function NewOrderPage() {
         } : undefined,
       });
       
+      if (!newOrder) throw new Error("ไม่ได้รับข้อมูลออเดอร์");
       // Success message based on whether jobs were created
       const jobsCreated = autoCreateJobs && hasHumanService;
       const successMessage = jobsCreated

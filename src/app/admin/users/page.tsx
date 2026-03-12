@@ -36,7 +36,7 @@ interface UserData {
   phone?: string;
   type: "seller" | "worker";
   status: "active" | "inactive" | "banned";
-  kycLevel: "none" | "basic" | "verified" | "business";
+
   createdAt: string;
   lastActiveAt: string;
   // Seller specific
@@ -58,7 +58,6 @@ const MOCK_USERS: UserData[] = [
     phone: "081-234-5678",
     type: "seller",
     status: "active",
-    kycLevel: "verified",
     createdAt: "2024-01-15",
     lastActiveAt: "2024-02-05",
     shopName: "ร้านสมชายออนไลน์",
@@ -72,7 +71,6 @@ const MOCK_USERS: UserData[] = [
     phone: "089-876-5432",
     type: "worker",
     status: "active",
-    kycLevel: "verified",
     createdAt: "2024-02-01",
     lastActiveAt: "2024-02-05",
     totalJobs: 89,
@@ -85,7 +83,6 @@ const MOCK_USERS: UserData[] = [
     email: "wichai@example.com",
     type: "seller",
     status: "active",
-    kycLevel: "basic",
     createdAt: "2024-01-20",
     lastActiveAt: "2024-02-04",
     shopName: "วิชัย Shop",
@@ -99,7 +96,6 @@ const MOCK_USERS: UserData[] = [
     phone: "082-111-2222",
     type: "worker",
     status: "inactive",
-    kycLevel: "none",
     createdAt: "2024-01-25",
     lastActiveAt: "2024-01-30",
     totalJobs: 12,
@@ -112,7 +108,6 @@ const MOCK_USERS: UserData[] = [
     email: "manee@example.com",
     type: "worker",
     status: "banned",
-    kycLevel: "basic",
     createdAt: "2024-01-10",
     lastActiveAt: "2024-01-28",
     totalJobs: 5,
@@ -126,7 +121,6 @@ const MOCK_USERS: UserData[] = [
     phone: "085-999-8888",
     type: "seller",
     status: "active",
-    kycLevel: "business",
     createdAt: "2023-12-01",
     lastActiveAt: "2024-02-05",
     shopName: "Thanakorn Enterprise",
@@ -141,12 +135,7 @@ const STATUS_CONFIG = {
   banned: { label: "ถูกแบน", color: "bg-red-100 text-red-700", icon: Ban },
 };
 
-const KYC_CONFIG = {
-  none: { label: "ไม่มี", color: "bg-gray-100 text-gray-600" },
-  basic: { label: "Basic", color: "bg-blue-100 text-blue-700" },
-  verified: { label: "Verified", color: "bg-green-100 text-green-700" },
-  business: { label: "Business", color: "bg-purple-100 text-purple-700" },
-};
+
 
 export default function AdminUsersPage() {
   const [users] = useState<UserData[]>(MOCK_USERS);
@@ -288,7 +277,7 @@ export default function AdminUsersPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-brand-text-light">ผู้ใช้</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-brand-text-light">ประเภท</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-brand-text-light">KYC</th>
+
                 <th className="px-4 py-3 text-left text-sm font-medium text-brand-text-light">สถานะ</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-brand-text-light">สถิติ</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-brand-text-light">จัดการ</th>
@@ -306,7 +295,6 @@ export default function AdminUsersPage() {
                 filteredUsers.map((user) => {
                   const statusConfig = STATUS_CONFIG[user.status];
                   const StatusIcon = statusConfig.icon;
-                  const kycConfig = KYC_CONFIG[user.kycLevel];
 
                   return (
                     <tr key={user.id} className="hover:bg-brand-bg/30">
@@ -333,11 +321,6 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-4">
                         <Badge className={user.type === "seller" ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}>
                           {user.type === "seller" ? "Seller" : "Worker"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4">
-                        <Badge className={kycConfig.color}>
-                          {kycConfig.label}
                         </Badge>
                       </td>
                       <td className="px-4 py-4">
@@ -416,9 +399,6 @@ export default function AdminUsersPage() {
                       </Badge>
                       <Badge className={STATUS_CONFIG[selectedUser.status].color}>
                         {STATUS_CONFIG[selectedUser.status].label}
-                      </Badge>
-                      <Badge className={KYC_CONFIG[selectedUser.kycLevel].color}>
-                        KYC: {KYC_CONFIG[selectedUser.kycLevel].label}
                       </Badge>
                     </div>
                   </div>

@@ -5,7 +5,9 @@
  */
 
 import type { Order, StoreService, Team, Job } from "@/types";
-import type { Transaction } from "@/lib/api";
+
+// Legacy transaction type (for analytics compatibility)
+type Transaction = { id: string; type: string; amount: number; createdAt: string; [key: string]: unknown };
 
 export interface AnalyticsOverview {
   totalRevenue: number;

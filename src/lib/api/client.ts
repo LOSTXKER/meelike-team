@@ -240,18 +240,24 @@ export class ApiClient {
   }
 
   /**
-   * Get auth token from storage (reads JWT from Zustand persisted state)
+   * Get auth token — reads Supabase session from localStorage
    */
   private getAuthToken(): string | null {
     if (typeof window === "undefined") return null;
 
     try {
-      const authData = localStorage.getItem("meelike-auth");
-      if (!authData) return null;
-
-      const parsed = JSON.parse(authData);
-      const token = parsed?.state?.user?.token;
-      return token || null;
+      // Supabase stores the session under "sb-<project>-auth-token" keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("sb-") && key.endsWith("-auth-token")) {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
+          const token = parsed?.access_token;
+          if (token) return token;
+        }
+      }
+      return null;
     } catch {
       return null;
     }
