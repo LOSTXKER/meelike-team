@@ -205,52 +205,73 @@ export const PLANS: Record<SubscriptionPlan, PlanConfig> = {
 export const PLAN_LIST = Object.values(PLANS);
 
 // ──────────────────────────────────────────────
-// LEGACY RANK SYSTEM (display only, no longer affects fees)
+// SELLER RANK SYSTEM (gamification — cosmetic badges & recognition)
 // ──────────────────────────────────────────────
 
 export type SellerRank = "bronze" | "silver" | "gold" | "platinum";
 
 export interface RankConfig {
   name: string;
-  minSpend: number;
+  minOrders: number;
   color: string;
   icon: string;
-  feePercent: number;
+  badge: string;
+  hubLabel: string;
   benefits: string[];
 }
 
 export const RANKS: Record<SellerRank, RankConfig> = {
   bronze: {
     name: "Bronze",
-    minSpend: 0,
+    minOrders: 0,
     color: "#cd7f32",
     icon: "🥉",
-    feePercent: 0,
-    benefits: ["ระบบพื้นฐาน", "สมาชิกทีม 5 คน"],
+    badge: "Bronze Seller",
+    hubLabel: "",
+    benefits: [
+      "Badge Bronze บนโปรไฟล์",
+      "เข้าถึงระบบพื้นฐานทั้งหมด",
+      "สร้างทีมและรับออเดอร์ได้ไม่จำกัด",
+    ],
   },
   silver: {
     name: "Silver",
-    minSpend: 20000,
+    minOrders: 100,
     color: "#c0c0c0",
     icon: "🥈",
-    feePercent: 0,
-    benefits: ["ทุกอย่างจาก Bronze", "Analytics เพิ่มเติม"],
+    badge: "Silver Seller",
+    hubLabel: "ร้านค้าแนะนำ",
+    benefits: [
+      "Badge Silver บนโปรไฟล์และ Hub",
+      "ร้านค้าแสดงใน \"ร้านค้าแนะนำ\" ใน Hub",
+      "โปรไฟล์โดดเด่นกว่า Bronze",
+    ],
   },
   gold: {
     name: "Gold",
-    minSpend: 50000,
+    minOrders: 500,
     color: "#ffd700",
     icon: "🥇",
-    feePercent: 0,
-    benefits: ["ทุกอย่างจาก Silver", "Priority Support"],
+    badge: "Trusted Seller",
+    hubLabel: "Trusted Seller",
+    benefits: [
+      "Badge Gold + ตรา \"Trusted Seller\" บน Store",
+      "Priority แสดงผลใน Hub",
+      "โปรไฟล์ติด verified badge",
+    ],
   },
   platinum: {
     name: "Platinum",
-    minSpend: 150000,
-    color: "#e5e4e2",
+    minOrders: 2000,
+    color: "#b0c4de",
     icon: "💎",
-    feePercent: 0,
-    benefits: ["ทุกอย่างจาก Gold", "Dedicated Account Manager"],
+    badge: "Top Seller",
+    hubLabel: "Top Seller",
+    benefits: [
+      "Badge Platinum + ตรา \"Top Seller\" พิเศษ",
+      "แสดงบนหน้าแรก Hub",
+      "Store ติด Top Seller ribbon",
+    ],
   },
 };
 

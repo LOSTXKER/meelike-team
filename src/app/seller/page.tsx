@@ -83,17 +83,17 @@ export default function SellerDashboard() {
   };
 
 
-  // Rank data
+  // Rank data (gamification — based on total orders managed)
   const currentRank: SellerRank = seller?.sellerRank || "bronze";
   const currentRankConfig = RANKS[currentRank];
   const currentRankIndex = RANK_ORDER.indexOf(currentRank);
   const nextRank = currentRankIndex < RANK_ORDER.length - 1 ? RANK_ORDER[currentRankIndex + 1] : null;
   const nextRankConfig = nextRank ? RANKS[nextRank] : null;
-  const rollingAvg = seller?.rollingAvgSpend || 0;
+  const totalOrders = seller?.totalOrders || 0;
   const rankProgress = nextRankConfig
-    ? Math.min(100, Math.round(((rollingAvg - currentRankConfig.minSpend) / (nextRankConfig.minSpend - currentRankConfig.minSpend)) * 100))
+    ? Math.min(100, Math.round(((totalOrders - currentRankConfig.minOrders) / (nextRankConfig.minOrders - currentRankConfig.minOrders)) * 100))
     : 100;
-  const amountToNextRank = nextRankConfig ? Math.max(0, nextRankConfig.minSpend - rollingAvg) : 0;
+  const ordersToNextRank = nextRankConfig ? Math.max(0, nextRankConfig.minOrders - totalOrders) : 0;
 
   const teamColors = [
     "from-brand-primary to-brand-primary/70",
@@ -305,7 +305,7 @@ export default function SellerDashboard() {
 
         {/* ========== RIGHT COLUMN (1/3) ========== */}
         <div className="space-y-6">
-          {/* Seller Rank Card — Redesigned */}
+          {/* Seller Rank Card */}
           <Card className="border-none shadow-md overflow-hidden">
             {/* === Current Rank Hero === */}
             <div
@@ -325,12 +325,17 @@ export default function SellerDashboard() {
                       <h3 className="text-xl font-bold text-brand-text-dark leading-tight">
                         {currentRankConfig.name}
                       </h3>
-                      <p className="text-xs text-brand-text-light">
-                        ค่าธรรมเนียม{" "}
-                        <span className="font-bold text-brand-primary">
-                          {currentRankConfig.feePercent}%
+                      {currentRankConfig.badge && (
+                        <span
+                          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: `${currentRankConfig.color}25`,
+                            color: currentRankConfig.color === "#b0c4de" ? "#4a6fa5" : currentRankConfig.color,
+                          }}
+                        >
+                          {currentRankConfig.badge}
                         </span>
-                      </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -356,10 +361,10 @@ export default function SellerDashboard() {
                   <div className="relative">
                     <div className="flex items-center justify-between text-[11px] mb-1.5">
                       <span className="text-brand-text-light">
-                        {formatCurrency(rollingAvg)}/เดือน
+                        {totalOrders.toLocaleString()} ออเดอร์
                       </span>
                       <span className="text-brand-text-light">
-                        {formatCurrency(nextRankConfig.minSpend)}/เดือน
+                        {nextRankConfig.minOrders.toLocaleString()} ออเดอร์
                       </span>
                     </div>
                     <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
@@ -372,14 +377,11 @@ export default function SellerDashboard() {
                       />
                     </div>
                     <p className="text-[11px] mt-2 text-brand-text-light">
-                      เพิ่มยอดจ้างเฉลี่ยอีก{" "}
+                      รับออเดอร์เพิ่มอีก{" "}
                       <span className="font-bold text-brand-primary">
-                        {formatCurrency(amountToNextRank)}
+                        {ordersToNextRank.toLocaleString()} ออเดอร์
                       </span>
-                      {" "}→ fee ลดจาก {currentRankConfig.feePercent}% เหลือ{" "}
-                      <span className="font-bold text-green-600">
-                        {nextRankConfig.feePercent}%
-                      </span>
+                      {" "}เพื่อปลดล็อค Badge {nextRankConfig.badge}
                     </p>
                   </div>
                 </div>
@@ -390,7 +392,7 @@ export default function SellerDashboard() {
                     <div>
                       <p className="text-xs font-bold text-amber-800">ระดับสูงสุดแล้ว!</p>
                       <p className="text-[11px] text-amber-600">
-                        คุณได้รับค่าธรรมเนียมต่ำสุด {currentRankConfig.feePercent}%
+                        คุณเป็น Top Seller ของแพลตฟอร์ม
                       </p>
                     </div>
                   </div>
@@ -421,11 +423,11 @@ export default function SellerDashboard() {
           <Dialog.Title>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-500" />
-              สิทธิประโยชน์ Seller Rank
+              Seller Rank — Badge &amp; Recognition
             </div>
           </Dialog.Title>
           <Dialog.Description>
-            ยิ่งยอดจ้างเฉลี่ยต่อเดือนสูงขึ้น ค่าธรรมเนียมยิ่งลดลง
+            ยิ่งรับออเดอร์มาก ยิ่งได้รับ badge และการยอมรับในชุมชน
           </Dialog.Description>
         </Dialog.Header>
 
@@ -447,14 +449,12 @@ export default function SellerDashboard() {
                         : "border-dashed border-gray-200 opacity-50"
                   }`}
                 >
-                  {/* Current rank indicator ribbon */}
                   {isCurrent && (
                     <div className="absolute top-0 right-0 bg-brand-primary text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-lg">
                       ปัจจุบัน
                     </div>
                   )}
 
-                  {/* Header row */}
                   <div
                     className="px-4 py-3 flex items-center gap-3"
                     style={{
@@ -469,23 +469,24 @@ export default function SellerDashboard() {
                         <h4 className="font-bold text-brand-text-dark">
                           {config.name}
                         </h4>
-                        <span
-                          className="text-xs font-bold px-2 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: `${config.color}20`,
-                            color: config.color === "#E5E4E2" ? "#71717a" : config.color,
-                          }}
-                        >
-                          fee {config.feePercent}%
-                        </span>
+                        {config.badge && (
+                          <span
+                            className="text-xs font-bold px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: `${config.color}20`,
+                              color: config.color === "#b0c4de" ? "#4a6fa5" : config.color,
+                            }}
+                          >
+                            {config.badge}
+                          </span>
+                        )}
                       </div>
                       <p className="text-[11px] text-brand-text-light">
                         {i === 0
-                          ? "สำหรับทุกคนที่เริ่มต้น"
-                          : `ยอดจ้างเฉลี่ย ≥ ${formatCurrency(config.minSpend)}/เดือน`}
+                          ? "เริ่มต้นที่ 0 ออเดอร์"
+                          : `ต้องการ ${config.minOrders.toLocaleString()}+ ออเดอร์`}
                       </p>
                     </div>
-                    {/* Status icon */}
                     <div className="shrink-0">
                       {isUnlocked ? (
                         <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
@@ -499,7 +500,6 @@ export default function SellerDashboard() {
                     </div>
                   </div>
 
-                  {/* Benefits list */}
                   <div className="px-4 pb-3 pt-0">
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
                       {config.benefits.map((benefit, bi) => (

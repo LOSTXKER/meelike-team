@@ -24,7 +24,7 @@ import {
   Flame,
   Award,
   Shield,
-  CreditCard,
+
   History,
 } from "lucide-react";
 
@@ -163,10 +163,10 @@ export default function WorkerDashboard() {
                 <Progress value={progressToNextLevel} className="h-2 mb-3" />
                 <div className="flex justify-between items-center text-xs">
                   <span className="bg-brand-primary/10 text-brand-primary px-2 py-1 rounded-md font-medium">
-                    ค่าธรรมเนียม {levelInfo.fee}%
+                    🏅 {levelInfo.badge}
                   </span>
                   <span className="bg-brand-success/10 text-brand-success px-2 py-1 rounded-md font-medium">
-                    โบนัส +{levelInfo.bonus}%
+                    Trust: {levelInfo.trust}
                   </span>
                 </div>
               </div>
@@ -237,12 +237,6 @@ export default function WorkerDashboard() {
                     </div>
                     
                     <div className="flex gap-3 w-full md:w-auto">
-                      <Link href="/work/earnings/withdraw" className="flex-1 md:flex-none">
-                        <Button variant="secondary" className="w-full md:w-auto bg-white text-[#8C6A54] hover:bg-white/90 border-transparent shadow-lg font-bold px-6 h-12">
-                          <CreditCard className="w-4 h-4 mr-2" />
-                          ถอนเงิน
-                        </Button>
-                      </Link>
                       <Link href="/work/earnings" className="flex-1 md:flex-none">
                         <Button variant="secondary" className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm px-6 h-12">
                           <History className="w-4 h-4 mr-2" />

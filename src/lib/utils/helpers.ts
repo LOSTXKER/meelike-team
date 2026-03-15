@@ -71,18 +71,19 @@ export function getLevelInfo(level: string): {
   icon: string;
   name: string;
   color: string;
-  fee: number;
-  bonus: number;
+  badge: string;
+  trust: string;
+  hubLabel: string;
 } {
   const levels: Record<
     string,
-    { icon: string; name: string; color: string; fee: number; bonus: number }
+    { icon: string; name: string; color: string; badge: string; trust: string; hubLabel: string }
   > = {
-    bronze: { icon: "bronze", name: "Bronze", color: "text-amber-600", fee: 10, bonus: 0 },
-    silver: { icon: "silver", name: "Silver", color: "text-gray-400", fee: 8, bonus: 2 },
-    gold: { icon: "gold", name: "Gold", color: "text-yellow-500", fee: 6, bonus: 5 },
-    platinum: { icon: "platinum", name: "Platinum", color: "text-cyan-400", fee: 4, bonus: 8 },
-    vip: { icon: "vip", name: "VIP", color: "text-purple-500", fee: 2, bonus: 10 },
+    bronze: { icon: "bronze", name: "Bronze", color: "text-amber-600", badge: "Bronze Worker", trust: "ใหม่", hubLabel: "" },
+    silver: { icon: "silver", name: "Silver", color: "text-gray-400", badge: "Silver Worker", trust: "น่าเชื่อถือ", hubLabel: "แสดงใน Leaderboard" },
+    gold: { icon: "gold", name: "Gold", color: "text-yellow-500", badge: "Trusted Worker", trust: "Trusted", hubLabel: "Trusted Worker" },
+    platinum: { icon: "platinum", name: "Platinum", color: "text-cyan-400", badge: "Expert Worker", trust: "Expert", hubLabel: "Expert Worker" },
+    vip: { icon: "vip", name: "VIP", color: "text-purple-500", badge: "Top Worker", trust: "Top", hubLabel: "Top Worker" },
   };
   return levels[level] || levels.bronze;
 }

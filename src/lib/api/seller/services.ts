@@ -7,8 +7,30 @@ export async function getServices() {
 }
 
 export async function createServices(payload: unknown) {
-  const res = await apiClient.post<{ service: StoreService }>("/seller/services", payload);
-  return (res.data?.service ?? null) as StoreService | null;
+  const items = Array.isArray(payload) ? payload : [payload];
+
+  const results: StoreService[] = [];
+  for (const item of items) {
+    const mapped = {
+      name: item.name,
+      description: item.description,
+      platform: item.category || item.platform,
+      serviceType: item.serviceType || item.type,
+      mode: item.serviceType === "bot" ? "bot" : "human",
+      costPrice: item.costPrice,
+      workerRate: item.workerRate,
+      sellPrice: item.sellPrice,
+      minQty: item.minQuantity ?? item.minQty ?? 1,
+      maxQty: item.maxQuantity ?? item.maxQty ?? 10000,
+      meelikeServiceId: item.meelikeServiceId,
+      isActive: item.isActive ?? true,
+      showInStore: item.showInStore ?? false,
+    };
+    const res = await apiClient.post<{ service: StoreService }>("/seller/services", mapped);
+    if (res.data?.service) results.push(res.data.service);
+  }
+
+  return results.length === 1 ? results[0] : results;
 }
 
 export async function updateService(id: string, patch: unknown) {
