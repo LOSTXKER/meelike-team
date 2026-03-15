@@ -9,14 +9,20 @@ export async function getServices() {
 export async function createServices(payload: unknown) {
   const items = Array.isArray(payload) ? payload : [payload];
 
+  const validModes = ["bot", "human"];
+  const validServiceTypes = ["like", "comment", "follow", "share", "view"];
+
   const results: StoreService[] = [];
   for (const item of items) {
+    const rawServiceType = item.serviceType;
+    const isMode = validModes.includes(rawServiceType);
+
     const mapped = {
       name: item.name,
       description: item.description,
       platform: item.category || item.platform,
-      serviceType: item.serviceType || item.type,
-      mode: item.serviceType === "bot" ? "bot" : "human",
+      serviceType: isMode ? (item.type || "like") : rawServiceType,
+      mode: isMode ? rawServiceType : (validServiceTypes.includes(rawServiceType) ? "human" : "human"),
       costPrice: item.costPrice,
       workerRate: item.workerRate,
       sellPrice: item.sellPrice,
