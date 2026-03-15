@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSeller } from "@/lib/api/auth-helper";
 import { prisma } from "@/lib/prisma";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapService(s: any) {
+  return { ...s, minQuantity: s.minQty, maxQuantity: s.maxQty, category: s.platform, type: s.serviceType };
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,7 +30,7 @@ export async function PATCH(
     data: body,
   });
 
-  return NextResponse.json({ service: updated });
+  return NextResponse.json({ service: mapService(updated) });
 }
 
 export async function DELETE(
