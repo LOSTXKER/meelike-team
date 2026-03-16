@@ -271,7 +271,7 @@ export default function TeamJobsPage() {
                             <Zap className="w-3 h-3 mr-1" /> ด่วน
                           </Badge>
                         )}
-                        <ServiceTypeBadge type={job.type as ServiceMode} />
+                        <ServiceTypeBadge type={"human" as ServiceMode} />
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-sm text-brand-text-light">
                         <span className="flex items-center gap-1">

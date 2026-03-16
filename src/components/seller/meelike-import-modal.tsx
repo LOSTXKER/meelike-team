@@ -132,13 +132,13 @@ export function MeeLikeImportModal({
       servicesToImport.push({
         name: meelikeService.name.replace(/^[🔵📸🎵▶️🐦]\s*/, ''), // Remove emoji prefix
         description: meelikeService.description,
-        category: mapCategoryToPlatform(meelikeService.category),
-        type: mapTypeToServiceType(meelikeService.type),
-        serviceType: "bot", // MeeLike services are always bot
+        platform: mapCategoryToPlatform(meelikeService.category),
+        serviceType: mapTypeToServiceType(meelikeService.type),
+        mode: "bot", // MeeLike services are always bot
         costPrice: costPerUnit,
         sellPrice: sellPrice,
-        minQuantity: parseInt(meelikeService.min),
-        maxQuantity: parseInt(meelikeService.max),
+        minQty: parseInt(meelikeService.min),
+        maxQty: parseInt(meelikeService.max),
         meelikeServiceId: meelikeService.service,
         estimatedTime: meelikeService.averageTime,
         isActive: true,

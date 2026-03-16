@@ -7,7 +7,7 @@
 // ===== HUB POST =====
 export interface HubPost {
   id: string;
-  type: "recruit" | "find-team" | "outsource";
+  type: "recruit" | "find_team" | "outsource";
   title: string;
   author: {
     name: string;
@@ -18,7 +18,7 @@ export interface HubPost {
     memberCount?: number;
     totalPaid?: number;
   };
-  description: string;
+  content: string;
   platforms: string[];
   // Recruit specific
   payRate?: string | { min: number; max: number; unit: string };
@@ -38,8 +38,8 @@ export interface HubPost {
   budget?: string;
   deadline?: string;
   // Common
-  views: number;
-  interested: number;
+  viewCount: number;
+  replyCount: number;
   createdAt: string;
   isHot?: boolean;
   isUrgent?: boolean;
@@ -55,7 +55,7 @@ export interface FindTeamPost {
     rating: number;
     level: "Platinum" | "Gold" | "Silver" | "Bronze" | "New";
   };
-  description: string;
+  content: string;
   platforms: string[];
   experience: string;
   completedJobs: number;
@@ -64,8 +64,8 @@ export interface FindTeamPost {
   availability: string;
   skills: string[];
   portfolio: string;
-  views: number;
-  interested: number;
+  viewCount: number;
+  replyCount: number;
   createdAt: string;
   isTopWorker?: boolean;
 }
@@ -105,7 +105,7 @@ export interface OutsourceJob {
   assignedTeamId?: string; // Team that's working on it
   assignedJobId?: string; // The TeamJob created after accepting bid
   
-  views: number;
+  viewCount: number;
   bidsCount: number;
   createdAt: string;
   updatedAt: string;

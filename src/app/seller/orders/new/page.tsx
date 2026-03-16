@@ -8,7 +8,7 @@ import { HStack } from "@/components/layout";
 import { PlatformIcon, ServiceTypeBadge } from "@/components/shared";
 import { useSellerServices, useSellerTeams } from "@/lib/api/hooks";
 import { api } from "@/lib/api";
-import type { Platform, ServiceMode } from "@/types";
+import type { Platform, ServiceType } from "@/types";
 import { useToast } from "@/components/ui/toast";
 import { useUnsavedChanges } from "@/lib/hooks/useUnsavedChanges";
 import {
@@ -34,9 +34,8 @@ interface OrderItem {
   id: string;
   serviceId: string;
   serviceName: string;
-  serviceType: ServiceMode;
+  serviceType: ServiceType;
   platform: string;
-  type: string;
   targetUrl: string;
   quantity: number;
   unitPrice: number;
@@ -92,8 +91,12 @@ export default function NewOrderPage() {
 
   // Check if any human service in items
   const hasHumanService = useMemo(() => {
-    return items.some(item => item.serviceType === "human");
-  }, [items]);
+    if (!mockServices) return false;
+    return items.some(item => {
+      const svc = mockServices.find((s: { id: string; mode: string }) => s.id === item.serviceId);
+      return svc?.mode === "human";
+    });
+  }, [items, mockServices]);
 
   const handleAddItem = () => {
     if (!selectedService || !targetUrl || !quantity || !mockServices) {
@@ -105,13 +108,13 @@ export default function NewOrderPage() {
     if (!service) return;
 
     const qty = parseInt(quantity);
-    if (qty < service.minQuantity || qty > service.maxQuantity) {
-      toast.warning(`จำนวนต้องอยู่ระหว่าง ${service.minQuantity} - ${service.maxQuantity}`);
+    if (qty < service.minQty || qty > service.maxQty) {
+      toast.warning(`จำนวนต้องอยู่ระหว่าง ${service.minQty} - ${service.maxQty}`);
       return;
     }
 
     // ใช้ workerRate สำหรับ human services, costPrice สำหรับ bot services
-    const effectiveCost = service.serviceType === "human"
+    const effectiveCost = service.mode === "human"
       ? (service.workerRate || 0)
       : (service.costPrice || 0);
 
@@ -120,14 +123,13 @@ export default function NewOrderPage() {
       serviceId: service.id,
       serviceName: service.name,
       serviceType: service.serviceType,
-      platform: service.category,
-      type: service.type, // Add the service type (like, comment, follow, etc.)
+      platform: service.platform,
       targetUrl,
       quantity: qty,
       unitPrice: service.sellPrice,
       costPrice: effectiveCost,
       subtotal: qty * service.sellPrice,
-      commentTemplates: service.type === "comment" ? commentTemplates : undefined,
+      commentTemplates: service.serviceType === "comment" ? commentTemplates : undefined,
     };
 
     setItems([...items, newItem]);
@@ -185,18 +187,15 @@ export default function NewOrderPage() {
     try {
       // Create order via API
       const newOrder = await api.seller.createOrder({
-        customer: {
-          name: customerName,
-          contactType: contactType as "line" | "facebook" | "phone" | "email",
-          contactValue: contactValue,
-          note: customerNote || undefined,
-        },
+        customerName,
+        contactType,
+        contactValue,
+        customerNote: customerNote || undefined,
         items: items.map((item) => ({
           serviceId: item.serviceId,
           serviceName: item.serviceName,
           serviceType: item.serviceType,
           platform: item.platform,
-          type: item.type,
           targetUrl: item.targetUrl,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
@@ -353,7 +352,7 @@ export default function NewOrderPage() {
               {selectedServiceData && (
                 <div className="p-4 bg-brand-bg/50 border border-brand-border/30 rounded-xl text-sm animate-fade-in">
                   <div className="flex items-center gap-2 mb-2">
-                    <ServiceTypeBadge type={selectedServiceData.serviceType} />
+                    <ServiceTypeBadge type={selectedServiceData.mode} />
                     <span className="text-brand-text-dark font-bold text-base">
                       {selectedServiceData.name}
                     </span>
@@ -365,11 +364,11 @@ export default function NewOrderPage() {
                      </span>
                      <span className="w-px h-4 bg-brand-border/50 self-center"></span>
                      <span>
-                        ขั้นต่ำ <b>{selectedServiceData.minQuantity.toLocaleString()}</b>
+                        ขั้นต่ำ <b>{selectedServiceData.minQty.toLocaleString()}</b>
                      </span>
                      <span className="w-px h-4 bg-brand-border/50 self-center"></span>
                      <span>
-                        สูงสุด <b>{selectedServiceData.maxQuantity.toLocaleString()}</b>
+                        สูงสุด <b>{selectedServiceData.maxQty.toLocaleString()}</b>
                      </span>
                   </div>
                 </div>
@@ -390,13 +389,13 @@ export default function NewOrderPage() {
                   type="number"
                   placeholder={
                     selectedServiceData
-                      ? `${selectedServiceData.minQuantity} - ${selectedServiceData.maxQuantity}`
+                      ? `${selectedServiceData.minQty} - ${selectedServiceData.maxQty}`
                       : "จำนวน"
                   }
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  min={selectedServiceData?.minQuantity}
-                  max={selectedServiceData?.maxQuantity}
+                  min={selectedServiceData?.minQty}
+                  max={selectedServiceData?.maxQty}
                   className="rounded-xl border-brand-border/50 focus:ring-brand-primary/10"
                 />
                 <div className="flex items-end">
@@ -409,7 +408,7 @@ export default function NewOrderPage() {
                 </div>
               </div>
 
-              {selectedServiceData?.type === "comment" && (
+              {selectedServiceData?.serviceType === "comment" && (
                 <Textarea
                   label="ข้อความเม้น (บรรทัดละ 1 เม้น)"
                   placeholder="สินค้าดีมากครับ&#10;แนะนำเลยค่ะ&#10;ชอบมากๆ"
@@ -452,7 +451,7 @@ export default function NewOrderPage() {
                         <p className="font-bold text-brand-text-dark">
                           {index + 1}. {item.serviceName}
                         </p>
-                          <ServiceTypeBadge type={item.serviceType} />
+                          <ServiceTypeBadge type={mockServices?.find((s: { id: string }) => s.id === item.serviceId)?.mode || "bot"} />
                         </div>
                         <p className="text-sm text-brand-text-light truncate max-w-xs font-mono bg-white/50 px-1.5 rounded mt-1 inline-block">
                           {item.targetUrl}
@@ -585,7 +584,10 @@ export default function NewOrderPage() {
                             <div className="flex justify-between text-xs">
                               <span className="text-brand-text-light">ค่าจ้างรวม (ประมาณ)</span>
                               <span className="font-bold text-brand-success">
-                                ฿{(items.filter(i => i.serviceType === "human").reduce((sum, i) => sum + i.quantity, 0) * parseFloat(jobPayRate || "0")).toLocaleString()}
+                                ฿{(items.filter(i => {
+                                  const svc = mockServices?.find((s: { id: string; mode: string }) => s.id === i.serviceId);
+                                  return svc?.mode === "human";
+                                }).reduce((sum, i) => sum + i.quantity, 0) * parseFloat(jobPayRate || "0")).toLocaleString()}
                               </span>
                             </div>
                           </div>

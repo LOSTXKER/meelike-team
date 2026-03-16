@@ -4,19 +4,17 @@
  * Types related to orders and order items.
  */
 
-import type { Platform, ServiceType, ServiceMode } from "./common";
+import type { Platform, ServiceType } from "./common";
 
 // ===== ORDER =====
 export interface Order {
   id: string;
   orderNumber: string;
   sellerId: string;
-  customer: {
-    name: string;
-    contactType: "line" | "facebook" | "phone" | "email";
-    contactValue: string;
-    note?: string;
-  };
+  customerName: string;
+  contactType?: string;
+  contactValue?: string;
+  customerNote?: string;
   items: OrderItem[];
   subtotal: number;
   discount: number;
@@ -54,9 +52,8 @@ export interface OrderItem {
   orderId: string;
   serviceId: string;
   serviceName: string;
-  serviceType: ServiceMode;
+  serviceType: ServiceType;
   platform: Platform;
-  type: ServiceType;
   targetUrl: string;
   quantity: number;
   commentTemplates?: string[];
@@ -86,6 +83,7 @@ export interface OrderTimeline {
   event:
     | "created"
     | "paid"
+    | "payment_confirmed"
     | "confirmed"
     | "bot_started"
     | "bot_completed"

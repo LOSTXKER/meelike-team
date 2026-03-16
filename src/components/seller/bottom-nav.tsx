@@ -15,10 +15,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useState } from "react";
+import { useSellerStats } from "@/lib/api/hooks";
 
 const SELLER_BOTTOM_NAV = [
   { label: "หน้าแรก", href: "/seller", icon: LayoutDashboard },
-  { label: "ออเดอร์", href: "/seller/orders", icon: ShoppingBag, badge: 4 },
+  { label: "ออเดอร์", href: "/seller/orders", icon: ShoppingBag, hasBadge: true },
   { label: "บริการ", href: "/seller/services", icon: Package },
   { label: "ทีม", href: "/seller/team", icon: Users },
   { label: "เพิ่มเติม", href: "#more", icon: MoreHorizontal, isMore: true },
@@ -34,6 +35,8 @@ const MORE_MENU_ITEMS = [
 export function SellerBottomNav() {
   const pathname = usePathname();
   const [showMore, setShowMore] = useState(false);
+  const { data: stats } = useSellerStats();
+  const pendingOrders = (stats as { pendingOrders?: number })?.pendingOrders ?? 0;
 
   // Check if current path is in "more" menu
   const isInMoreMenu = MORE_MENU_ITEMS.some(
@@ -122,9 +125,9 @@ export function SellerBottomNav() {
               >
                 <div className="relative">
                   <Icon className="w-5 h-5" />
-                  {item.badge && item.badge > 0 && (
+                  {"hasBadge" in item && item.hasBadge && pendingOrders > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-error text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {item.badge > 9 ? "9+" : item.badge}
+                      {pendingOrders > 9 ? "9+" : pendingOrders}
                     </span>
                   )}
                 </div>

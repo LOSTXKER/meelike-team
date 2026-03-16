@@ -128,7 +128,7 @@ export default function WorkerTeamsPage() {
                   <CheckCircle2 className="w-5 h-5 text-brand-success" />
                 </div>
                 <p className="text-2xl font-bold text-brand-text-dark leading-none mb-1">
-                  {team.totalJobsCompleted.toLocaleString()}
+                  {(team.totalJobsCompleted ?? 0).toLocaleString()}
                 </p>
                 <p className="text-xs font-medium text-brand-text-light uppercase tracking-wide">งานสำเร็จ</p>
               </div>

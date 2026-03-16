@@ -7,7 +7,7 @@ import { z } from "zod";
 // ===== POST =====
 
 export const createPostSchema = z.object({
-  type: z.enum(["recruit", "find-team", "outsource"], {
+  type: z.enum(["recruit", "find_team", "outsource"], {
     message: "ประเภทโพสต์ไม่ถูกต้อง",
   }),
   title: z

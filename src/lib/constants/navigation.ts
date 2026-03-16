@@ -61,7 +61,6 @@ export const SELLER_NAV: NavConfig = [
     label: "ออเดอร์",
     href: "/seller/orders",
     icon: ShoppingBag,
-    badge: 4, // TODO: dynamic pending orders count
   },
   {
     label: "บริการ",
@@ -137,7 +136,6 @@ export const getTeamNav = (teamId: string): NavConfig => [
     label: "ตรวจสอบงาน",
     href: `/seller/team/${teamId}/review`,
     icon: CheckCircle,
-    badge: 5, // TODO: dynamic from API
   },
   {
     label: "จ่ายเงิน",
@@ -173,7 +171,6 @@ export const WORKER_NAV: NavConfig = [
     label: "งานของฉัน",
     href: "/work/jobs",
     icon: ClipboardList,
-    badge: 5, // TODO: dynamic active jobs count
   },
   {
     label: "ทีมของฉัน",
@@ -207,7 +204,7 @@ export const WORKER_NAV: NavConfig = [
     label: "อื่นๆ",
     icon: Settings,
     items: [
-      { label: "Leaderboard", href: "/work/leaderboard", icon: Trophy },
+      { label: "Leaderboard", href: "/hub/leaderboard", icon: Trophy },
       { label: "ชวนเพื่อน", href: "/work/referral", icon: UserPlus },
       { label: "ตั้งค่า", href: "/work/settings", icon: Settings },
     ],

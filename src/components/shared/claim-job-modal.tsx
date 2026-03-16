@@ -113,7 +113,7 @@ export function ClaimJobModal({
                   {job.teamName}
                 </span>
               )}
-              <ServiceTypeBadge type={job.type as ServiceMode} />
+              <ServiceTypeBadge type={"human" as ServiceMode} />
             </div>
           </div>
         </div>

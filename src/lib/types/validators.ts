@@ -121,13 +121,13 @@ export function validateSocialMediaUrl(url: string, platform?: string): Validati
 export interface ServiceFormData {
   name: string;
   description?: string;
-  category: string;
-  type: string;
+  platform: string;
   serviceType: string;
+  mode: string;
   costPrice: number;
   sellPrice: number;
-  minQuantity: number;
-  maxQuantity: number;
+  minQty: number;
+  maxQty: number;
   estimatedTime?: string;
 }
 
@@ -144,22 +144,22 @@ export function validateServiceForm(data: ServiceFormData): ValidationResult {
   }
   
   // Platform validation
-  if (!isPlatform(data.category)) {
+  if (!isPlatform(data.platform)) {
     errors.push("กรุณาเลือกแพลตฟอร์ม");
   }
   
   // Service type validation
-  if (!isServiceType(data.type)) {
+  if (!isServiceType(data.serviceType)) {
     errors.push("กรุณาเลือกประเภทบริการ");
   }
   
   // Service mode validation
-  if (data.serviceType !== "bot" && data.serviceType !== "human") {
+  if (data.mode !== "bot" && data.mode !== "human") {
     errors.push("กรุณาเลือกรูปแบบบริการ");
   }
   
   // Price validation - different for bot vs human services
-  if (data.serviceType === "bot") {
+  if (data.mode === "bot") {
     // Bot services require costPrice
     if (!isPositiveNumber(data.costPrice)) {
       errors.push("ต้นทุน API ต้องเป็นตัวเลขที่มากกว่า 0");
@@ -181,15 +181,15 @@ export function validateServiceForm(data: ServiceFormData): ValidationResult {
   }
   
   // Quantity validation
-  if (!isPositiveNumber(data.minQuantity)) {
+  if (!isPositiveNumber(data.minQty)) {
     errors.push("จำนวนขั้นต่ำต้องเป็นตัวเลขที่มากกว่า 0");
   }
   
-  if (!isPositiveNumber(data.maxQuantity)) {
+  if (!isPositiveNumber(data.maxQty)) {
     errors.push("จำนวนสูงสุดต้องเป็นตัวเลขที่มากกว่า 0");
   }
   
-  if (data.maxQuantity < data.minQuantity) {
+  if (data.maxQty < data.minQty) {
     errors.push("จำนวนสูงสุดต้องมากกว่าหรือเท่ากับจำนวนขั้นต่ำ");
   }
   

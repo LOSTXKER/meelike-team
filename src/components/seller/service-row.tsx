@@ -51,25 +51,25 @@ export function ServiceRow({
             {service.name}
           </span>
           <span className="text-xs text-brand-text-light mt-0.5 flex items-center gap-1.5">
-            <ServiceTypeBadge type={service.serviceType} size="sm" showIcon={false} />
-            {service.minQuantity} - {service.maxQuantity.toLocaleString()}
+            <ServiceTypeBadge type={service.mode} size="sm" showIcon={false} />
+            {service.minQty} - {service.maxQty.toLocaleString()}
           </span>
         </div>
       </td>
       
       {/* Platform */}
       <td className="p-4">
-        <PlatformIcon platform={service.category} showLabel />
+        <PlatformIcon platform={service.platform} showLabel />
       </td>
       
       {/* Service Type */}
       <td className="p-4 text-center">
-        <ServiceTypeIcon type={service.type} useEmoji showLabel />
+        <ServiceTypeIcon type={service.serviceType} useEmoji showLabel />
       </td>
       
       {/* Cost / Worker Rate */}
       <td className="p-4 text-right">
-        {service.serviceType === "human" ? (
+        {service.mode === "human" ? (
           <div>
             <span className="text-xs text-purple-500 italic">กรอกตอนสร้าง Job</span>
           </div>
@@ -89,7 +89,7 @@ export function ServiceRow({
       
       {/* Profit */}
       <td className="p-4 text-right">
-        {service.serviceType === "human" ? (
+        {service.mode === "human" ? (
           <span className="text-xs text-brand-text-light italic">-</span>
         ) : (
           (() => {

@@ -16,6 +16,7 @@ import {
   X,
   LogIn,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/hub/recruit", label: "หาลูกทีม", icon: Users },
   { href: "/hub/find-team", label: "หาทีม", icon: Search },
   { href: "/hub/outsource", label: "โยนงาน", icon: Briefcase },
+  { href: "/hub/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 
 export default function HubLayout({

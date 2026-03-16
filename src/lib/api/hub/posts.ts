@@ -2,7 +2,7 @@ import { apiClient } from "../client";
 import type { HubPost, FindTeamPost } from "@/types";
 
 export async function getPosts(
-  type?: "all" | "recruit" | "find-team" | "outsource"
+  type?: "all" | "recruit" | "find_team" | "outsource"
 ) {
   const params = new URLSearchParams();
   if (type && type !== "all") params.set("type", type);

@@ -21,7 +21,7 @@ interface ServiceFormProps {
 
 export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
   const [errors, setErrors] = useState<string[]>([]);
-  const [serviceMode, setServiceMode] = useState<ServiceMode>(service?.serviceType || "bot");
+  const [serviceMode, setServiceMode] = useState<ServiceMode>(service?.mode || "bot");
   const [costPrice, setCostPrice] = useState<number>(service?.costPrice || 0);
   const [sellPrice, setSellPrice] = useState<number>(service?.sellPrice || 0);
 
@@ -42,13 +42,13 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
       const data = {
         name: formData.get("name") as string,
         description: formData.get("description") as string,
-        category: formData.get("category") as Platform,
-        type: formData.get("type") as ServiceType,
-        serviceType: serviceMode,
+        platform: formData.get("platform") as Platform,
+        serviceType: formData.get("serviceType") as ServiceType,
+        mode: serviceMode,
         costPrice: finalCostPrice,
         sellPrice: parseFloat(formData.get("sellPrice") as string),
-        minQuantity: parseInt(formData.get("minQuantity") as string),
-        maxQuantity: parseInt(formData.get("maxQuantity") as string),
+        minQty: parseInt(formData.get("minQty") as string),
+        maxQty: parseInt(formData.get("maxQty") as string),
         estimatedTime: formData.get("estimatedTime") as string,
       };
 
@@ -94,19 +94,19 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <FormField label="แพลตฟอร์ม" required>
           <FormSelect
-            name="category"
+            name="platform"
             options={[
               { value: "facebook", label: "🔵 Facebook" },
               { value: "instagram", label: "📸 Instagram" },
               { value: "tiktok", label: "🎵 Tiktok" },
               { value: "youtube", label: "▶️ YouTube" },
             ]}
-            defaultValue={service?.category || "facebook"}
+            defaultValue={service?.platform || "facebook"}
           />
         </FormField>
         <FormField label="ประเภท" required>
           <FormSelect
-            name="type"
+            name="serviceType"
             options={[
               { value: "like", label: "Like" },
               { value: "comment", label: "Comment" },
@@ -114,7 +114,7 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
               { value: "view", label: "View" },
               { value: "share", label: "Share" },
             ]}
-            defaultValue={service?.type || "like"}
+            defaultValue={service?.serviceType || "like"}
           />
         </FormField>
       </div>
@@ -176,7 +176,7 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
             </p>
           </button>
         </div>
-        <input type="hidden" name="serviceType" value={serviceMode} />
+        <input type="hidden" name="mode" value={serviceMode} />
       </FormField>
 
       {/* Visibility */}
@@ -319,20 +319,20 @@ export function ServiceForm({ service, onSubmit }: ServiceFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <FormField label="จำนวนขั้นต่ำ" required>
           <FormInput
-            name="minQuantity"
+            name="minQty"
             type="number"
             min="1"
             placeholder="100"
-            defaultValue={service?.minQuantity}
+            defaultValue={service?.minQty}
           />
         </FormField>
         <FormField label="จำนวนสูงสุด" required>
           <FormInput
-            name="maxQuantity"
+            name="maxQty"
             type="number"
             min="1"
             placeholder="10000"
-            defaultValue={service?.maxQuantity}
+            defaultValue={service?.maxQty}
           />
         </FormField>
       </div>

@@ -270,7 +270,7 @@ export default function OutsourcePage() {
                   <div className="flex items-center gap-4 text-sm text-brand-text-light">
                     <span className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
-                      {job.views} เข้าชม
+                      {job.viewCount} เข้าชม
                     </span>
                     <span className="flex items-center gap-1">
                       <MessageCircle className="w-4 h-4" />

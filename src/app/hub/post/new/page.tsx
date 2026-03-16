@@ -26,7 +26,7 @@ import {
   Twitter,
 } from "lucide-react";
 
-type PostType = "recruit" | "find-team" | "outsource";
+type PostType = "recruit" | "find_team" | "outsource";
 
 const postTypeConfig: Record<PostType, { 
   label: string; 
@@ -40,7 +40,7 @@ const postTypeConfig: Record<PostType, {
     description: "ประกาศรับสมัคร Worker เข้าทีมของคุณ",
     color: "bg-brand-primary",
   },
-  "find-team": {
+  find_team: {
     label: "หาทีม",
     icon: <Search className="w-5 h-5" />,
     description: "ประกาศตัวเพื่อหาทีมเข้าร่วม",
@@ -176,7 +176,7 @@ function NewPostForm() {
         payload.requirements = requirements.filter(r => r.trim() !== "");
         payload.benefits = benefits.filter(b => b.trim() !== "");
         payload.openSlots = openSlots ? parseInt(openSlots) : undefined;
-      } else if (postType === "find-team") {
+      } else if (postType === "find_team") {
         payload.experience = experience;
         payload.expectedPay = expectedPay;
         payload.availability = availability;
@@ -268,7 +268,7 @@ function NewPostForm() {
               // Check role permissions
               const canPost =
                 (type === "recruit" && role === "seller") ||
-                (type === "find-team" && role === "worker") ||
+                (type === "find_team" && role === "worker") ||
                 (type === "outsource" && role === "seller");
 
               return (
@@ -295,7 +295,7 @@ function NewPostForm() {
                   </p>
                   {!canPost && (
                     <p className="text-xs text-brand-error mt-2">
-                      {type === "find-team"
+                      {type === "find_team"
                         ? "สำหรับ Worker เท่านั้น"
                         : "สำหรับ Seller เท่านั้น"}
                     </p>
@@ -472,7 +472,7 @@ function NewPostForm() {
               )}
 
               {/* Find-team Fields */}
-              {postType === "find-team" && (
+              {postType === "find_team" && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <Input

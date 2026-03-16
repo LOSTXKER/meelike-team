@@ -29,7 +29,6 @@ interface OrderItem {
   status: string;
   serviceName: string;
   platform: string;
-  type: string;
   serviceType: string;
   targetUrl: string;
   unitPrice: number;
@@ -42,7 +41,8 @@ interface ServiceInfo {
   id: string;
   name: string;
   serviceType: string;
-  category?: string;
+  mode: string;
+  platform?: string;
   costPrice?: number;
 }
 
@@ -141,7 +141,7 @@ export function OrderItems({
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-2xl border border-brand-border/20">
-                    {platformIcon(service?.category)}
+                    {platformIcon(service?.platform)}
                   </div>
                   <div>
                     <p className="font-bold text-lg text-brand-text-dark">
@@ -150,12 +150,12 @@ export function OrderItems({
                     <div className="flex items-center gap-2 mt-1.5">
                       <Badge
                         variant={
-                          service?.serviceType === "bot" ? "bot" : "human"
+                          service?.mode === "bot" ? "bot" : "human"
                         }
                         size="sm"
                         className="shadow-none border-none"
                       >
-                        {service?.serviceType === "bot"
+                        {service?.mode === "bot"
                           ? "Bot Service"
                           : "Real Human"}
                       </Badge>
@@ -222,7 +222,7 @@ export function OrderItems({
               </div>
 
               {/* Jobs List (human services) */}
-              {hasJobs && service?.serviceType === "human" && (
+              {hasJobs && service?.mode === "human" && (
                 <div className="space-y-3 p-4 bg-white rounded-xl border border-brand-border/20 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -334,7 +334,7 @@ export function OrderItems({
                     <div className="flex items-center gap-2 p-3 bg-brand-success/10 border border-brand-success/30 rounded-xl">
                       <CheckCircle2 className="w-5 h-5 text-brand-success" />
                       <span className="text-sm font-medium text-brand-success">
-                        {service?.serviceType === "bot"
+                        {service?.mode === "bot"
                           ? "ส่ง API แล้ว"
                           : "มอบหมายงานแล้ว"}
                       </span>
@@ -348,7 +348,7 @@ export function OrderItems({
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                      {service?.serviceType === "bot" ? (
+                      {service?.mode === "bot" ? (
                         <Button
                           variant="primary"
                           size="sm"

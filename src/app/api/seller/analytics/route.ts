@@ -12,6 +12,7 @@ export async function GET() {
 
   const [
     totalOrders,
+    pendingOrders,
     todayOrders,
     monthOrders,
     totalRevenue,
@@ -20,6 +21,9 @@ export async function GET() {
     activeJobs,
   ] = await Promise.all([
     prisma.order.count({ where: { sellerId: seller!.id } }),
+    prisma.order.count({
+      where: { sellerId: seller!.id, status: { in: ["pending", "processing", "confirmed"] } },
+    }),
     prisma.order.count({
       where: { sellerId: seller!.id, createdAt: { gte: startOfToday } },
     }),
@@ -49,6 +53,7 @@ export async function GET() {
 
   return NextResponse.json({
     totalOrders,
+    pendingOrders,
     todayOrders,
     monthOrders,
     totalRevenue: totalRevenue._sum.total ?? 0,

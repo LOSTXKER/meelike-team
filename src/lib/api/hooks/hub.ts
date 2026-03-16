@@ -7,13 +7,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../index";
 import { queryKeys } from "../query-keys";
+import type { LeaderboardType, LeaderboardPeriod } from "../hub/leaderboard";
 
 // =====================
 // QUERIES
 // =====================
 
 export function useHubPosts(
-  type?: "all" | "recruit" | "find-team" | "outsource"
+  type?: "all" | "recruit" | "find_team" | "outsource"
 ) {
   return useQuery({
     queryKey: queryKeys.hub.posts(type),
@@ -39,6 +40,16 @@ export function useOutsourceJobs() {
   return useQuery({
     queryKey: queryKeys.hub.outsourceJobs(),
     queryFn: () => api.hub.getOutsourceJobs(),
+  });
+}
+
+export function useLeaderboard(
+  type: LeaderboardType = "workers",
+  period: LeaderboardPeriod = "week"
+) {
+  return useQuery({
+    queryKey: queryKeys.hub.leaderboard(type, period),
+    queryFn: () => api.hub.getLeaderboard(type, period),
   });
 }
 

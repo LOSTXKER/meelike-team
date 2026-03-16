@@ -72,8 +72,8 @@ export default function OrderDetailPage() {
     );
   }
 
-  const customerName = order.customer?.name || "ลูกค้า";
-  const customerContact = order.customer?.contactValue || "";
+  const customerName = order.customerName || "ลูกค้า";
+  const customerContact = order.contactValue || "";
 
   // ===== Handlers =====
 

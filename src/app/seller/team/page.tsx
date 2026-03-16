@@ -104,7 +104,7 @@ export default function TeamCenterPage() {
       teams: teams.length,
       members: teams.reduce((sum, t) => sum + t.memberCount, 0),
       activeJobs: teams.reduce((sum, t) => sum + t.activeJobCount, 0),
-      completed: teams.reduce((sum, t) => sum + t.totalJobsCompleted, 0),
+      completed: teams.reduce((sum, t) => sum + (t.totalJobsCompleted ?? 0), 0),
       earnings: teams.reduce((sum, t) => sum + getTeamEarnings(t.id).thisMonth, 0),
     };
   }, [teams]);

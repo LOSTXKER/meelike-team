@@ -17,12 +17,12 @@ import {
   Sparkles,
 } from "lucide-react";
 
-type PostType = "all" | "recruit" | "find-team" | "outsource";
+type PostType = "all" | "recruit" | "find_team" | "outsource";
 
 const filterOptions: FilterOption<PostType>[] = [
   { key: "all", label: "ทั้งหมด" },
   { key: "recruit", label: "หาลูกทีม", icon: <Users className="w-4 h-4" /> },
-  { key: "find-team", label: "หาทีม", icon: <Search className="w-4 h-4" /> },
+  { key: "find_team", label: "หาทีม", icon: <Search className="w-4 h-4" /> },
   { key: "outsource", label: "โยนงาน", icon: <Briefcase className="w-4 h-4" /> },
 ];
 
@@ -47,7 +47,7 @@ export default function HubPage() {
     return hubPosts.filter((post) => {
       const matchSearch =
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.description.toLowerCase().includes(searchQuery.toLowerCase());
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
       const matchType = filterType === "all" || post.type === filterType;
       return matchSearch && matchType;
     });

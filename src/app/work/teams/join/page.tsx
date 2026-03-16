@@ -239,7 +239,7 @@ function JoinTeamContent() {
                       <Users className="w-3 h-3 mr-1" />
                       {team.memberCount} สมาชิก
                     </Badge>
-                    {team.status === "active" && (
+                    {team.isActive && (
                       <Badge variant="success" size="sm" className="px-2 py-0.5">
                         เปิดรับสมาชิก
                       </Badge>
@@ -266,7 +266,7 @@ function JoinTeamContent() {
                   <p className="text-xs text-brand-text-light">งานเปิดรับ</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-bold text-brand-text-dark">{team.totalJobsCompleted.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-brand-text-dark">{(team.totalJobsCompleted ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-brand-text-light">งานสำเร็จ</p>
                 </div>
               </div>

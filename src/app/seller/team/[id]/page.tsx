@@ -361,7 +361,7 @@ export default function TeamDetailPage() {
               {/* Total Jobs */}
               <div className="flex items-center justify-between py-2 border-t border-brand-border/30">
                 <span className="text-sm text-brand-text-light">งานทั้งหมด</span>
-                <span className="font-bold text-brand-text-dark">{team.totalJobsCompleted + team.activeJobCount}</span>
+                <span className="font-bold text-brand-text-dark">{(team.totalJobsCompleted ?? 0) + (team.activeJobCount ?? 0)}</span>
               </div>
             </div>
           </Card>

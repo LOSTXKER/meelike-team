@@ -109,27 +109,24 @@ export interface Seller extends BaseSellerStore {
   storeId?: string;
 }
 
-// ===== STORE SERVICE =====
+// ===== STORE SERVICE (aligned with Prisma Service model) =====
 export interface StoreService {
   id: string;
   sellerId: string;
   name: string;
   description?: string;
-  category: Platform;
-  type: ServiceType;
-  serviceType: ServiceMode;
-  // Pricing:
-  // - Bot services: ใช้ costPrice (ต้นทุน API)
-  // - Human services: ใช้ workerRate (ค่าจ้าง Worker) - costPrice = 0 หรือ undefined
-  costPrice?: number; // ต้นทุน API (สำหรับ Bot service)
-  workerRate?: number; // ค่าจ้าง Worker ต่อหน่วย (สำหรับ Human service)
+  platform: Platform;
+  serviceType: ServiceType;
+  mode: ServiceMode;
+  costPrice?: number;
+  workerRate?: number;
   sellPrice: number;
-  minQuantity: number;
-  maxQuantity: number;
+  minQty: number;
+  maxQty: number;
   meelikeServiceId?: string;
   estimatedTime?: string;
   isActive: boolean;
-  showInStore: boolean; // true = แสดงในร้าน, false = บริการลับ
+  showInStore: boolean;
   orderCount: number;
   createdAt: string;
   updatedAt: string;

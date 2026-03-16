@@ -50,7 +50,7 @@ export default function FindTeamPage() {
     return findTeamPosts.filter((post) => {
       const matchSearch =
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.description.toLowerCase().includes(searchQuery.toLowerCase());
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
       const matchLevel =
         filterLevel === "all" || post.author.level === filterLevel;
       return matchSearch && matchLevel;
@@ -180,7 +180,7 @@ export default function FindTeamPage() {
 
                 {/* Description */}
                 <p className="text-brand-text-light text-sm line-clamp-2">
-                  {post.description}
+                  {post.content}
                 </p>
 
                 {/* Stats */}
@@ -241,11 +241,11 @@ export default function FindTeamPage() {
                   <div className="flex items-center gap-3 text-sm text-brand-text-light">
                     <span className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
-                      {post.views}
+                      {post.viewCount}
                     </span>
                     <span className="flex items-center gap-1">
                       <Heart className="w-4 h-4" />
-                      {post.interested} สนใจ
+                      {post.replyCount} สนใจ
                     </span>
                   </div>
                   <Button 

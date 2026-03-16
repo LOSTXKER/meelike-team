@@ -47,11 +47,11 @@ interface ManualServiceRow {
   id: string;
   name: string;
   description: string;
-  category: Platform;
-  type: ServiceType;
+  platform: Platform;
+  serviceType: ServiceType;
   sellPrice: number;
-  minQuantity: number;
-  maxQuantity: number;
+  minQty: number;
+  maxQty: number;
   estimatedTime: string;
 }
 
@@ -115,11 +115,11 @@ function createEmptyManualRow(): ManualServiceRow {
     id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name: "",
     description: "",
-    category: "facebook",
-    type: "like",
+    platform: "facebook",
+    serviceType: "like",
     sellPrice: 0, // ราคาขายลูกค้า
-    minQuantity: 100,
-    maxQuantity: 10000,
+    minQty: 100,
+    maxQty: 10000,
     estimatedTime: "",
   };
 }
@@ -244,13 +244,13 @@ export function ServiceAddModal({
         servicesToAdd.push({
           name: meelikeService.name.replace(/^[🔵📸🎵▶️🐦]\s*/, ''),
           description: meelikeService.description,
-          category: mapCategoryToPlatform(meelikeService.category),
-          type: mapTypeToServiceType(meelikeService.type),
-          serviceType: "bot",
+          platform: mapCategoryToPlatform(meelikeService.category),
+          serviceType: mapTypeToServiceType(meelikeService.type),
+          mode: "bot",
           costPrice: costPerUnit,
           sellPrice: sellPrice,
-          minQuantity: parseInt(meelikeService.min),
-          maxQuantity: parseInt(meelikeService.max),
+          minQty: parseInt(meelikeService.min),
+          maxQty: parseInt(meelikeService.max),
           meelikeServiceId: meelikeService.service,
           estimatedTime: meelikeService.averageTime,
           isActive: true,
@@ -263,12 +263,12 @@ export function ServiceAddModal({
         servicesToAdd.push({
           name: row.name,
           description: row.description,
-          category: row.category,
-          type: row.type,
-          serviceType: "human",
+          platform: row.platform,
+          serviceType: row.serviceType,
+          mode: "human",
           sellPrice: row.sellPrice,
-          minQuantity: row.minQuantity,
-          maxQuantity: row.maxQuantity,
+          minQty: row.minQty,
+          maxQty: row.maxQty,
           estimatedTime: row.estimatedTime,
           isActive: true,
           showInStore: true,
@@ -729,14 +729,14 @@ function ManualServicesTab({
                <Select
                  label="แพลตฟอร์ม"
                  options={platformOptions}
-                 value={row.category}
-                 onChange={(e) => onUpdateRow(row.id, "category", e.target.value as Platform)}
+                 value={row.platform}
+                 onChange={(e) => onUpdateRow(row.id, "platform", e.target.value as Platform)}
                />
                <Select
                  label="ประเภท"
                  options={serviceTypeOptions}
-                 value={row.type}
-                 onChange={(e) => onUpdateRow(row.id, "type", e.target.value as ServiceType)}
+                 value={row.serviceType}
+                 onChange={(e) => onUpdateRow(row.id, "serviceType", e.target.value as ServiceType)}
                />
              </div>
 
@@ -761,15 +761,15 @@ function ManualServicesTab({
                  label="จำนวนขั้นต่ำ"
                  type="number"
                  placeholder="100"
-                 value={row.minQuantity || ""}
-                 onChange={(e) => onUpdateRow(row.id, "minQuantity", parseInt(e.target.value) || 0)}
+                 value={row.minQty || ""}
+                 onChange={(e) => onUpdateRow(row.id, "minQty", parseInt(e.target.value) || 0)}
                />
                <Input
                  label="จำนวนสูงสุด"
                  type="number"
                  placeholder="10000"
-                 value={row.maxQuantity || ""}
-                 onChange={(e) => onUpdateRow(row.id, "maxQuantity", parseInt(e.target.value) || 0)}
+                 value={row.maxQty || ""}
+                 onChange={(e) => onUpdateRow(row.id, "maxQty", parseInt(e.target.value) || 0)}
                />
              </div>
 

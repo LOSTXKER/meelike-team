@@ -31,7 +31,6 @@ export interface Worker {
   rating: number;
   ratingCount: number;
   level: WorkerLevel;
-  totalJobsCompleted: number;
   pendingBalance: number;
   availableBalance: number;
   /** Total owed by team leaders (informational only — no system withdrawal) */

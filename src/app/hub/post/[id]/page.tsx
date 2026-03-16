@@ -36,7 +36,7 @@ import {
 
 const postTypeConfig: Record<string, { label: string; color: "info" | "success" | "warning"; icon: React.ElementType }> = {
   recruit: { label: "หาลูกทีม", color: "info", icon: Users },
-  "find-team": { label: "หาทีม", color: "success", icon: Search },
+  find_team: { label: "หาทีม", color: "success", icon: Search },
   outsource: { label: "โยนงาน", color: "warning", icon: Briefcase },
 };
 
@@ -227,7 +227,7 @@ export default function HubPostDetailPage() {
               รายละเอียด
             </h3>
             <p className="text-brand-text-dark leading-relaxed whitespace-pre-line">
-              {post.description}
+              {post.content}
             </p>
           </Card>
 
@@ -294,7 +294,7 @@ export default function HubPostDetailPage() {
           )}
 
           {/* Find Team Type Specific Info */}
-          {post.type === "find-team" && (
+          {post.type === "find_team" && (
             <Card variant="bordered" padding="lg">
               <h3 className="font-bold text-brand-text-dark mb-4 flex items-center gap-2">
                 <Award className="w-5 h-5 text-brand-info" />
@@ -358,11 +358,11 @@ export default function HubPostDetailPage() {
             <div className="flex items-center justify-between text-sm text-brand-text-light mb-6 pb-4 border-b border-brand-border">
               <span className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4" />
-                {post.views} ดู
+                {post.viewCount} ดู
               </span>
               <span className="flex items-center gap-1.5">
                 <Heart className="w-4 h-4" />
-                {post.interested} สนใจ
+                {post.replyCount} สนใจ
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4" />
@@ -421,7 +421,7 @@ export default function HubPostDetailPage() {
                 </Button>
               )}
 
-              {post.type === "find-team" && (
+              {post.type === "find_team" && (
                 <Button
                   className="w-full shadow-lg shadow-brand-primary/20"
                   size="lg"

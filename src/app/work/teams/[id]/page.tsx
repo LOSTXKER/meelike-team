@@ -50,23 +50,24 @@ export default function WorkerTeamDetailPage() {
     if (!team) return null;
     
     // Calculate completion rate from team stats (rounded to 1 decimal)
-    const completionRate = team.totalJobsCompleted > 0 
-      ? Math.round(Math.min(98.5, (team.totalJobsCompleted / (team.totalJobsCompleted + 10)) * 100) * 10) / 10
+    const completed = team.totalJobsCompleted ?? 0;
+    const completionRate = completed > 0 
+      ? Math.round(Math.min(98.5, (completed / (completed + 10)) * 100) * 10) / 10
       : 95;
     
     return {
       ...team,
       description: team.description || "ทีมงานคุณภาพ จ่ายจริง จ่ายไว มีงานให้ทำตลอด 24 ชม. รับประกันรายได้",
       owner: {
-        name: "@johnboost", // Would derive from sellerId
+        name: "@johnboost",
         avatar: "JB",
         rating: team.rating,
         reviews: team.ratingCount,
       },
       stats: {
         completionRate,
-        avgPayTime: "2 วัน", // Mock for now
-        totalPaidOut: team.totalJobsCompleted * 50, // Estimate
+        avgPayTime: "2 วัน",
+        totalPaidOut: completed * 50,
       },
       myStats: {
         jobsCompleted: 45, // Would calculate from worker's claims in this team

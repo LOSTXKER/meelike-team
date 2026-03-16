@@ -2,17 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSeller } from "@/lib/api/auth-helper";
 import { prisma } from "@/lib/prisma";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapService(s: any) {
-  return {
-    ...s,
-    minQuantity: s.minQty,
-    maxQuantity: s.maxQty,
-    category: s.platform,
-    type: s.serviceType,
-  };
-}
-
 export async function GET() {
   const { seller, error } = await requireSeller();
   if (error) return error;
@@ -22,7 +11,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ services: services.map(mapService) });
+  return NextResponse.json({ services });
 }
 
 export async function POST(request: NextRequest) {
@@ -72,5 +61,5 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ service: mapService(service) }, { status: 201 });
+  return NextResponse.json({ service }, { status: 201 });
 }

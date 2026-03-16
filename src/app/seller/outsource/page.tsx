@@ -168,7 +168,7 @@ export default function SellerOutsourcePage() {
                       <div className="flex items-center gap-4 mt-2 text-xs text-brand-text-light">
                         <span className="flex items-center gap-1">
                           <Eye className="w-3 h-3" />
-                          {job.views} เข้าชม
+                          {job.viewCount} เข้าชม
                         </span>
                         <span className="flex items-center gap-1 font-medium text-brand-accent">
                           <MessageCircle className="w-3 h-3" />

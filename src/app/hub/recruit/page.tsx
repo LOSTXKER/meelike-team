@@ -39,7 +39,7 @@ export default function RecruitPage() {
     return recruitPosts.filter((post) => {
       const matchSearch =
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.description.toLowerCase().includes(searchQuery.toLowerCase());
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
       const matchPlatform =
         filterPlatform === "all" || post.platforms.includes(filterPlatform);
       return matchSearch && matchPlatform;

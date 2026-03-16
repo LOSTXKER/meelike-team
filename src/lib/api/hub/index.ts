@@ -28,6 +28,7 @@ import {
   postOutsourceDirect,
   cancelOutsourceJob,
 } from "./outsource";
+import { getLeaderboard } from "./leaderboard";
 
 // ===== COMBINED HUB API =====
 
@@ -52,4 +53,7 @@ export const hubApi = {
   rejectBid,
   postOutsourceDirect,
   cancelOutsourceJob,
+
+  // Leaderboard
+  getLeaderboard,
 };

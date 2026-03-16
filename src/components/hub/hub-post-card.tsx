@@ -20,7 +20,7 @@ import {
 
 const postTypeConfig: Record<string, { label: string; color: "info" | "success" | "warning" }> = {
   recruit: { label: "หาลูกทีม", color: "info" },
-  "find-team": { label: "หาทีม", color: "success" },
+  find_team: { label: "หาทีม", color: "success" },
   outsource: { label: "โยนงาน", color: "warning" },
 };
 
@@ -184,7 +184,7 @@ export function HubPostCard({
             {post.title}
           </h3>
           <p className="text-brand-text-light text-sm leading-relaxed line-clamp-2">
-            {post.description}
+            {post.content}
           </p>
         </div>
 
@@ -220,7 +220,7 @@ export function HubPostCard({
             </div>
           )}
 
-          {post.type === "find-team" && (
+          {post.type === "find_team" && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="text-xs text-brand-text-light block mb-1">ประสบการณ์</span>
@@ -285,11 +285,11 @@ export function HubPostCard({
           <div className="flex items-center gap-4 text-xs font-medium text-brand-text-light">
             <span className="flex items-center gap-1.5">
               <Eye className="w-4 h-4" />
-              {post.views}
+              {post.viewCount}
             </span>
             <span className="flex items-center gap-1.5">
               <Heart className="w-4 h-4" />
-              {post.interested} สนใจ
+              {post.replyCount} สนใจ
             </span>
             {post.applicants !== undefined && (
               <span className="flex items-center gap-1.5">

@@ -25,7 +25,7 @@ export interface Job {
   // Service info
   title?: string;
   serviceName: string;      // Required - display name
-  type: ServiceType;
+  serviceType: ServiceType;
   platform: Platform;
   targetUrl: string;
   instructions?: string;    // Instructions for workers
@@ -39,7 +39,7 @@ export interface Job {
   totalPayout: number;      // quantity * pricePerUnit
   
   // Visibility & Requirements
-  visibility: "all_members" | "level_required" | "selected";
+  visibility: "team" | "public";
   allowedWorkerIds?: string[];
   minWorkerLevel?: WorkerLevel;
   minWorkerRating?: number;
@@ -72,7 +72,7 @@ export interface JobClaim {
   submittedAt?: string;
   proofUrls?: string[];
   actualQuantity?: number;
-  workerNote?: string;
+  note?: string;
   reviewedAt?: string;
   reviewedBy?: string;
   reviewNote?: string;

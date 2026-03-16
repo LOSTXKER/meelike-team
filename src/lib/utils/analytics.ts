@@ -118,7 +118,7 @@ export function computeAnalytics(
   // Customer analytics
   const customerMap = new Map<string, number>();
   completedOrders.forEach(order => {
-    const customerId = order.customer.contactValue;
+    const customerId = order.contactValue || "unknown";
     customerMap.set(customerId, (customerMap.get(customerId) || 0) + 1);
   });
   
@@ -203,7 +203,7 @@ export function computeAnalytics(
   const topTeams: TopTeam[] = teams.slice(0, 3).map(team => ({
     name: team.name,
     members: team.memberCount,
-    completedJobs: team.totalJobsCompleted,
+    completedJobs: team.totalJobsCompleted ?? 0,
     rating: team.rating,
     revenue: 45000, // Would derive from team jobs
   }));
@@ -218,7 +218,7 @@ export function computeAnalytics(
   
   // Customer insights
   const newCustomersThisMonth = Array.from(customerMap.entries()).filter(([customerId, count]) => {
-    const firstOrder = completedOrders.find(o => o.customer.contactValue === customerId);
+    const firstOrder = completedOrders.find(o => o.contactValue === customerId);
     return firstOrder && new Date(firstOrder.createdAt) >= monthAgo;
   }).length;
   
@@ -228,7 +228,7 @@ export function computeAnalytics(
   
   const topCustomerSpend = Math.max(...Array.from(customerMap.entries()).map(([customerId]) => {
     return completedOrders
-      .filter(o => o.customer.contactValue === customerId)
+      .filter(o => o.contactValue === customerId)
       .reduce((sum, o) => sum + o.total, 0);
   }), 0);
   

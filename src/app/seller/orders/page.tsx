@@ -31,11 +31,12 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-type OrderStatus = "all" | "pending" | "processing" | "completed" | "cancelled";
+type OrderStatus = "all" | "pending" | "confirmed" | "processing" | "completed" | "cancelled";
 
 const STATUS_CONFIGS: Record<OrderStatus, { label: string; color: "default" | "warning" | "info" | "success" | "error"; icon?: typeof Clock }> = {
   all: { label: "ทั้งหมด", color: "default" },
   pending: { label: "รอทำ", color: "warning", icon: Clock },
+  confirmed: { label: "ยืนยันแล้ว", color: "info", icon: CheckCircle2 },
   processing: { label: "กำลังทำ", color: "info", icon: Loader2 },
   completed: { label: "เสร็จ", color: "success", icon: CheckCircle2 },
   cancelled: { label: "ยกเลิก", color: "error", icon: XCircle },
@@ -53,7 +54,7 @@ export default function OrdersPage() {
     search: (order: Order, value: any) => 
       !value || 
       order.orderNumber.toLowerCase().includes(value.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(value.toLowerCase())
+      order.customerName.toLowerCase().includes(value.toLowerCase())
   };
 
   const { filteredItems, setFilter, filters } = useFilters(orders || [], filterConfig, {
@@ -72,6 +73,7 @@ export default function OrdersPage() {
   const orderCounts = useMemo(() => ({
     all: orders?.length || 0,
     pending: orders?.filter((o: { status: string }) => o.status === "pending").length || 0,
+    confirmed: orders?.filter((o: { status: string }) => o.status === "confirmed").length || 0,
     processing: orders?.filter((o: { status: string }) => o.status === "processing").length || 0,
     completed: orders?.filter((o: { status: string }) => o.status === "completed").length || 0,
     cancelled: orders?.filter((o: { status: string }) => o.status === "cancelled").length || 0,
@@ -106,17 +108,17 @@ export default function OrdersPage() {
       )
     },
     {
-      key: "customer",
+      key: "customerName",
       label: "ลูกค้า",
       render: (_, order) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold text-brand-primary border border-brand-border">
-            {order.customer.name.charAt(0)}
+            {order.customerName.charAt(0)}
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-brand-text-dark">{order.customer.name}</span>
+            <span className="text-sm font-medium text-brand-text-dark">{order.customerName}</span>
             <span className="text-xs text-brand-text-light truncate max-w-[120px]">
-              {order.customer.contactType}: {order.customer.contactValue}
+              {order.contactType}: {order.contactValue}
             </span>
           </div>
         </div>
@@ -210,7 +212,7 @@ export default function OrdersPage() {
       {/* Summary Stats - Always visible */}
       <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-xl border border-brand-border/50 shadow-sm">
         <span className="text-sm font-medium text-brand-text-dark mr-2">สถานะ:</span>
-        {(["all", "pending", "processing", "completed", "cancelled"] as OrderStatus[]).map((status) => {
+        {(["all", "pending", "confirmed", "processing", "completed", "cancelled"] as OrderStatus[]).map((status) => {
           const config = STATUS_CONFIGS[status];
           const count = orderCounts[status];
           const isActive = statusFilter === status;

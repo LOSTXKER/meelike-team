@@ -57,6 +57,8 @@ export const queryKeys = {
     findTeamPosts: () => [...queryKeys.hub.all, "findTeamPosts"] as const,
     recruitPosts: () => [...queryKeys.hub.all, "recruitPosts"] as const,
     outsourceJobs: () => [...queryKeys.hub.all, "outsourceJobs"] as const,
+    leaderboard: (type?: string, period?: string) =>
+      [...queryKeys.hub.all, "leaderboard", type, period] as const,
   },
 
   // ===== TEAM =====

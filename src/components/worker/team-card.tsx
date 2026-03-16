@@ -88,7 +88,7 @@ export function TeamCard({
         )}
         <div className="flex items-center gap-1.5 text-sm text-brand-text-light">
           <ClipboardList className="w-4 h-4" />
-          <span>{team.totalJobsCompleted || 0} งาน</span>
+          <span>{team.totalJobsCompleted ?? 0} งาน</span>
         </div>
       </div>
 

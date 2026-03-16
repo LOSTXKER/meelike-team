@@ -127,7 +127,7 @@ export default function TeamMembersPage() {
       hideOnMobile: true,
       render: (member) => (
         <span>
-          <span className="font-medium text-brand-text-dark">{member.worker.totalJobsCompleted}</span>
+          <span className="font-medium text-brand-text-dark">{member.worker.totalJobs}</span>
           <span className="text-brand-text-light text-sm"> งาน</span>
         </span>
       ),
@@ -349,7 +349,7 @@ export default function TeamMembersPage() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">
-                  <p className="text-xl font-bold text-brand-text-dark">{selectedMember.worker.totalJobsCompleted}</p>
+                  <p className="text-xl font-bold text-brand-text-dark">{selectedMember.worker.totalJobs}</p>
                   <p className="text-xs text-brand-text-light">งานเสร็จ</p>
                 </div>
                 <div className="bg-brand-bg/30 rounded-xl p-4 text-center border border-brand-border/20">

@@ -80,11 +80,11 @@ export default function TeamReviewPage() {
             displayName: "Unknown",
             level: "bronze",
             rating: 0,
-            totalJobsCompleted: 0,
+            totalJobs: 0,
           },
           submittedAt: claim.submittedAt,
           proofImages: claim.proofUrls || [],
-          workerNote: claim.workerNote || "",
+          note: claim.note || "",
         };
       });
   }, [pendingReviewsData, workers, teamJobs, locallyRemovedIds]);

@@ -9,13 +9,14 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
+type OrderStatus = "pending" | "confirmed" | "processing" | "completed" | "cancelled";
 
 const statusConfig: Record<
   OrderStatus,
   { label: string; color: "warning" | "info" | "success" | "error" }
 > = {
   pending: { label: "รอชำระเงิน", color: "warning" },
+  confirmed: { label: "ยืนยันแล้ว", color: "info" },
   processing: { label: "กำลังดำเนินการ", color: "info" },
   completed: { label: "เสร็จสิ้น", color: "success" },
   cancelled: { label: "ยกเลิก", color: "error" },

@@ -18,9 +18,9 @@ const orderCustomerSchema = z.object({
 const orderItemSchema = z.object({
   serviceId: z.string().min(1, "กรุณาเลือกบริการ"),
   serviceName: z.string().min(1),
-  serviceType: z.enum(["bot", "human"]),
+  mode: z.enum(["bot", "human"]),
   platform: z.string().min(1, "กรุณาเลือกแพลตฟอร์ม"),
-  type: z.string().min(1),
+  serviceType: z.string().min(1),
   targetUrl: z.string().url("URL ไม่ถูกต้อง"),
   quantity: z.number().int().min(1, "จำนวนต้องมากกว่า 0"),
   unitPrice: z.number().min(0, "ราคาต้องไม่ติดลบ"),

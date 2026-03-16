@@ -50,7 +50,7 @@ export function getTeamStats(team: Team): StatItem[] {
     },
     {
       label: "งานสำเร็จ",
-      value: team.totalJobsCompleted.toLocaleString(),
+      value: (team.totalJobsCompleted ?? 0).toLocaleString(),
       icon: CheckCircle,
       iconColor: "text-[#1E8E3E]",
       iconBgColor: "bg-[#E6F4EA]",

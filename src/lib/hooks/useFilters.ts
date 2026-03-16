@@ -31,8 +31,8 @@ export interface FiltersResult<T> {
  * @example
  * ```tsx
  * const filterConfig = {
- *   platform: (service, value) => !value || value === 'all' || service.category === value,
- *   type: (service, value) => !value || value === 'all' || service.type === value,
+ *   platform: (service, value) => !value || value === 'all' || service.platform === value,
+ *   type: (service, value) => !value || value === 'all' || service.serviceType === value,
  *   search: (service, value) => !value || service.name.toLowerCase().includes(value.toLowerCase())
  * };
  * 

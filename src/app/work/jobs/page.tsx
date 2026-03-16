@@ -171,7 +171,7 @@ export default function WorkerJobsPage() {
                           <Users className="w-3 h-3 mr-1" />
                           {job.teamName}
                         </Badge>
-                        <ServiceTypeBadge type={job.type as ServiceMode} />
+                        <ServiceTypeBadge type={"human" as ServiceMode} />
                       </div>
                     </div>
                   </div>

@@ -190,7 +190,7 @@ export default function OutsourceDetailPage() {
               <div className="flex items-center gap-3 text-sm text-brand-text-light">
                 <span className="flex items-center gap-1">
                   <Eye className="w-4 h-4" />
-                  {job.views} เข้าชม
+                  {job.viewCount} เข้าชม
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">

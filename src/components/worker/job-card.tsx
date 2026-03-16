@@ -25,21 +25,31 @@ interface JobCardProps {
   className?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; variant: "info" | "warning" | "success" | "error" | "default"; icon: typeof Clock }> = {
+  pending: {
+    label: "รอเริ่ม",
+    variant: "default",
+    icon: Clock,
+  },
   in_progress: {
     label: "กำลังทำ",
-    variant: "info" as const,
+    variant: "info",
     icon: Clock,
   },
   pending_review: {
     label: "รอตรวจ",
-    variant: "warning" as const,
+    variant: "warning",
     icon: AlertCircle,
   },
   completed: {
     label: "เสร็จแล้ว",
-    variant: "success" as const,
+    variant: "success",
     icon: CheckCircle2,
+  },
+  cancelled: {
+    label: "ยกเลิก",
+    variant: "error",
+    icon: AlertCircle,
   },
 };
 
@@ -50,7 +60,7 @@ export function JobCard({
   href,
   className,
 }: JobCardProps) {
-  const config = statusConfig[job.status];
+  const config = statusConfig[job.status] || statusConfig.pending;
   const StatusIcon = config.icon;
   const progress = job.quantity > 0 ? (job.completedQuantity / job.quantity) * 100 : 0;
   const totalEarnings = job.quantity * job.pricePerUnit;

@@ -133,7 +133,7 @@ export default function WorkerJobPreviewPage() {
                     {team.name}
                   </Badge>
                 )}
-                <ServiceTypeBadge type={job.platform as ServiceMode} />
+                <ServiceTypeBadge type={"human" as ServiceMode} />
               </div>
             </VStack>
           </HStack>
@@ -357,7 +357,7 @@ export default function WorkerJobPreviewPage() {
                       </span>
                       <span className="text-xs text-brand-text-light font-medium flex items-center gap-1">
                         <span className="w-1 h-1 rounded-full bg-brand-border" />
-                        {team.totalJobsCompleted} งาน
+                        {team.totalJobsCompleted ?? 0} งาน
                       </span>
                     </div>
                   </div>

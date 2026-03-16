@@ -49,11 +49,11 @@ export interface Team {
   recruitingMessage?: string;
   memberCount: number;
   activeJobCount: number;
+  totalJobs?: number;
   totalJobsCompleted: number;
   rating: number;
   ratingCount: number;
   assistantConfig?: AssistantConfig;
-  status: 'active' | 'inactive';
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

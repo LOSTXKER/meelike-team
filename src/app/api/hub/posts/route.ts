@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "20");
 
-  const posts = await prisma.hubPost.findMany({
+  const rows = await prisma.hubPost.findMany({
     where: {
       status: "active",
       ...(type ? { type: type as "recruit" | "find_team" | "outsource" } : {}),
@@ -19,6 +19,29 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "desc" },
     skip: (page - 1) * limit,
     take: limit,
+  });
+
+  // Look up author info for each post
+  const authorIds = [...new Set(rows.map((r) => r.authorId))];
+  const users = await prisma.user.findMany({
+    where: { id: { in: authorIds } },
+    include: { seller: true },
+  });
+  const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+
+  const posts = rows.map((row) => {
+    const user = userMap[row.authorId];
+    return {
+      ...row,
+      author: {
+        name: user?.name ?? "Unknown",
+        avatar: user?.name?.charAt(0) ?? "?",
+        rating: 4.5,
+        verified: !!user?.seller,
+        type: (user?.role === "seller" ? "seller" : "worker") as "seller" | "worker",
+        memberCount: undefined,
+      },
+    };
   });
 
   return NextResponse.json({ posts, page, limit });

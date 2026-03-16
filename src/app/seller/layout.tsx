@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRequireAuth } from "@/lib/hooks";
+import { useSellerStats } from "@/lib/api/hooks";
 import { SELLER_NAV, USER_MENU_ITEMS, isNavGroup } from "@/lib/constants/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,9 @@ export default function SellerLayout({
     requiredRole: "seller",
     redirectIfWrongRole: "/work",
   });
+
+  const { data: sellerStats } = useSellerStats();
+  const pendingOrders = (sellerStats as { pendingOrders?: number })?.pendingOrders ?? 0;
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -313,9 +317,9 @@ export default function SellerLayout({
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
-                  {item.badge && (
+                  {item.href === "/seller/orders" && pendingOrders > 0 && (
                     <Badge variant="error" size="sm" className="ml-1">
-                      {item.badge}
+                      {pendingOrders}
                     </Badge>
                   )}
                   {isActive && (
@@ -391,15 +395,6 @@ export default function SellerLayout({
                           >
                             <SubIcon className="w-5 h-5" />
                             <span className="font-medium">{subItem.label}</span>
-                            {subItem.badge && (
-                              <Badge
-                                variant={isActive ? "default" : "error"}
-                                size="sm"
-                                className={cn("ml-auto", isActive && "bg-white/20 text-white")}
-                              >
-                                {subItem.badge}
-                              </Badge>
-                            )}
                           </Link>
                         );
                       })}
@@ -425,13 +420,13 @@ export default function SellerLayout({
                   >
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
-                    {item.badge && (
+                    {item.href === "/seller/orders" && pendingOrders > 0 && (
                       <Badge
                         variant={isActive ? "default" : "error"}
                         size="sm"
                         className={cn("ml-auto", isActive && "bg-white/20 text-white")}
                       >
-                        {item.badge}
+                        {pendingOrders}
                       </Badge>
                     )}
                   </Link>

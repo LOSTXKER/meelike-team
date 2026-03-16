@@ -52,7 +52,7 @@ import {
 function exportServicesToCSV(services: StoreService[]) {
   const data = services.map((service, index) => {
     // Bot services มี costPrice, Human services กรอก worker rate ตอนสร้าง Job
-    const costDisplay = service.serviceType === 'human' 
+    const costDisplay = service.mode === 'human' 
       ? '(กรอกตอนสร้าง Job)' 
       : (service.costPrice || 0);
     
@@ -60,13 +60,13 @@ function exportServicesToCSV(services: StoreService[]) {
       'ลำดับ': index + 1,
       'ชื่อบริการ': service.name,
       'รายละเอียด': service.description || '',
-      'แพลตฟอร์ม': PLATFORM_CONFIGS[service.category]?.label || service.category,
-      'ประเภท': SERVICE_TYPE_CONFIGS[service.type]?.labelTh || service.type,
-      'รูปแบบบริการ': service.serviceType === 'bot' ? 'งานเว็บ' : 'งานกดมือ',
+      'แพลตฟอร์ม': PLATFORM_CONFIGS[service.platform]?.label || service.platform,
+      'ประเภท': SERVICE_TYPE_CONFIGS[service.serviceType]?.labelTh || service.serviceType,
+      'รูปแบบบริการ': service.mode === 'bot' ? 'งานเว็บ' : 'งานกดมือ',
       'ต้นทุน/ค่าจ้าง (บาท/หน่วย)': costDisplay,
       'ราคาขาย (บาท/หน่วย)': service.sellPrice,
-      'จำนวนขั้นต่ำ': service.minQuantity,
-      'จำนวนสูงสุด': service.maxQuantity,
+      'จำนวนขั้นต่ำ': service.minQty,
+      'จำนวนสูงสุด': service.maxQty,
       'เวลาส่งมอบ': service.estimatedTime || '',
       'แสดงในร้าน': service.showInStore ? 'แสดง' : 'ซ่อน',
       'สถานะ': service.isActive ? 'เปิด' : 'ปิด',
@@ -119,13 +119,13 @@ export default function ServicesPage() {
   // Use new hooks for filtering
   const filterConfig = {
     serviceMode: (service: StoreService, value: any) => 
-      value === "all" || service.serviceType === value,
+      value === "all" || service.mode === value,
     platform: (service: StoreService, value: any) => 
-      value === "all" || service.category === value,
+      value === "all" || service.platform === value,
     search: (service: StoreService, value: any) => 
       !value || 
       service.name.toLowerCase().includes(value.toLowerCase()) || 
-      service.category.toLowerCase().includes(value.toLowerCase())
+      service.platform.toLowerCase().includes(value.toLowerCase())
   };
 
   const { filteredItems, setFilter, filters } = useFilters(services, filterConfig, {
@@ -136,7 +136,7 @@ export default function ServicesPage() {
 
   // Helper to get effective cost (only for bot services)
   const getEffectiveCost = (service: StoreService) => 
-    service.serviceType === "human" 
+    service.mode === "human" 
       ? 0 // Human services don't have cost defined here
       : (service.costPrice || 0);
 
@@ -163,8 +163,8 @@ export default function ServicesPage() {
   } = useBulkSelection(sortedItems);
 
   // Stats
-  const botCount = services.filter(s => s.serviceType === "bot").length;
-  const humanCount = services.filter(s => s.serviceType === "human").length;
+  const botCount = services.filter(s => s.mode === "bot").length;
+  const humanCount = services.filter(s => s.mode === "human").length;
   const activeCount = services.filter(s => s.isActive).length;
 
   // Handlers
@@ -224,23 +224,23 @@ export default function ServicesPage() {
         <div className="flex flex-col">
           <span className="font-bold text-sm text-brand-text-dark">{service.name}</span>
           <span className="text-xs text-brand-text-light mt-0.5 flex items-center gap-1.5">
-            <ServiceTypeBadge type={service.serviceType} size="sm" showIcon={false} />
-            {service.minQuantity} - {service.maxQuantity.toLocaleString()}
+            <ServiceTypeBadge type={service.mode} size="sm" showIcon={false} />
+            {service.minQty} - {service.maxQty.toLocaleString()}
           </span>
         </div>
       )
     },
     {
-      key: "category",
+      key: "platform",
       label: "แพลตฟอร์ม",
       sortable: true,
-      render: (_, service) => <PlatformIcon platform={service.category} showLabel />
+      render: (_, service) => <PlatformIcon platform={service.platform} showLabel />
     },
     {
-      key: "type",
+      key: "serviceType",
       label: "ประเภท",
       sortable: true,
-      render: (_, service) => <ServiceTypeIcon type={service.type} useEmoji showLabel />
+      render: (_, service) => <ServiceTypeIcon type={service.serviceType} useEmoji showLabel />
     },
     {
       key: "costPrice",
@@ -248,7 +248,7 @@ export default function ServicesPage() {
       align: "right",
       sortable: true,
       render: (_, service) => {
-        if (service.serviceType === "human") {
+        if (service.mode === "human") {
           return (
             <span className="text-xs text-purple-500 italic">กรอกตอนสร้าง Job</span>
           );
@@ -273,7 +273,7 @@ export default function ServicesPage() {
       align: "right",
       sortable: true,
       render: (_, service) => {
-        if (service.serviceType === "human") {
+        if (service.mode === "human") {
           return <span className="text-xs text-brand-text-light italic">-</span>;
         }
         const cost = service.costPrice || 0;
